@@ -1,0 +1,8 @@
+bin/
+obj/
+salida/
+.dotnet/
+dotnet-install.sh
+.vs/
+*.user
+.vercel
