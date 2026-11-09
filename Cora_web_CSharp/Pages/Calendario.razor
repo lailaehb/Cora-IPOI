@@ -1,0 +1,135 @@
+@page "/calendario"
+@inherits PaginaCora
+
+@* CALENDARIO mensual + «Mi semana».
+   RETO 3: mientras la IA trabaja, los días se ven como huecos grises, el botón cambia de mensaje
+   y los días se rellenan uno a uno al terminar. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Titulo="Calendario" Sub="Tus outfits del mes" Avatar="true" />
+
+        <section class="tarjeta mes" aria-label="Mes">
+            <div class="mes-cab">
+                <button class="icono" @onclick="() => CambiarMes(-1)" aria-label="Mes anterior">@Iconos.Anterior</button>
+                <b>@Fechas.Cap(Fechas.Meses[mes.Month - 1]) @mes.Year</b>
+                <button class="icono" @onclick="() => CambiarMes(1)" aria-label="Mes siguiente">@Iconos.Siguiente</button>
+            </div>
+            <div class="rejilla">
+                @foreach (var l in new[] { "L", "M", "X", "J", "V", "S", "D" })
+                {
+                    <span class="dn">@l</span>
+                }
+                @foreach (var d in Celdas)
+                {
+                    var dia = d;
+                    var fecha = Fechas.De(dia);
+                    bool fuera = fecha.Month != mes.Month, elegido = dia == sel, enSemana = Semana.Contains(dia);
+                    bool conOutfit = E.OutfitDe(dia) != null, conPlan = E.PlanDe(dia) != null;
+                    <button class="dia @(fuera ? "fuera" : "") @(elegido ? "elegido" : "") @(enSemana && !elegido ? "semana" : "") @(dia == Hoy ? "hoy" : "")"
+                            aria-pressed="@(elegido ? "true" : "false")" aria-label="@($"{fecha.Day} de {Fechas.Meses[fecha.Month - 1]}{(conOutfit ? ", con outfit" : conPlan ? ", con planes" : "")}")"
+                            @onclick="() => Elegir(dia)">
+                        <span>@fecha.Day</span>
+                        <i class="@(conOutfit ? "punto" : conPlan ? "aro" : "")"></i>
+                    </button>
+                }
+            </div>
+            <div class="leyenda"><span><i class="punto"></i>Con outfit</span><span><i class="aro"></i>Con planes</span></div>
+        </section>
+
+        <div class="seccion"><h2>Mi semana</h2><small class="sec">@RangoSemana</small></div>
+        <p class="sec peque">@E.Tiempo.Fuente</p>
+        @foreach (var d in Semana)
+        {
+            var dia = d;
+            var o = E.OutfitDe(dia);
+            var pl = E.PlanDe(dia);
+            var w = E.Tiempo.De(dia);
+            bool pasado = Fechas.Dif(dia) < 0;
+            bool guardado = E.DiaGuardado(dia);
+            <section class="tarjeta dia-tarjeta @(dia == sel ? "elegida" : "") @(pasado ? "pasado" : "")">
+                <div class="entre"><b>@Fechas.Etiqueta(dia) · @(pl != null ? Fechas.Cap(pl.Etiqueta) : "Sin planes")</b><small class="sec">@w.T° @w.Cielo</small></div>
+                @if (E.EsperandoDia(dia))
+                {
+                    if (Clasica)
+                    {
+                        <p class="sec">Cargando…</p>
+                    }
+                    else
+                    {
+                        <FilaOutfit Cargando="true" />
+                    }
+                }
+                else if (o != null)
+                {
+                    <FilaOutfit Ids="o.Ids" Catalogo="E.D.Prendas" Animar="@(E.RecienRelleno(dia))" @key="@(dia + (E.RecienRelleno(dia) ? "-nuevo" : ""))" />
+                    <p class="porque">@o.Porque</p>
+                    if (!pasado)
+                    {
+                        <div class="fila">
+                            <button class="btn secundario bajo" @onclick="() => E.OtraOpcionAsync(dia)">Otra opción</button>
+                            <button class="btn secundario bajo" aria-pressed="@(guardado ? "true" : "false")" @onclick="() => E.AlternarGuardadoDiaAsync(dia)">@Iconos.Marcador(guardado) @(guardado ? "Guardado ✓" : "Guardar")</button>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="sec">@(pasado ? "Sin outfit registrado." : "Todavía sin outfit. Cuéntale tus planes a la IA.")</p>
+                }
+            </section>
+        }
+    </div>
+    <footer class="pie" aria-live="polite">
+        @if (E.Generando)
+        {
+            <div class="btn ocupado">
+                <span>@(Clasica ? "Cargando…" : E.MensajeEspera)</span>
+                @if (!Clasica)
+                {
+                    <span class="barra-progreso" style="width:@(E.Progreso)%"></span>
+                }
+            </div>
+        }
+        else
+        {
+            <a class="btn" href="@($"planificar?dia={(Fechas.Dif(sel) >= 0 ? sel : Hoy)}")">@Iconos.Chispa Planificar con IA</a>
+        }
+    </footer>
+</div>
+
+@code {
+    string sel = Fechas.Hoy;
+    DateTime mes = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+    bool Clasica => E.D.Ajustes.Espera == "clasica";
+    List<string> Semana => Fechas.Semana(sel);
+
+    string RangoSemana
+    {
+        get
+        {
+            var a = Fechas.De(Semana[0]); var b = Fechas.De(Semana[6]);
+            return $"{a.Day} {Fechas.Meses[a.Month - 1][..3]} – {b.Day} {Fechas.Meses[b.Month - 1][..3]}";
+        }
+    }
+
+    /// <summary>Días que se ven en la cuadrícula del mes (empieza en lunes).</summary>
+    List<string> Celdas
+    {
+        get
+        {
+            int desfase = ((int)mes.DayOfWeek + 6) % 7;
+            var inicio = mes.AddDays(-desfase);
+            int total = desfase + DateTime.DaysInMonth(mes.Year, mes.Month) > 35 ? 42 : 35;
+            return Enumerable.Range(0, total).Select(i => Fechas.Iso(inicio.AddDays(i))).ToList();
+        }
+    }
+
+    void CambiarMes(int n) => mes = mes.AddMonths(n);
+
+    void Elegir(string dia)
+    {
+        sel = dia;
+        var f = Fechas.De(dia);
+        if (f.Month != mes.Month || f.Year != mes.Year) mes = new DateTime(f.Year, f.Month, 1);
+    }
+}

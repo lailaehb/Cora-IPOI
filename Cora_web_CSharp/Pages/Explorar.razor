@@ -1,0 +1,77 @@
+@page "/explorar"
+@inherits PaginaCora
+
+@* EXPLORAR: red social de outfits. Me gusta, comentar y guardar se rellenan al pulsarlos. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Titulo="Explorar" Sub="Inspírate con los conjuntos de otras personas" Avatar="true" />
+        <div class="chips">
+            @foreach (var f in new[] { "Todo", "Outfits", "Personas" })
+            {
+                var filtroChip = f;
+                <Chip Texto="@filtroChip" Activo="@(filtro == filtroChip)" OnClick="@(() => filtro = filtroChip)" />
+            }
+        </div>
+        @foreach (var pub in DatosEjemplo.Publicaciones)
+        {
+            var p = pub;
+            bool like = meGusta.Contains(p.Id), com = comentados.Contains(p.Id), sigue = siguiendo.Contains(p.Id);
+            bool guardado = E.EstaGuardado("post-" + p.Id);
+            var prendas = p.Ids.Select(id => Catalogo.FirstOrDefault(x => x.Id == id)).Where(x => x != null).Select(x => x!).ToList();
+            <article class="tarjeta">
+                <div class="fila">
+                    <span class="avatar peque">@(p.Usuario.Substring(1, 1).ToUpper())</span>
+                    <div class="crece"><b>@p.Usuario</b><small class="sec">@p.Hace</small></div>
+                    <button class="seguir @(sigue ? "on" : "")" aria-pressed="@(sigue ? "true" : "false")" @onclick="() => Alternar(siguiendo, p.Id)">@(sigue ? "✓ Siguiendo" : "Seguir")</button>
+                </div>
+                @if (p.Look != null)
+                {
+                    <div class="look">
+                        <img src="@($"img/{p.Look}.png")" alt="Foto del conjunto" />
+                        <div class="look-prendas">
+                            @foreach (var x in prendas)
+                            {
+                                <FotoPrenda P="x" Proporcion="1.15" />
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="collage">
+                        @foreach (var x in prendas)
+                        {
+                            <FotoPrenda P="x" Proporcion="0.8" />
+                        }
+                    </div>
+                }
+                <div><h3>@p.Titulo</h3><p class="sec">@p.Texto</p></div>
+                <div class="sociales">
+                    <button class="@(like ? "on" : "")" aria-pressed="@(like ? "true" : "false")" aria-label="Me gusta" @onclick="() => MeGusta(p.Id)">@Iconos.Corazon(like) @(p.MeGusta + (like ? 1 : 0))</button>
+                    <button class="@(com ? "on" : "")" aria-pressed="@(com ? "true" : "false")" aria-label="Comentar" @onclick="() => Alternar(comentados, p.Id)">@Iconos.Comentario(com) @(p.Comentarios + (com ? 1 : 0))</button>
+                    <span class="crece"></span>
+                    <button class="@(guardado ? "on" : "")" aria-pressed="@(guardado ? "true" : "false")" aria-label="Guardar en mi perfil" @onclick="() => Guardar(p)">@Iconos.Marcador(guardado) @(guardado ? "Guardado" : "Guardar")</button>
+                </div>
+            </article>
+        }
+    </div>
+</div>
+
+@code {
+    string filtro = "Todo";
+    readonly HashSet<string> meGusta = new(), comentados = new(), siguiendo = new();
+    static readonly List<Prenda> Catalogo = DatosEjemplo.Catalogo();
+
+    static void Alternar(HashSet<string> conjunto, string id)
+    {
+        if (!conjunto.Remove(id)) conjunto.Add(id);
+    }
+
+    async Task MeGusta(string id)
+    {
+        Alternar(meGusta, id);
+        if (meGusta.Contains(id)) await E.SonarAsync("guardado");
+    }
+
+    Task Guardar(Publicacion p) => E.AlternarGuardadoAsync(new Guardado { Id = "post-" + p.Id, Ids = p.Ids.ToList(), Titulo = $"Outfit de {p.Usuario}", Look = p.Look });
+}

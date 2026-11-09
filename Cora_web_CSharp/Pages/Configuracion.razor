@@ -1,0 +1,111 @@
+@page "/configuracion"
+@inherits PaginaCora
+
+@* CONFIGURACIÓN: todo lo que se preguntó al registrarse, editable, más los avisos y la prueba del reto 3. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="Configuración" />
+
+        <section class="tarjeta">
+            <h3>Tu cuenta</h3>
+            <label class="campo"><span>Nombre</span><input @bind="p.Nombre" /></label>
+            <label class="campo"><span>Usuario</span><input @bind="p.Usuario" autocapitalize="none" /></label>
+            <label class="campo"><span>Correo electrónico</span><input type="email" @bind="p.Email" /></label>
+            <div class="entre alto"><span>Contraseña</span><button class="enlace-acento" @onclick="@(() => E.MostrarAviso("Te hemos enviado un correo para cambiarla"))">Cambiar</button></div>
+            <div class="entre alto"><span>Cuenta vinculada</span><span class="sec">@p.Cuenta</span></div>
+        </section>
+
+        <section class="tarjeta">
+            <h3>Sobre ti</h3>
+            <div class="dos">
+                <label class="campo"><span>Edad</span><input inputmode="numeric" maxlength="3" @bind="p.Edad" /></label>
+                <label class="campo"><span>Ciudad (para el tiempo)</span><input @bind="p.Ciudad" /></label>
+            </div>
+        </section>
+
+        <section class="tarjeta">
+            <h3>Tu estilo</h3>
+            <div class="chips">
+                @foreach (var x in DatosEjemplo.Estilos)
+                {
+                    var v = x;
+                    <Chip Texto="@v" Activo="@(p.Estilos.Contains(v))" OnClick="@(() => Alternar(p.Estilos, v))" />
+                }
+            </div>
+            <span class="etq">Lo que más te gusta llevar</span>
+            <div class="chips">
+                @foreach (var x in DatosEjemplo.Gustos)
+                {
+                    var v = x;
+                    <Chip Texto="@v" Activo="@(p.Gustos.Contains(v))" OnClick="@(() => Alternar(p.Gustos, v))" />
+                }
+            </div>
+        </section>
+
+        <section class="tarjeta">
+            <h3>Avisos</h3>
+            <label class="interruptor"><span>Sonidos de confirmación</span><input type="checkbox" role="switch" checked="@E.D.Ajustes.Sonido" @onchange="@(e => E.CambiarAjustesAsync(a => a.Sonido = (bool)(e.Value ?? false)))" /></label>
+            <label class="interruptor"><span>Vibración (Android)</span><input type="checkbox" role="switch" checked="@E.D.Ajustes.Vibracion" @onchange="@(e => E.CambiarAjustesAsync(a => a.Vibracion = (bool)(e.Value ?? false)))" /></label>
+        </section>
+
+        <section class="tarjeta">
+            <h3>Prueba del reto 3: la espera</h3>
+            <p class="sec">Cambia cómo se ve la espera del planificador para comparar con usuarios cuál parece más rápida. Las dos duran lo mismo.</p>
+            <div class="segmentos">
+                <button class="@(E.D.Ajustes.Espera == "mensajes" ? "on" : "")" aria-pressed="@(E.D.Ajustes.Espera == "mensajes" ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Espera = "mensajes"))">Con mensajes</button>
+                <button class="@(E.D.Ajustes.Espera == "clasica" ? "on" : "")" aria-pressed="@(E.D.Ajustes.Espera == "clasica" ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Espera = "clasica"))">Clásica</button>
+            </div>
+        </section>
+
+        @if (!confirmar)
+        {
+            <button class="enlace" @onclick="() => confirmar = true">Restablecer datos de ejemplo</button>
+        }
+        else
+        {
+            <Caja Tipo="error" Texto="Se borrarán tus prendas, planes y guardados y volverán los datos de ejemplo." />
+            <div class="fila">
+                <button class="btn secundario" @onclick="() => confirmar = false">Cancelar</button>
+                <button class="btn peligro" @onclick="Restablecer">Restablecer</button>
+            </div>
+        }
+        <button class="enlace" @onclick="CerrarSesion">Cerrar sesión</button>
+    </div>
+    <footer class="pie">
+        <button class="btn" @onclick="Guardar">Guardar cambios</button>
+    </footer>
+</div>
+
+@code {
+    Perfil p = new();
+    bool confirmar;
+
+    protected override void OnInitialized() => p = E.D.Perfil.Copia();
+
+    static void Alternar(List<string> lista, string v)
+    {
+        if (!lista.Remove(v)) lista.Add(v);
+    }
+
+    async Task Guardar()
+    {
+        await E.GuardarPerfilAsync(p);
+        await E.SonarAsync("guardado");
+        E.MostrarAviso("Cambios guardados");
+        await E.Atras();
+    }
+
+    async Task Restablecer()
+    {
+        confirmar = false;
+        await E.RestablecerAsync();
+    }
+
+    async Task CerrarSesion()
+    {
+        var copia = E.D.Perfil.Copia();
+        copia.Registrada = false;
+        await E.GuardarPerfilAsync(copia);
+        Nav.NavigateTo("registro", replace: true);
+    }
+}

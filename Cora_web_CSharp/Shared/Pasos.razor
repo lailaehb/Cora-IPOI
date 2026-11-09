@@ -1,0 +1,11 @@
+<div class="pasos" aria-label="Paso @(Actual + 1) de @Total">
+    @for (int i = 0; i < Total; i++)
+    {
+        <span class="@(i == Actual ? "on" : "")"></span>
+    }
+</div>
+
+@code {
+    [Parameter] public int Actual { get; set; }
+    [Parameter] public int Total { get; set; } = 2;
+}

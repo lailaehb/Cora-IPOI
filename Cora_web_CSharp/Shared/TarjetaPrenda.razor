@@ -1,0 +1,28 @@
+<button type="button" class="tprenda @(Seleccionada ? "sel" : "")" @onclick="OnClick"
+        aria-label="@(P.Nombre + (P.Lavando ? ", en la lavadora" : ""))" aria-pressed="@(ModoSeleccion ? (Seleccionada ? "true" : "false") : null)">
+    <span class="tp-foto">
+        <FotoPrenda P="P" Apagada="P.Lavando" />
+        @if (P.Lavando)
+        {
+            <span class="etq-lavadora">En la lavadora</span>
+        }
+        @if (ModoSeleccion)
+        {
+            <span class="tick">@if (Seleccionada) { @Iconos.Check }</span>
+        }
+        else if (Favorita)
+        {
+            <span class="fav">@Iconos.Corazon(true)</span>
+        }
+    </span>
+    <span class="tp-nombre">@P.Nombre</span>
+    <span class="tp-marca">@P.Marca</span>
+</button>
+
+@code {
+    [Parameter, EditorRequired] public Prenda P { get; set; } = default!;
+    [Parameter] public bool ModoSeleccion { get; set; }
+    [Parameter] public bool Seleccionada { get; set; }
+    [Parameter] public bool Favorita { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+}

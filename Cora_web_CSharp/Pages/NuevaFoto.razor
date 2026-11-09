@@ -1,0 +1,50 @@
+@page "/nueva/foto"
+@inherits PaginaCora
+
+@* HACER UNA FOTO: abre la cámara del móvil y después se completan los datos. *@
+<div class="pantalla">
+    <div class="contenido">
+        @if (foto == null)
+        {
+            <Cabecera Volver="true" Titulo="Hacer una foto" />
+            <div class="visor-foto">
+                <p>Pon la prenda sobre un fondo liso, con buena luz, y que ocupe casi toda la foto</p>
+                <span class="marco"></span>
+                <span class="percha-tenue">@Iconos.PerchaGrande</span>
+            </div>
+            @* En el móvil, capture="environment" abre directamente la cámara trasera *@
+            <label class="disparador" aria-label="Hacer la foto">
+                <InputFile OnChange="Elegir" accept="image/*" capture="environment" class="oculto" />
+            </label>
+            <label class="enlace-acento centrado">
+                @Iconos.Imagen Elegir de la galería
+                <InputFile OnChange="Elegir" accept="image/*" class="oculto" />
+            </label>
+            if (fallo)
+            {
+                <Caja Tipo="error" Texto="No se ha podido abrir la foto. Prueba con otra." />
+            }
+        }
+        else
+        {
+            <Cabecera Volver="true" Titulo="Revisa la prenda" Sub="Completa los datos para que Cora la tenga en cuenta" />
+            <FormPrenda @key="foto" Foto="@foto" />
+            <label class="enlace-acento centrado">
+                @Iconos.Camara Repetir la foto
+                <InputFile OnChange="Elegir" accept="image/*" capture="environment" class="oculto" />
+            </label>
+        }
+    </div>
+</div>
+
+@code {
+    string? foto;
+    bool fallo;
+
+    async Task Elegir(InputFileChangeEventArgs e)
+    {
+        var f = await Fotos.LeerAsync(e.File);
+        fallo = f == null;
+        if (f != null) foto = f;
+    }
+}

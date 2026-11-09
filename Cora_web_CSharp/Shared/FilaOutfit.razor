@@ -1,0 +1,28 @@
+@* Las 4 prendas de un conjunto, o huecos grises que parpadean mientras la IA trabaja (reto 3). *@
+<div class="fila-outfit @(Animar ? "aparece" : "")">
+    @for (int i = 0; i < 4; i++)
+    {
+        var id = Ids != null && i < Ids.Count ? Ids[i] : null;
+        if (Cargando)
+        {
+            <div class="hueco" style="aspect-ratio: 1 / @Ratio" aria-label="Cargando"></div>
+        }
+        else if (id != null)
+        {
+            <FotoPrenda P="@(Catalogo.FirstOrDefault(p => p.Id == id))" Proporcion="Proporcion" />
+        }
+        else
+        {
+            <div class="vacio" style="aspect-ratio: 1 / @Ratio"></div>
+        }
+    }
+</div>
+
+@code {
+    string Ratio => Proporcion.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    [Parameter] public List<string>? Ids { get; set; }
+    [Parameter] public List<Prenda> Catalogo { get; set; } = new();
+    [Parameter] public bool Cargando { get; set; }
+    [Parameter] public bool Animar { get; set; }
+    [Parameter] public double Proporcion { get; set; } = 1.2;
+}

@@ -1,0 +1,45 @@
+@inject Estado E
+@inject NavigationManager Nav
+
+<header class="cabecera">
+    @if (Volver)
+    {
+        <button class="volver" @onclick="Atras" aria-label="Volver">@Iconos.Atras</button>
+    }
+    <div class="cab-texto">
+        @if (Logo)
+        {
+            <span class="logo">Cora</span>
+        }
+        else if (!string.IsNullOrEmpty(Titulo))
+        {
+            <h1>@Titulo</h1>
+        }
+        @if (!string.IsNullOrEmpty(Sub))
+        {
+            <p class="sec">@Sub</p>
+        }
+    </div>
+    @if (Avatar)
+    {
+        <a class="avatar" href="perfil" aria-label="Mi perfil">@Inicial</a>
+    }
+</header>
+
+@code {
+    [Parameter] public string? Titulo { get; set; }
+    [Parameter] public string? Sub { get; set; }
+    [Parameter] public bool Volver { get; set; }
+    [Parameter] public bool Avatar { get; set; }
+    [Parameter] public bool Logo { get; set; }
+    /// <summary>A dónde va «Volver». Si no se indica, vuelve a la pantalla anterior.</summary>
+    [Parameter] public string? VolverA { get; set; }
+
+    string Inicial => string.IsNullOrEmpty(E.D.Perfil.Nombre) ? "P" : E.D.Perfil.Nombre[..1].ToUpper();
+
+    async Task Atras()
+    {
+        if (VolverA != null) Nav.NavigateTo(VolverA);
+        else await E.Atras();
+    }
+}

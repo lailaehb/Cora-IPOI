@@ -1,0 +1,70 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject Estado E
+@inject NavigationManager Nav
+
+<div class="escenario">
+    <main class="movil">
+        @if (!E.Listo)
+        {
+            <div class="arranque">Cora</div>
+        }
+        else
+        {
+            <div class="vista">@Body</div>
+            if (EsPrincipal)
+            {
+                <nav class="barra" aria-label="Secciones">
+                    <a href="" class="pestana @(Ruta == "" ? "activa" : "")" aria-current="@(Ruta == "" ? "page" : null)">@Iconos.Casa<span>Inicio</span></a>
+                    <a href="armario" class="pestana @(Ruta == "armario" ? "activa" : "")" aria-current="@(Ruta == "armario" ? "page" : null)">@Iconos.Percha<span>Armario</span></a>
+                    <a href="anadir" class="pestana mas" aria-label="Añadir prenda"><span class="circulo">@Iconos.Mas</span><span>Añadir</span></a>
+                    <a href="calendario" class="pestana @(Ruta == "calendario" ? "activa" : "")" aria-current="@(Ruta == "calendario" ? "page" : null)">@Iconos.Calendario<span>Calendario</span></a>
+                    <a href="explorar" class="pestana @(Ruta == "explorar" ? "activa" : "")" aria-current="@(Ruta == "explorar" ? "page" : null)">@Iconos.Globo<span>Explorar</span></a>
+                </nav>
+            }
+        }
+        <div class="toast @(E.TextoAviso != null ? "visible" : "")" role="status" aria-live="polite">@E.TextoAviso</div>
+    </main>
+</div>
+
+@code {
+    static readonly string[] Principales = { "", "armario", "anadir", "calendario", "explorar" };
+
+    string Ruta => Nav.ToBaseRelativePath(Nav.Uri).Split('?', '#')[0].TrimEnd('/');
+    bool EsPrincipal => Principales.Contains(Ruta);
+
+    protected override void OnInitialized()
+    {
+        E.Cambio += Repintar;
+        Nav.LocationChanged += AlNavegar;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeraVez)
+    {
+        if (primeraVez)
+        {
+            await E.CargarAsync();
+            ComprobarRegistro();
+        }
+    }
+
+    void AlNavegar(object? s, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        ComprobarRegistro();
+        InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>Si la persona aún no se ha registrado, la lleva al registro.</summary>
+    void ComprobarRegistro()
+    {
+        if (E.Listo && !E.D.Perfil.Registrada && Ruta != "registro") Nav.NavigateTo("registro", replace: true);
+    }
+
+    void Repintar() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        E.Cambio -= Repintar;
+        Nav.LocationChanged -= AlNavegar;
+    }
+}

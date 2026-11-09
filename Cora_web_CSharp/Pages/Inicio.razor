@@ -1,0 +1,94 @@
+@page "/"
+@inherits PaginaCora
+
+@* INICIO: el outfit de hoy es la protagonista; debajo, la semana y la lavadora. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Logo="true" Avatar="true" />
+        <div>
+            <p class="sec">@Fechas.Cap(Fechas.Larga(Hoy))</p>
+            <h1 class="saludo">@Saludo, @(string.IsNullOrEmpty(E.D.Perfil.Nombre) ? "Pilar" : E.D.Perfil.Nombre)</h1>
+        </div>
+
+        <section class="hoy" aria-label="Tu outfit de hoy">
+            <h2>Tu outfit de hoy</h2>
+            <div class="etiquetas">
+                @if (plan != null)
+                {
+                    <span class="pastilla">@Iconos.Calendario @Fechas.Cap(plan.Etiqueta)</span>
+                }
+                <span class="pastilla">@ServicioTiempo.Icono(tiempoHoy.Cielo) @tiempoHoy.T° · @tiempoHoy.Cielo</span>
+            </div>
+            @if (outfit != null)
+            {
+                <div class="collage">
+                    @foreach (var id in outfit.Ids.Take(4))
+                    {
+                        <FotoPrenda P="@(E.PrendaPorId(id))" Proporcion="0.75" />
+                    }
+                </div>
+                <p class="porque">@outfit.Porque</p>
+            }
+            <div class="fila">
+                <button class="btn secundario redondo" @onclick="() => E.OtraOpcionAsync(Hoy)">@Iconos.Recargar Otra opción</button>
+                <button class="btn secundario redondo" aria-pressed="@(guardado ? "true" : "false")" @onclick="() => E.AlternarGuardadoDiaAsync(Hoy)">@Iconos.Marcador(guardado) @(guardado ? "Guardado" : "Guardar")</button>
+            </div>
+        </section>
+
+        <div class="seccion"><h2>Esta semana</h2><a href="calendario">Ver calendario</a></div>
+        <div class="lista">
+            @for (int n = 1; n <= 4; n++)
+            {
+                var dia = Fechas.Sumar(Hoy, n);
+                var od = E.OutfitDe(dia);
+                var pl = E.PlanDe(dia);
+                var w = E.Tiempo.De(dia);
+                <div class="fila-dia">
+                    <div class="fecha"><small>@Fechas.DiaCorto(dia)</small><b>@Fechas.De(dia).Day</b></div>
+                    <a class="plan" href="calendario">
+                        <span class="fuerte">@(n == 1 ? "Mañana · " : "")@(pl != null ? Fechas.Cap(pl.Etiqueta) : "Sin planes")</span>
+                        <small>@w.T° @w.Cielo</small>
+                    </a>
+                    @if (od != null)
+                    {
+                        <div class="minis">
+                            @foreach (var id in od.Ids.Take(4))
+                            {
+                                <div class="mini"><FotoPrenda P="@(E.PrendaPorId(id))" Proporcion="1.2" /></div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="enlace-acento" href="planificar">Planificar @Iconos.Siguiente</a>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (E.EnLavadora.Count > 0)
+        {
+            <a class="tarjeta fila-tarjeta" href="categoria/lavadora">
+                <span class="ico-caja">@Iconos.Lavadora</span>
+                <span class="crece"><b>@E.EnLavadora.Count @(E.EnLavadora.Count == 1 ? "prenda" : "prendas") en la lavadora</b><small>@(string.Join(", ", E.EnLavadora.Select(p => p.Nombre)))</small></span>
+                @Iconos.Siguiente
+            </a>
+        }
+        <a class="tarjeta fila-tarjeta" href="explorar">
+            <img class="ico-caja" src="img/look_lucia.png" alt="" style="object-fit:cover" />
+            <span class="crece"><b>Inspírate</b><small>@("@lucia") ha publicado un outfit de otoño</small></span>
+            @Iconos.Siguiente
+        </a>
+    </div>
+</div>
+
+@code {
+    Outfit? outfit => E.OutfitDe(Hoy);
+    PlanResuelto? plan => E.PlanDe(Hoy);
+    Tiempo tiempoHoy => E.Tiempo.De(Hoy);
+    bool guardado => E.DiaGuardado(Hoy);
+
+    string Saludo => DateTime.Now.Hour < 14 ? "Buenos días" : DateTime.Now.Hour < 21 ? "Buenas tardes" : "Buenas noches";
+
+    protected override async Task OnInitializedAsync() => await E.AsegurarOutfitAsync(Hoy);
+}

@@ -1,0 +1,116 @@
+@page "/registro"
+@inherits PaginaCora
+
+@* Registro en dos pasos: 1) la cuenta · 2) sobre ti y tu estilo *@
+<div class="pantalla">
+    <div class="contenido">
+        @if (paso == 0)
+        {
+            <div class="marca">
+                <span class="logo grande">Cora</span>
+                <p class="sec">tu armario, a tu manera</p>
+                <span class="percha">@Iconos.PerchaGrande</span>
+            </div>
+            <Pasos Actual="0" />
+            <h1>Crea tu cuenta</h1>
+            <label class="campo"><span>Nombre</span><input @bind="p.Nombre" @bind:event="oninput" autocomplete="given-name" /></label>
+            <label class="campo"><span>Correo electrónico</span><input type="email" @bind="p.Email" @bind:event="oninput" autocomplete="email" /></label>
+            <label class="campo"><span>Contraseña</span><input type="password" @bind="clave" @bind:event="oninput" autocomplete="new-password" /></label>
+            if (!string.IsNullOrEmpty(error))
+            {
+                <Caja Tipo="error" Texto="@error" />
+            }
+        }
+        else
+        {
+            <button class="volver" @onclick="() => paso = 0" aria-label="Volver">@Iconos.Atras</button>
+            <Pasos Actual="1" />
+            <h1>Cuéntanos sobre ti</h1>
+            <Caja Texto="Así Cora sabe qué tiempo hace y qué ropa te pega. Podrás cambiarlo en tu perfil." />
+            <div class="dos">
+                <label class="campo"><span>Edad</span><input inputmode="numeric" maxlength="3" @bind="p.Edad" /></label>
+                <label class="campo"><span>Ciudad</span><input @bind="p.Ciudad" /></label>
+            </div>
+            <h3>¿Cuál es tu estilo?</h3>
+            <div class="chips">
+                @foreach (var x in DatosEjemplo.Estilos)
+                {
+                    var v = x;
+                    <Chip Texto="@v" Activo="@(p.Estilos.Contains(v))" OnClick="@(() => Alternar(p.Estilos, v))" />
+                }
+            </div>
+            <h3>¿Qué te gusta llevar?</h3>
+            <div class="chips">
+                @foreach (var x in DatosEjemplo.Gustos)
+                {
+                    var v = x;
+                    <Chip Texto="@v" Activo="@(p.Gustos.Contains(v))" OnClick="@(() => Alternar(p.Gustos, v))" />
+                }
+            </div>
+        }
+    </div>
+    <footer class="pie">
+        @if (paso == 0)
+        {
+            <button class="btn" @onclick="Continuar">Continuar</button>
+            <button class="btn secundario" @onclick="ConGoogle">Continuar con Google</button>
+            <button class="enlace" @onclick="Entrar">¿Ya tienes cuenta? Entrar</button>
+        }
+        else
+        {
+            <button class="btn" @onclick="Terminar">Empezar</button>
+        }
+    </footer>
+</div>
+
+@code {
+    int paso;
+    Perfil p = new();
+    string clave = "", error = "";
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrEmpty(p.Nombre) && string.IsNullOrEmpty(p.Email))
+        {
+            p = E.D.Perfil.Copia();
+            if (p.Estilos.Count == 0) p.Estilos.Add("Casual");
+        }
+    }
+
+    static void Alternar(List<string> lista, string v)
+    {
+        if (!lista.Remove(v)) lista.Add(v);
+    }
+
+    void Continuar()
+    {
+        error = "";
+        if (string.IsNullOrWhiteSpace(p.Nombre)) error = "Escribe tu nombre.";
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(p.Email.Trim(), @"^\S+@\S+\.\S+$")) error = "Escribe un correo válido, por ejemplo pilar@correo.es.";
+        else if (clave.Length < 6) error = "La contraseña necesita al menos 6 caracteres.";
+        else paso = 1;
+    }
+
+    void ConGoogle()
+    {
+        p.Cuenta = "Google";
+        if (string.IsNullOrWhiteSpace(p.Nombre)) p.Nombre = "Pilar";
+        if (string.IsNullOrWhiteSpace(p.Email)) p.Email = "pilar@gmail.com";
+        paso = 1;
+    }
+
+    async Task Entrar()
+    {
+        if (string.IsNullOrWhiteSpace(p.Nombre)) p.Nombre = "Pilar";
+        if (string.IsNullOrWhiteSpace(p.Email)) p.Email = "pilar@correo.es";
+        if (p.Gustos.Count == 0) p.Gustos.Add("Vaqueros");
+        await Terminar();
+    }
+
+    async Task Terminar()
+    {
+        p.Registrada = true;
+        await E.GuardarPerfilAsync(p);
+        Nav.NavigateTo("", replace: true);
+    }
+}

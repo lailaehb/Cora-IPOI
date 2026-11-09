@@ -1,0 +1,86 @@
+@* Formulario para dar de alta una prenda (lo usan «Hacer una foto» y «Añadir a mano»). *@
+@inject Estado E
+@inject NavigationManager Nav
+
+<section class="tarjeta">
+    @if (foto != null)
+    {
+        <img class="foto-nueva" src="@foto" alt="Tu foto" />
+    }
+    <label class="campo">
+        <span>Nombre de la prenda *</span>
+        <input @ref="campoNombre" @bind="nombre" @bind:event="oninput" placeholder="Por ejemplo: camiseta de rayas" />
+    </label>
+    <span class="etq">Categoría *</span>
+    <div class="chips">
+        @foreach (var c in Enum.GetValues<Categoria>())
+        {
+            var cat = c;
+            <Chip Texto="@(DatosEjemplo.NombreCorto[cat])" Activo="@(categoria == cat)" OnClick="@(() => { categoria = cat; sub = ""; error = ""; })" />
+        }
+    </div>
+    @if (categoria != null)
+    {
+        <span class="etq">Tipo</span>
+        <div class="chips">
+            @foreach (var s in DatosEjemplo.Subcategorias[categoria.Value])
+            {
+                var nombreSub = s;
+                <Chip Texto="@nombreSub" Activo="@(sub == nombreSub)" OnClick="@(() => sub = sub == nombreSub ? "" : nombreSub)" />
+            }
+        </div>
+    }
+    <div class="dos">
+        <label class="campo"><span>Marca</span><input @bind="marca" /></label>
+        <label class="campo"><span>Talla</span><input @bind="talla" /></label>
+    </div>
+    <label class="campo"><span>Color</span><input @bind="color" /></label>
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <Caja Tipo="error" Texto="@error" />
+    }
+    @if (ConBotonFoto)
+    {
+        <label class="btn secundario">
+            @Iconos.Imagen @(foto == null ? "Añadir una foto (opcional)" : "Cambiar la foto")
+            <InputFile OnChange="ElegirFoto" accept="image/*" class="oculto" />
+        </label>
+    }
+    <button class="btn" @onclick="Guardar">Guardar en mi armario</button>
+</section>
+
+@code {
+    [Parameter] public string? Foto { get; set; }
+    [Parameter] public bool ConBotonFoto { get; set; }
+    [Parameter] public bool AutoFoco { get; set; }
+
+    ElementReference campoNombre;
+    string nombre = "", marca = "", talla = "", color = "", sub = "", error = "";
+    Categoria? categoria;
+    string? foto;
+
+    protected override void OnParametersSet() => foto ??= Foto;
+
+    protected override async Task OnAfterRenderAsync(bool primeraVez)
+    {
+        if (primeraVez && AutoFoco) { try { await campoNombre.FocusAsync(); } catch { } }
+    }
+
+    async Task ElegirFoto(InputFileChangeEventArgs e) => foto = await Fotos.LeerAsync(e.File) ?? foto;
+
+    async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) { error = "Escribe un nombre para la prenda."; await E.SonarAsync("error"); return; }
+        if (categoria == null) { error = "Elige una categoría."; await E.SonarAsync("error"); return; }
+        var cat = categoria.Value;
+        string s = string.IsNullOrEmpty(sub) ? DatosEjemplo.Subcategorias[cat][0] : sub;
+        (int Min, int Max, int Abrigo, bool Lluvia) def = DatosEjemplo.PorDefecto.TryGetValue(s, out var d) ? d : (1, 2, 1, true);
+        var p = new Prenda
+        {
+            Id = "p" + DateTime.Now.Ticks, Nombre = nombre.Trim(), Marca = marca.Trim(), Talla = talla.Trim(), Color = color.Trim(),
+            Cat = cat, Sub = s, Foto = foto, FormMin = def.Min, FormMax = def.Max, Abrigo = def.Abrigo, AptaLluvia = def.Lluvia,
+        };
+        await E.AnadirPrendaAsync(p);
+        Nav.NavigateTo($"categoria/{cat.ToString().ToLower()}", replace: true);
+    }
+}

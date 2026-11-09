@@ -1,0 +1,14 @@
+@* Foto de una prenda. Ocupa todo el ancho de su contenedor; Proporcion = alto / ancho. *@
+<div class="foto" style="aspect-ratio: 1 / @Ratio">
+    @if (P != null)
+    {
+        <img src="@P.Imagen" alt="" class="@(Apagada ? "apagada" : "")" />
+    }
+</div>
+
+@code {
+    string Ratio => Proporcion.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    [Parameter] public Prenda? P { get; set; }
+    [Parameter] public double Proporcion { get; set; } = 1;
+    [Parameter] public bool Apagada { get; set; }
+}

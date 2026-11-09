@@ -1,0 +1,28 @@
+@page "/anadir"
+@inherits PaginaCora
+
+@* AÑADIR PRENDA: cada opción abre su pantalla (cámara, escáner QR o formulario). *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Titulo="Añadir prenda" Sub="¿Cómo quieres añadirla?" Avatar="true" />
+        <a class="tarjeta opcion" href="nueva/foto">
+            <span class="acento">@Iconos.Camara</span>
+            <span class="crece"><b>Hacer una foto</b><small>Se abre la cámara y luego completas los datos</small></span>
+            @Iconos.Siguiente
+        </a>
+        <a class="tarjeta opcion principal" href="nueva/qr">
+            <span class="acento">@Iconos.Qr</span>
+            <span class="crece"><b>Escanear la etiqueta</b><small>Lee el código QR y rellena los datos por ti</small></span>
+            @Iconos.Siguiente
+        </a>
+        <a class="tarjeta opcion" href="nueva/manual">
+            <span class="acento">@Iconos.Lapiz</span>
+            <span class="crece"><b>Añadir a mano</b><small>Escribe tú los datos con el teclado</small></span>
+            @Iconos.Siguiente
+        </a>
+        <div class="centrado">
+            <p class="sec">Así tu armario siempre estará completo</p>
+            <span class="acento">@Iconos.PerchaGrande</span>
+        </div>
+    </div>
+</div>

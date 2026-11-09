@@ -1,0 +1,11 @@
+@* Recuadro de aviso: información (beige), correcto (verde) o error (rojo). *@
+<div class="caja @Tipo" role="@(Tipo == "error" ? "alert" : null)">
+    <span class="caja-ico">@(Tipo == "ok" ? Iconos.Altavoz : Iconos.Info)</span>
+    <span>@Texto</span>
+</div>
+
+@code {
+    [Parameter] public string Texto { get; set; } = "";
+    /// <summary>"info", "ok" o "error".</summary>
+    [Parameter] public string Tipo { get; set; } = "info";
+}

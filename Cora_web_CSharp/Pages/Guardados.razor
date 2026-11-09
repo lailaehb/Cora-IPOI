@@ -1,0 +1,58 @@
+@page "/guardados"
+@inherits PaginaCora
+
+@* GUARDADOS: outfits guardados (de la IA o de Explorar) y prendas favoritas. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="Guardados" />
+        <div class="segmentos" role="tablist">
+            <button role="tab" aria-selected="@(pestana == "outfits" ? "true" : "false")" class="@(pestana == "outfits" ? "on" : "")" @onclick="@(() => pestana = "outfits")">Outfits (@E.D.Guardados.Count)</button>
+            <button role="tab" aria-selected="@(pestana == "prendas" ? "true" : "false")" class="@(pestana == "prendas" ? "on" : "")" @onclick="@(() => pestana = "prendas")">Prendas favoritas (@Favoritas.Count)</button>
+        </div>
+
+        @if (pestana == "outfits")
+        {
+            if (E.D.Guardados.Count == 0)
+            {
+                <Caja Texto="Aún no has guardado ningún outfit. Pulsa «Guardar» en un conjunto de la IA o en una publicación de Explorar." />
+            }
+            foreach (var g in Enumerable.Reverse(E.D.Guardados).ToList())
+            {
+                var guardado = g;
+                <section class="tarjeta">
+                    <div class="entre"><b>@guardado.Titulo</b><button class="enlace" @onclick="() => E.AlternarGuardadoAsync(guardado)">Quitar</button></div>
+                    @if (guardado.Look != null)
+                    {
+                        <img class="look-grande" src="@($"img/{guardado.Look}.png")" alt="" />
+                    }
+                    <FilaOutfit Ids="guardado.Ids" Catalogo="Catalogo" />
+                </section>
+            }
+        }
+        else
+        {
+            if (Favoritas.Count == 0)
+            {
+                <Caja Texto="Marca una prenda con el corazón en su ficha para tenerla aquí." />
+            }
+            <div class="cuadricula">
+                @foreach (var p in Favoritas)
+                {
+                    var id = p.Id;
+                    <TarjetaPrenda P="p" Favorita="true" OnClick="@(() => Ir($"prenda/{id}"))" />
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "tab")] public string? Tab { get; set; }
+    string pestana = "outfits";
+
+    List<Prenda> Favoritas => E.D.Prendas.Where(p => E.EsFavorita(p.Id)).ToList();
+    // Para los looks de Explorar puede haber prendas que no están en tu armario
+    List<Prenda> Catalogo => E.D.Prendas.Concat(DatosEjemplo.Catalogo()).ToList();
+
+    protected override void OnParametersSet() => pestana = Tab == "prendas" ? "prendas" : "outfits";
+}

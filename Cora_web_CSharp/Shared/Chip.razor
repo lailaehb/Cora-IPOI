@@ -1,0 +1,14 @@
+@* Chip seleccionable. Seleccionado = blanco con borde de color, negrita y ✓ (se lee como «pulsado»). *@
+<button type="button" class="chip @(Activo ? "on" : "")" role="checkbox" aria-checked="@(Activo ? "true" : "false")" @onclick="OnClick">
+    @if (Activo)
+    {
+        @Iconos.Check
+    }
+    <span>@Texto</span>
+</button>
+
+@code {
+    [Parameter] public string Texto { get; set; } = "";
+    [Parameter] public bool Activo { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+}

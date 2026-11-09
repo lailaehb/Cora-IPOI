@@ -1,0 +1,216 @@
+@page "/nueva/qr"
+@inherits PaginaCora
+@inject IJSRuntime JS
+@using System.Text.Json
+
+@* RETO 1: escanear el QR de la etiqueta con confirmación por imagen, sonido y vibración.
+   Estados: buscando → leído (verde, ✓, pitido + vibración) o error (rojo, dos tonos + vibración y cómo arreglarlo). *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="Escanear etiqueta" />
+
+        <div class="visor @Clase" aria-live="polite">
+            @if (fase == Fase.Buscando && directo)
+            {
+                <video id="video-qr" muted playsinline></video>
+            }
+            <span class="esquinas"></span>
+            @if (fase == Fase.Leido)
+            {
+                <span class="sello">@Iconos.Check</span>
+            }
+            else if (fase == Fase.Error)
+            {
+                <span class="sello">!</span>
+            }
+            else if (!directo)
+            {
+                <span class="qr-tenue">@Iconos.Qr</span>
+            }
+            <span class="estado">@TextoEstado</span>
+        </div>
+
+        @if (fase == Fase.Buscando)
+        {
+            if (!directo)
+            {
+                <label class="btn">
+                    @Iconos.Camara Hacer una foto a la etiqueta
+                    <InputFile OnChange="LeerFoto" accept="image/*" capture="environment" class="oculto" />
+                </label>
+            }
+            if (sinPermiso)
+            {
+                <Caja Tipo="error" Texto="No hay permiso para usar la cámara. Actívalo en los ajustes del navegador, o usa «Hacer una foto a la etiqueta»." />
+            }
+            <Caja Texto="Al leerla sonará un pitido (y el móvil vibrará si es Android). Las etiquetas de prueba están en el prototipo: Añadir › Escanear la etiqueta › Ver etiquetas de prueba." />
+            <button class="enlace" @onclick="Simular">Simular una lectura (sin etiqueta)</button>
+        }
+        else if (fase == Fase.Error)
+        {
+            <Caja Tipo="error" Texto="@($"{tituloError} {textoError}")" />
+            <button class="btn" @onclick="Reintentar">Volver a intentarlo</button>
+        }
+        else if (leida != null)
+        {
+            <Caja Tipo="ok" Texto="Revisa los datos antes de guardar. Puedes corregir lo que haga falta." />
+            <section class="tarjeta">
+                <div class="fila">
+                    <div class="foto-peque"><FotoPrenda P="leida" /></div>
+                    <div class="crece"><h3>@leida.Nombre</h3><p class="sec">@leida.Marca · @leida.Sub</p></div>
+                </div>
+                <label class="campo"><span>Nombre</span><input @bind="leida.Nombre" /></label>
+                <div class="dos">
+                    <label class="campo"><span>Marca</span><input @bind="leida.Marca" /></label>
+                    <label class="campo"><span>Talla</span><input @bind="leida.Talla" /></label>
+                </div>
+                <label class="campo"><span>Color</span><input @bind="leida.Color" /></label>
+                <button class="btn" @onclick="Guardar">Guardar en mi armario</button>
+                <button class="enlace" @onclick="Reintentar">Escanear otra</button>
+            </section>
+        }
+    </div>
+</div>
+
+@code {
+    enum Fase { Buscando, Leido, Error }
+    Fase fase = Fase.Buscando;
+    bool directo;          // cámara en directo (solo en https o localhost)
+    bool arrancar;         // hay que encender la cámara después de pintar
+    bool sinPermiso;
+    Prenda? leida;
+    string tituloError = "", textoError = "";
+    DotNetObjectReference<NuevaQr>? yo;
+
+    string Clase => fase switch { Fase.Leido => "ok", Fase.Error => "error", _ => directo ? "directo" : "" };
+    string TextoEstado => fase switch
+    {
+        Fase.Leido => "Etiqueta leída",
+        Fase.Error => "No se ha podido leer",
+        _ => directo ? "Coloca el código QR dentro del cuadro" : "Haz una foto al código QR de la etiqueta",
+    };
+
+    protected override async Task OnAfterRenderAsync(bool primeraVez)
+    {
+        if (primeraVez)
+        {
+            yo = DotNetObjectReference.Create(this);
+            try { directo = await JS.InvokeAsync<bool>("cora.qr.camaraDisponible"); } catch { directo = false; }
+            arrancar = directo;
+            StateHasChanged();
+            return;
+        }
+        if (arrancar && fase == Fase.Buscando && directo)
+        {
+            arrancar = false;
+            var r = await JS.InvokeAsync<string>("cora.qr.iniciar", "video-qr", yo);
+            if (r != "ok") { directo = false; sinPermiso = r == "sin-permiso"; StateHasChanged(); }
+        }
+    }
+
+    /// <summary>Lo llama el JavaScript cuando la cámara encuentra un QR.</summary>
+    [JSInvokable]
+    public async Task QrLeido(string texto)
+    {
+        await Procesar(texto);
+        StateHasChanged();
+    }
+
+    async Task LeerFoto(InputFileChangeEventArgs e)
+    {
+        var dataUrl = await Fotos.LeerAsync(e.File, 1200);
+        string? texto = dataUrl == null ? null : await JS.InvokeAsync<string?>("cora.qr.leerImagen", dataUrl);
+        if (texto == null)
+        {
+            Error("No encontramos un código QR en la foto.", "Acerca la etiqueta para que el código ocupe casi toda la foto, con buena luz y sin reflejos.");
+            await E.SonarAsync("error");
+            return;
+        }
+        await Procesar(texto);
+    }
+
+    async Task Procesar(string texto)
+    {
+        var p = LeerEtiqueta(texto);
+        if (p == null)
+        {
+            Error("Este código no es de una etiqueta de ropa.", "Cora solo entiende los QR de las etiquetas de las prendas. Prueba con una de las etiquetas de prueba.");
+            await E.SonarAsync("error");
+            return;
+        }
+        if (E.PrendaPorId(p.Id) != null)
+        {
+            Error($"{p.Nombre} ya está en tu armario.", "No hace falta añadirla otra vez. Puedes escanear otra prenda.");
+            await E.SonarAsync("error");
+            return;
+        }
+        leida = p;
+        fase = Fase.Leido;
+        await E.SonarAsync("leido");
+    }
+
+    void Error(string titulo, string texto)
+    {
+        tituloError = titulo;
+        textoError = texto;
+        fase = Fase.Error;
+    }
+
+    /// <summary>Comprueba que el QR es una etiqueta de Cora: {"cora":1,"id":…,"n":…,"t":…}.</summary>
+    static Prenda? LeerEtiqueta(string texto)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(texto);
+            var j = doc.RootElement;
+            if (j.ValueKind != JsonValueKind.Object) return null;
+            if (!j.TryGetProperty("cora", out var v) || v.ValueKind != JsonValueKind.Number || v.GetInt32() != 1) return null;
+            string S(string k) => j.TryGetProperty(k, out var x) && x.ValueKind == JsonValueKind.String ? x.GetString() ?? "" : "";
+            string id = S("id"), nombre = S("n");
+            if (id == "" || nombre == "" || !Enum.TryParse<Categoria>(S("t"), true, out var cat)) return null;
+            var subs = DatosEjemplo.Subcategorias[cat];
+            string sub = subs.Contains(S("sub")) ? S("sub") : subs[0];
+            int fmin = 1, fmax = 2, abrigo = 1;
+            if (j.TryGetProperty("form", out var f) && f.ValueKind == JsonValueKind.Array && f.GetArrayLength() == 2) { fmin = f[0].GetInt32(); fmax = f[1].GetInt32(); }
+            if (j.TryGetProperty("abrigo", out var a) && a.ValueKind == JsonValueKind.Number) abrigo = a.GetInt32();
+            return new Prenda { Id = id, Nombre = nombre, Marca = S("m"), Cat = cat, Sub = sub, Color = S("c"), Talla = S("talla"), FormMin = fmin, FormMax = fmax, Abrigo = abrigo };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    async Task Simular()
+    {
+        var libre = DatosEjemplo.Etiquetas().FirstOrDefault(l => E.PrendaPorId(l.Id) == null) ?? DatosEjemplo.Etiquetas()[0];
+        static string Q(string v) => "\"" + JsonEncodedText.Encode(v) + "\"";
+        string json = "{\"cora\":1,\"id\":" + Q(libre.Id) + ",\"n\":" + Q(libre.Nombre) + ",\"m\":" + Q(libre.Marca) + ",\"t\":" + Q(libre.Cat.ToString().ToLower())
+            + ",\"sub\":" + Q(libre.Sub) + ",\"c\":" + Q(libre.Color) + ",\"talla\":" + Q(libre.Talla) + "}";
+        if (directo) { try { await JS.InvokeVoidAsync("cora.qr.parar"); } catch { } }
+        await Procesar(json);
+    }
+
+    void Reintentar()
+    {
+        leida = null;
+        sinPermiso = false;
+        fase = Fase.Buscando;
+        arrancar = directo;
+    }
+
+    async Task Guardar()
+    {
+        if (leida == null) return;
+        var p = leida;
+        await E.AnadirPrendaAsync(p);
+        Nav.NavigateTo($"categoria/{p.Cat.ToString().ToLower()}", replace: true);
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        _ = JS.InvokeVoidAsync("cora.qr.parar").AsTask().ContinueWith(_ => { });
+        yo?.Dispose();
+    }
+}

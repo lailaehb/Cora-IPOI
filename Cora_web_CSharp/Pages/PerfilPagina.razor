@@ -1,0 +1,40 @@
+@page "/perfil"
+@inherits PaginaCora
+
+@* MI PERFIL: datos, estilo (como etiquetas; se cambia en «Editar perfil») y accesos. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="Mi perfil" />
+        <div class="fila heroe">
+            <span class="avatar grande">@Inicial</span>
+            <div class="crece">
+                <h2>@E.D.Perfil.Nombre</h2>
+                <p class="sec">@("@")@E.D.Perfil.Usuario · @E.D.Prendas.Count prendas · @E.D.Guardados.Count outfits guardados</p>
+            </div>
+        </div>
+        <section class="tarjeta">
+            <h3>Mi estilo</h3>
+            <div class="etiquetas">
+                @foreach (var e in E.D.Perfil.Estilos.Concat(E.D.Perfil.Gustos))
+                {
+                    <span class="etiqueta">@e</span>
+                }
+                @if (E.D.Perfil.Estilos.Count + E.D.Perfil.Gustos.Count == 0)
+                {
+                    <span class="sec">Aún no has elegido tu estilo.</span>
+                }
+            </div>
+            <a class="btn secundario" href="configuracion">Editar perfil</a>
+        </section>
+        <nav class="lista" aria-label="Opciones del perfil">
+            <a class="fila-lista" href="armario">@Iconos.Percha<span class="crece">Mis prendas</span><span class="sec">@E.D.Prendas.Count</span>@Iconos.Siguiente</a>
+            <a class="fila-lista" href="guardados?tab=outfits">@Iconos.Marcador(false)<span class="crece">Outfits guardados</span><span class="sec">@E.D.Guardados.Count</span>@Iconos.Siguiente</a>
+            <a class="fila-lista" href="guardados?tab=prendas">@Iconos.Corazon(false)<span class="crece">Prendas favoritas</span><span class="sec">@E.D.Favoritas.Count</span>@Iconos.Siguiente</a>
+            <a class="fila-lista" href="configuracion">@Iconos.Engranaje<span class="crece">Configuración</span>@Iconos.Siguiente</a>
+        </nav>
+    </div>
+</div>
+
+@code {
+    string Inicial => string.IsNullOrEmpty(E.D.Perfil.Nombre) ? "P" : E.D.Perfil.Nombre[..1].ToUpper();
+}

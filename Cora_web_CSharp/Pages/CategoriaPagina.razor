@@ -1,0 +1,109 @@
+@page "/categoria/{Cat}"
+@inherits PaginaCora
+
+@* CATEGORÍA (con subcategorías) y EN LA LAVADORA, con selección múltiple. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="@Titulo" Sub="@Subtitulo" VolverA="armario" />
+
+        @if (EsLavadora && Todas.Count > 0 && !seleccionando)
+        {
+            <button class="btn secundario" @onclick="LiberarTodas">Marcar todas como disponibles</button>
+        }
+        @if (EsLavadora && Todas.Count == 0)
+        {
+            <Caja Tipo="ok" Texto="No tienes nada en la lavadora. Todo tu armario está disponible." />
+        }
+        @if (Subs.Count > 0)
+        {
+            <div class="chips">
+                @foreach (var s in new[] { "Todas" }.Concat(Subs))
+                {
+                    var nombre = s;
+                    <Chip Texto="@nombre" Activo="@(sub == nombre)" OnClick="@(() => sub = nombre)" />
+                }
+            </div>
+        }
+        <div class="cuadricula">
+            @foreach (var p in Lista)
+            {
+                var id = p.Id;
+                <TarjetaPrenda P="p" ModoSeleccion="seleccionando" Seleccionada="@(elegidas.Contains(id))" Favorita="@(E.EsFavorita(id))" OnClick="@(() => Tocar(id))" />
+            }
+        </div>
+    </div>
+    @if (Lista.Count > 0)
+    {
+        <footer class="pie">
+            @if (seleccionando)
+            {
+                <div class="fila">
+                    @if (!EsLavadora)
+                    {
+                        <button class="btn" disabled="@(ALavar.Count == 0)" @onclick="Lavar">A lavar (@ALavar.Count)</button>
+                    }
+                    <button class="btn" disabled="@(ALiberar.Count == 0)" @onclick="Liberar">Disponibles (@ALiberar.Count)</button>
+                    <button class="btn secundario corto" @onclick="Terminar">Cancelar</button>
+                </div>
+            }
+            else
+            {
+                <button class="btn secundario" @onclick="() => seleccionando = true">Seleccionar varias</button>
+            }
+        </footer>
+    }
+</div>
+
+@code {
+    [Parameter] public string Cat { get; set; } = "";
+
+    string sub = "Todas";
+    bool seleccionando;
+    HashSet<string> elegidas = new();
+
+    bool EsLavadora => Cat == "lavadora";
+    Categoria? CatEnum => Enum.TryParse<Categoria>(Cat, true, out var c) ? c : null;
+    string Titulo => EsLavadora ? "En la lavadora" : CatEnum is Categoria c ? DatosEjemplo.NombreCat[c] : "Armario";
+    string Subtitulo => EsLavadora ? (Todas.Count > 0 ? "Cora no las usará hasta que estén listas" : "") : $"{Todas.Count} prendas";
+
+    List<Prenda> Todas => EsLavadora ? E.EnLavadora : E.D.Prendas.Where(p => p.Cat == CatEnum).ToList();
+    List<string> Subs => CatEnum is Categoria c ? DatosEjemplo.Subcategorias[c].Where(s => Todas.Any(p => p.Sub == s)).ToList() : new();
+    List<Prenda> Lista => sub == "Todas" ? Todas : Todas.Where(p => p.Sub == sub).ToList();
+    List<string> ALavar => Lista.Where(p => elegidas.Contains(p.Id) && !p.Lavando).Select(p => p.Id).ToList();
+    List<string> ALiberar => Lista.Where(p => elegidas.Contains(p.Id) && p.Lavando).Select(p => p.Id).ToList();
+
+    protected override void OnParametersSet() { sub = "Todas"; Terminar(); }
+
+    static string Plural(int n, string uno, string varios) => $"{n} {(n == 1 ? uno : varios)}";
+
+    void Tocar(string id)
+    {
+        if (!seleccionando) { Ir($"prenda/{id}"); return; }
+        if (!elegidas.Remove(id)) elegidas.Add(id);
+    }
+
+    void Terminar() { seleccionando = false; elegidas.Clear(); }
+
+    async Task Lavar()
+    {
+        var ids = ALavar;
+        await E.CambiarLavadoAsync(ids, true);
+        E.MostrarAviso($"{Plural(ids.Count, "prenda", "prendas")} a lavar. Cora no las usará hasta que estén listas.");
+        Terminar();
+    }
+
+    async Task Liberar()
+    {
+        var ids = ALiberar;
+        await E.CambiarLavadoAsync(ids, false);
+        E.MostrarAviso($"{Plural(ids.Count, "prenda disponible", "prendas disponibles")} de nuevo");
+        Terminar();
+    }
+
+    async Task LiberarTodas()
+    {
+        var ids = Todas.Select(p => p.Id).ToList();
+        await E.CambiarLavadoAsync(ids, false);
+        E.MostrarAviso($"{Plural(ids.Count, "prenda disponible", "prendas disponibles")} de nuevo");
+    }
+}

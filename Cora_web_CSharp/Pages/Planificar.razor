@@ -1,0 +1,75 @@
+@page "/planificar"
+@inherits PaginaCora
+
+@* PLANIFICAR CON IA (reto 2): eliges el día, marcas los planes o los escribes, y la IA genera la semana. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="Cuéntale tus planes" Sub="La IA preparará un outfit para cada día" VolverA="calendario" />
+
+        @* Días: el elegido es blanco con borde (mismo criterio que los chips) *@
+        <div class="selector-dias" role="group" aria-label="Días">
+            @foreach (var d in Dias)
+            {
+                var dia = d;
+                bool on = dia == elegido;
+                <button class="@(on ? "on" : "")" aria-pressed="@(on ? "true" : "false")" aria-label="@(Fechas.Etiqueta(dia))" @onclick="() => elegido = dia">
+                    <small>@Fechas.DiaCorto(dia)</small>
+                    <b>@Fechas.De(dia).Day</b>
+                    <i class="@(E.PlanDe(dia) != null ? "punto" : "")"></i>
+                </button>
+            }
+        </div>
+
+        <section class="tarjeta">
+            <div class="fila"><span>@ServicioTiempo.Icono(W.Cielo)</span><span><b>@Fechas.Etiqueta(elegido)</b> · @W.T°, @W.Cielo</span></div>
+            <div class="chips">
+                @foreach (var t in DatosEjemplo.Planes)
+                {
+                    var tipo = t;
+                    <Chip Texto="@tipo.Nombre" Activo="@(Plan.Claves.Contains(tipo.Clave))" OnClick="@(() => E.AlternarPlanAsync(elegido, tipo.Clave))" />
+                }
+            </div>
+            <label class="campo">
+                <span>O cuéntaselo con tus palabras</span>
+                <textarea maxlength="200" rows="3" placeholder="Por ejemplo: clase por la mañana y cena con amigas" value="@Plan.Texto" @oninput="Escribir"></textarea>
+            </label>
+            <small class="sec derecha">@Plan.Texto.Length/200</small>
+        </section>
+
+        <Caja Texto="@($"Cora tiene en cuenta el tiempo ({E.Tiempo.Fuente.ToLower()}), lo que está en la lavadora y lo que te gusta llevar. No repite un conjunto hasta que pasa al menos una semana.")" />
+    </div>
+    <footer class="pie">
+        <button class="btn" @onclick="Generar">@Iconos.Chispa Generar mi semana</button>
+    </footer>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "dia")] public string? DiaInicial { get; set; }
+
+    string elegido = Fechas.Hoy;
+    List<string> Dias = new();
+
+    PlanDia Plan => E.D.Planes.TryGetValue(elegido, out var p) ? p : new PlanDia();
+    Tiempo W => E.Tiempo.De(elegido);
+
+    protected override void OnParametersSet()
+    {
+        string baseDia = DiaInicial != null && System.Text.RegularExpressions.Regex.IsMatch(DiaInicial, @"^\d{4}-\d{2}-\d{2}$") && Fechas.Dif(DiaInicial) >= 0 ? DiaInicial : Fechas.Hoy;
+        Dias = Fechas.Semana(baseDia).Where(d => Fechas.Dif(d) >= 0).ToList();
+        elegido = baseDia;
+    }
+
+    Task Escribir(ChangeEventArgs e) => E.TextoPlanAsync(elegido, e.Value?.ToString() ?? "");
+
+    async Task Generar()
+    {
+        if (!Dias.Any(d => E.PlanDe(d) != null))
+        {
+            await E.SonarAsync("error");
+            E.MostrarAviso("Cuéntale a Cora el plan de al menos un día.");
+            return;
+        }
+        _ = E.GenerarSemanaAsync(Dias);
+        Nav.NavigateTo("calendario");
+    }
+}

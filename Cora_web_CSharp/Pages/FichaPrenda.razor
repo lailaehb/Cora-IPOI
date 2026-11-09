@@ -1,0 +1,86 @@
+@page "/prenda/{Id}"
+@inherits PaginaCora
+
+@* FICHA DE LA PRENDA: datos, favorita y estado de la lavadora. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="Ficha de la prenda" />
+        @if (P == null)
+        {
+            <Caja Tipo="error" Texto="Esta prenda ya no está en tu armario." />
+        }
+        else
+        {
+            <div class="fila heroe">
+                <div class="foto-heroe"><FotoPrenda P="P" /></div>
+                <div class="crece"><h2>@P.Nombre</h2><p class="sec">@P.Marca</p></div>
+                <button class="corazon @(E.EsFavorita(P.Id) ? "on" : "")" aria-pressed="@(E.EsFavorita(P.Id) ? "true" : "false")"
+                        aria-label="Favorita" @onclick="() => E.AlternarFavoritaAsync(P.Id)">@Iconos.Corazon(E.EsFavorita(P.Id))</button>
+            </div>
+            <section class="tarjeta datos">
+                <div><span>Categoría</span><span>@(DatosEjemplo.NombreCat[P.Cat]) · @P.Sub</span></div>
+                <div><span>Color</span><span>@(string.IsNullOrEmpty(P.Color) ? "—" : P.Color)</span></div>
+                <div><span>Talla</span><span>@(string.IsNullOrEmpty(P.Talla) ? "—" : P.Talla)</span></div>
+                <div><span>Marca</span><span>@(string.IsNullOrEmpty(P.Marca) ? "—" : P.Marca)</span></div>
+            </section>
+            <section class="tarjeta">
+                @if (P.Lavando)
+                {
+                    <div class="fila">@Iconos.Lavadora <h3>En la lavadora</h3></div>
+                    <p class="sec">Día @DiaLavado de @Estado.DiasLavado · Estará disponible el @Listo</p>
+                    <div class="progreso" role="progressbar" aria-valuemin="0" aria-valuemax="@Estado.DiasLavado" aria-valuenow="@DiaLavado">
+                        <div style="width:@(DiaLavado * 100 / Estado.DiasLavado)%"></div>
+                    </div>
+                    <button class="btn" @onclick="Disponible">Marcar como disponible</button>
+                    <Caja Texto="Mientras se lava, Cora no la tendrá en cuenta en tus conjuntos." />
+                }
+                else
+                {
+                    <h3>Disponible</h3>
+                    <p class="sec">Cora la puede usar en tus conjuntos.</p>
+                    <button class="btn secundario" @onclick="Lavar">@Iconos.Lavadora Echar a lavar</button>
+                }
+            </section>
+            if (!confirmarBorrado)
+            {
+                <button class="enlace" @onclick="() => confirmarBorrado = true">Borrar prenda</button>
+            }
+            else
+            {
+                <Caja Tipo="error" Texto="@($"¿Seguro que quieres borrar «{P.Nombre}» de tu armario?")" />
+                <div class="fila">
+                    <button class="btn secundario" @onclick="() => confirmarBorrado = false">Cancelar</button>
+                    <button class="btn peligro" @onclick="Borrar">Borrar</button>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = "";
+    bool confirmarBorrado;
+
+    Prenda? P => E.PrendaPorId(Id);
+    string Desde => P?.LavadoDesde ?? Fechas.Hoy;
+    int DiaLavado => Math.Clamp(-Fechas.Dif(Desde) + 1, 1, Estado.DiasLavado);
+    string Listo => Fechas.Dias[(int)Fechas.De(Fechas.Sumar(Desde, Estado.DiasLavado)).DayOfWeek];
+
+    async Task Lavar()
+    {
+        await E.CambiarLavadoAsync(new[] { Id }, true);
+        E.MostrarAviso("En la lavadora. Volverá a estar disponible en 2 días.");
+    }
+
+    async Task Disponible()
+    {
+        await E.CambiarLavadoAsync(new[] { Id }, false);
+        E.MostrarAviso("Disponible de nuevo");
+    }
+
+    async Task Borrar()
+    {
+        await E.BorrarPrendaAsync(Id);
+        await E.Atras();
+    }
+}

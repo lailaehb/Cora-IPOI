@@ -1,0 +1,67 @@
+@page "/armario"
+@inherits PaginaCora
+
+@* MI ARMARIO: categorías (cada una abre su pantalla), favoritas y añadidas hace poco. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Titulo="Mi armario" Sub="@($"{E.D.Prendas.Count} prendas")" Avatar="true" />
+        @if (E.EnLavadora.Count > 0)
+        {
+            <a class="tarjeta fila-tarjeta aviso" href="categoria/lavadora">
+                <span class="ico-caja blanca">@Iconos.Lavadora</span>
+                <span class="crece"><b>En la lavadora (@E.EnLavadora.Count)</b><small>Toca para marcarlas como disponibles</small></span>
+                @Iconos.Siguiente
+            </a>
+        }
+
+        <div class="seccion"><h2>Categorías</h2></div>
+        <div class="categorias">
+            @foreach (var c in Enum.GetValues<Categoria>())
+            {
+                var lista = E.D.Prendas.Where(p => p.Cat == c).ToList();
+                <a class="tarjeta categoria" href="@($"categoria/{c.ToString().ToLower()}")" aria-label="@($"{DatosEjemplo.NombreCat[c]}, {lista.Count} prendas")">
+                    <span class="tres">
+                        @for (int i = 0; i < 3; i++)
+                        {
+                            if (i < lista.Count)
+                            {
+                                <FotoPrenda P="@(lista[i])" />
+                            }
+                            else
+                            {
+                                <span class="foto vacia"></span>
+                            }
+                        }
+                    </span>
+                    <b>@(DatosEjemplo.NombreCat[c])</b>
+                    <small>@lista.Count @(lista.Count == 1 ? "prenda" : "prendas")</small>
+                </a>
+            }
+        </div>
+
+        @if (Favoritas.Count > 0)
+        {
+            <div class="seccion"><h2>Favoritas</h2><a href="guardados?tab=prendas">Ver todas</a></div>
+            <div class="estante">
+                @foreach (var p in Favoritas)
+                {
+                    var id = p.Id;
+                    <TarjetaPrenda P="p" Favorita="true" OnClick="@(() => Ir($"prenda/{id}"))" />
+                }
+            </div>
+        }
+
+        <div class="seccion"><h2>Añadidas hace poco</h2></div>
+        <div class="estante">
+            @foreach (var p in Enumerable.Reverse(E.D.Prendas).Take(6))
+            {
+                var id = p.Id;
+                <TarjetaPrenda P="p" Favorita="@(E.EsFavorita(id))" OnClick="@(() => Ir($"prenda/{id}"))" />
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    List<Prenda> Favoritas => E.D.Prendas.Where(p => E.EsFavorita(p.Id)).ToList();
+}
