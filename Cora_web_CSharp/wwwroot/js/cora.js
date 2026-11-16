@@ -37,17 +37,44 @@ window.cora = (function () {
     });
   }
 
+  // Campanita: notas que se solapan y se apagan despacio (onda triangular + un armónico suave).
+  // Suena más agradable que los pitidos cortos; se usa para las buenas noticias de la lavadora.
+  function campana(notas, separacion, duracion) {
+    despertar();
+    if (!ctx) return;
+    const t0 = ctx.currentTime + 0.02;
+    notas.forEach(function (f, i) {
+      const t = t0 + i * separacion;
+      [[f, 'triangle', 0.22], [f * 2, 'sine', 0.05]].forEach(function (capa) {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = capa[1]; o.frequency.value = capa[0];
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(capa[2], t + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + duracion);
+        o.connect(g).connect(ctx.destination);
+        o.start(t); o.stop(t + duracion + 0.05);
+      });
+    });
+  }
+
+  // Sonidos tipo campana (notas en Hz)
+  const CAMPANAS = {
+    seca: [[784, 988, 1175], 0.16, 0.7],              // sol-si-re: «tu ropa está lista», suave y tranquilo
+    disponible: [[523, 659, 784, 1047], 0.09, 0.55],  // do-mi-sol-do: arpegio alegre que sube, «de vuelta al armario»
+  };
+
   const SONIDOS = {
     leido: [[1320, 0.09]],                 // pitido agudo corto: «leído»
     error: [[520, 0.12], [370, 0.18]],     // dos tonos que bajan: «algo ha fallado»
     guardado: [[880, 0.07], [1320, 0.1]],  // dos tonos que suben: «guardado»
     listo: [[660, 0.08], [990, 0.12]],
   };
-  const VIBRACIONES = { leido: 40, error: [60, 80, 60], guardado: 25, listo: 20 };
+  const VIBRACIONES = { leido: 40, error: [60, 80, 60], guardado: 25, listo: 20, seca: [30, 60, 30], disponible: [15, 40, 15, 40, 25] };
 
   // Reto 1: confirmación por sonido y vibración
   function aviso(tipo, conSonido, conVibracion) {
-    if (conSonido && SONIDOS[tipo]) tonos(SONIDOS[tipo]);
+    if (conSonido && CAMPANAS[tipo]) campana.apply(null, CAMPANAS[tipo]);
+    else if (conSonido && SONIDOS[tipo]) tonos(SONIDOS[tipo]);
     // La vibración funciona en Android. Safari en iPhone no deja vibrar a las páginas web.
     if (conVibracion && navigator.vibrate) { try { navigator.vibrate(VIBRACIONES[tipo] || 30); } catch (e) { } }
   }
@@ -118,5 +145,26 @@ window.cora = (function () {
     });
   }
 
-  return { leer: leer, guardar: guardar, aviso: aviso, qr: { camaraDisponible: camaraDisponible, iniciar: iniciar, parar: parar, leerImagen: leerImagen } };
+  // ---------- Notificaciones del navegador (la ropa ya está seca) ----------
+  // Funcionan con la web abierta (aunque esté en otra pestaña) en ordenador y Android.
+  // En iPhone solo si la web se añade a la pantalla de inicio (iOS 16.4 o posterior).
+  function pedirPermiso() {
+    try {
+      if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+    } catch (e) { }
+  }
+  function notificar(titulo, texto) {
+    try {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return false;
+      const n = new Notification(titulo, { body: texto, icon: 'icono.png', tag: 'cora-lavadora' });
+      n.onclick = function () {
+        window.focus();
+        if (window.Blazor && Blazor.navigateTo) Blazor.navigateTo('categoria/lavadora');
+        n.close();
+      };
+      return true;
+    } catch (e) { return false; }
+  }
+
+  return { leer: leer, guardar: guardar, aviso: aviso, pedirPermiso: pedirPermiso, notificar: notificar, qr: { camaraDisponible: camaraDisponible, iniciar: iniciar, parar: parar, leerImagen: leerImagen } };
 })();

@@ -26,6 +26,10 @@ public class Prenda
     public bool Lavando { get; set; }
     /// <summary>Fecha (AAAA-MM-DD) en que se echó a lavar.</summary>
     public string? LavadoDesde { get; set; }
+    /// <summary>Momento exacto (UTC, formato ISO) en que se echó a lavar: la barra avanza con las horas reales.</summary>
+    public string? LavadoHora { get; set; }
+    /// <summary>Ya se avisó de que está seca (para no avisar dos veces).</summary>
+    public bool AvisoSeca { get; set; }
     /// <summary>Foto hecha por el usuario (data URL). Si es null se usa la foto de ejemplo.</summary>
     public string? Foto { get; set; }
 

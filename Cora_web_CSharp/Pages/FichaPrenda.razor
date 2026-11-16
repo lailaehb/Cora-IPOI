@@ -1,5 +1,6 @@
 @page "/prenda/{Id}"
 @inherits PaginaCora
+@using System.Globalization
 
 @* FICHA DE LA PRENDA: datos, favorita y estado de la lavadora. *@
 <div class="pantalla">
@@ -38,13 +39,16 @@
             <section class="tarjeta">
                 @if (P.Lavando)
                 {
-                    <div class="fila">@Iconos.Lavadora <h3>En la lavadora</h3></div>
-                    <p class="sec">Día @DiaLavado de @Estado.DiasLavado · Estará disponible el @Listo</p>
-                    <div class="progreso" role="progressbar" aria-valuemin="0" aria-valuemax="@Estado.DiasLavado" aria-valuenow="@DiaLavado">
-                        <div style="width:@(DiaLavado * 100 / Estado.DiasLavado)%"></div>
+                    bool seca = Estado.Seca(P);
+                    <div class="fila">@Iconos.Lavadora <h3>@(seca ? "Ya debería estar seca" : "En la lavadora")</h3></div>
+                    <p class="sec">@(seca ? "Han pasado los 2 días de lavado y secado." : $"Quedan {Estado.TextoFalta(Estado.Falta(P))} · Estará seca {FinTexto}")</p>
+                    @* La barra avanza con las horas reales (se actualiza cada 30 segundos) *@
+                    <div class="progreso @(seca ? "completo" : "")" role="progressbar" aria-label="Lavado y secado"
+                         aria-valuemin="0" aria-valuemax="100" aria-valuenow="@((int)(Estado.FraccionLavado(P) * 100))">
+                        <div style="width:@Estado.AnchoLavado(P)"></div>
                     </div>
                     <button class="btn" @onclick="Disponible">Marcar como disponible</button>
-                    <Caja Texto="Mientras se lava, Cora no la tendrá en cuenta en tus conjuntos." />
+                    <Caja Tipo="@(seca ? "ok" : "info")" Texto="@(seca ? "Cuando la tengas en el armario, márcala como disponible y Cora volverá a usarla en tus conjuntos." : "Mientras se lava, Cora no la tendrá en cuenta en tus conjuntos. Te avisaré cuando esté seca.")" />
                 }
                 else
                 {
@@ -74,9 +78,18 @@
     bool confirmarBorrado;
 
     Prenda? P => E.PrendaPorId(Id);
-    string Desde => P?.LavadoDesde ?? Fechas.Hoy;
-    int DiaLavado => Math.Clamp(-Fechas.Dif(Desde) + 1, 1, Estado.DiasLavado);
-    string Listo => Fechas.Dias[(int)Fechas.De(Fechas.Sumar(Desde, Estado.DiasLavado)).DayOfWeek];
+    /// <summary>«hoy a las 18:30», «mañana a las 9:05» o «el jueves a las 12:00».</summary>
+    string FinTexto
+    {
+        get
+        {
+            if (P == null) return "";
+            var f = Estado.FinLavado(P);
+            int dif = (f.Date - DateTime.Today).Days;
+            string dia = dif == 0 ? "hoy" : dif == 1 ? "mañana" : "el " + Fechas.Dias[(int)f.DayOfWeek];
+            return $"{dia} a las {f.ToString("H:mm", CultureInfo.InvariantCulture)}";
+        }
+    }
 
     async Task CambiarUso(int nivel)
     {
@@ -90,7 +103,7 @@
     async Task Lavar()
     {
         await E.CambiarLavadoAsync(new[] { Id }, true);
-        E.MostrarAviso("En la lavadora. Volverá a estar disponible en 2 días.");
+        E.MostrarAviso("En la lavadora. Te avisaré cuando esté seca, en 2 días.");
     }
 
     async Task Disponible()

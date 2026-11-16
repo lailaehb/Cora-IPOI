@@ -57,6 +57,19 @@
             </div>
         </section>
 
+        <section class="tarjeta">
+            <h3>Probar la lavadora</h3>
+            <p class="sec">La ropa tarda 2 días en lavarse y secarse. Para ver cómo avanza la barra y cómo llega el aviso sin esperar, adelanta el tiempo de lo que hay en la lavadora.</p>
+            <div class="fila">
+                <button class="btn secundario" disabled="@(E.EnLavadora.Count == 0)" @onclick="() => E.AdelantarLavadoraAsync(12)">+12 horas</button>
+                <button class="btn secundario" disabled="@(E.EnLavadora.Count == 0)" @onclick="() => E.AdelantarLavadoraAsync(48)">Ya seca</button>
+            </div>
+            @if (E.EnLavadora.Count == 0)
+            {
+                <small class="sec">Ahora no tienes nada en la lavadora.</small>
+            }
+        </section>
+
         @if (!confirmar)
         {
             <button class="enlace" @onclick="() => confirmar = true">Restablecer datos de ejemplo</button>

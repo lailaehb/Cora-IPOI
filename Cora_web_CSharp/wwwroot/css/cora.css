@@ -274,3 +274,12 @@ small { font-size: 13px; }
 .foto-nueva.pensando { animation: pensar 1.2s ease-in-out infinite; }
 @keyframes pensar { 50% { opacity: .55; } }
 .btn[disabled] { opacity: .6; cursor: progress; }
+
+/* Lavadora en tiempo real: la barra avanza con las horas y se pone verde al terminar */
+.progreso div { transition: width .8s ease; }
+.progreso.completo div { background: var(--ok); }
+.etq-lavadora.seca { background: var(--ok-suave); color: var(--ok); }
+.mini-progreso { position: absolute; left: 8px; right: 8px; bottom: 8px; height: 5px; background: rgba(255, 255, 255, .75); border-radius: 99px; overflow: hidden; }
+.mini-progreso span { display: block; height: 100%; background: var(--acento); transition: width .8s ease; }
+.etq-lavadora.seca + .mini-progreso span { background: var(--ok); }
+.texto-ok { color: var(--ok); font-weight: 600; display: block; }

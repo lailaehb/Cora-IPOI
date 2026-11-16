@@ -1,10 +1,11 @@
 <button type="button" class="tprenda @(Seleccionada ? "sel" : "")" @onclick="OnClick"
-        aria-label="@(P.Nombre + (P.Lavando ? ", en la lavadora" : ""))" aria-pressed="@(ModoSeleccion ? (Seleccionada ? "true" : "false") : null)">
+        aria-label="@(P.Nombre + (Estado.Seca(P) ? ", ya está seca" : P.Lavando ? ", en la lavadora" : ""))" aria-pressed="@(ModoSeleccion ? (Seleccionada ? "true" : "false") : null)">
     <span class="tp-foto">
         <FotoPrenda P="P" Apagada="P.Lavando" />
         @if (P.Lavando)
         {
-            <span class="etq-lavadora">En la lavadora</span>
+            <span class="etq-lavadora @(Estado.Seca(P) ? "seca" : "")">@(Estado.Seca(P) ? "Ya está seca" : "En la lavadora")</span>
+            <span class="mini-progreso" aria-hidden="true"><span style="width:@Estado.AnchoLavado(P)"></span></span>
         }
         @if (ModoSeleccion)
         {

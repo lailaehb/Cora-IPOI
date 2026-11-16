@@ -75,7 +75,12 @@
         {
             <a class="tarjeta fila-tarjeta" href="categoria/lavadora">
                 <span class="ico-caja">@Iconos.Lavadora</span>
-                <span class="crece"><b>@E.EnLavadora.Count @(E.EnLavadora.Count == 1 ? "prenda" : "prendas") en la lavadora</b><small>@(string.Join(", ", E.EnLavadora.Select(p => p.Nombre)))</small></span>
+                <span class="crece"><b>@E.EnLavadora.Count @(E.EnLavadora.Count == 1 ? "prenda" : "prendas") en la lavadora</b><small>@(string.Join(", ", E.EnLavadora.Select(p => p.Nombre)))</small>
+                    @if (E.Secas.Count > 0)
+                    {
+                        <small class="texto-ok">@(E.Secas.Count == 1 ? $"{E.Secas[0].Nombre} ya está seca: márcala como disponible" : $"{E.Secas.Count} ya están secas: márcalas como disponibles")</small>
+                    }
+                </span>
                 @Iconos.Siguiente
             </a>
         }

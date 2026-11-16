@@ -1,10 +1,20 @@
 @page "/planificar"
 @inherits PaginaCora
 
-@* PLANIFICAR CON IA (reto 2): eliges el día, marcas los planes o los escribes, y la IA genera la semana. *@
+@* PLANIFICAR CON IA (reto 2): eliges el día, marcas los planes o los escribes,
+   y decides si la IA prepara solo ese día o toda la semana. *@
 <div class="pantalla">
     <div class="contenido">
-        <Cabecera Volver="true" Titulo="Cuéntale tus planes" Sub="La IA preparará un outfit para cada día" VolverA="calendario" />
+        <Cabecera Volver="true" Titulo="Cuéntale tus planes" Sub="La IA preparará tu outfit" VolverA="calendario" />
+
+        @* ¿Un día o toda la semana? Por defecto, solo el día elegido *@
+        <div>
+            <span class="etq">¿Qué quieres que prepare la IA?</span>
+            <div class="segmentos" role="radiogroup" aria-label="Qué planificar">
+                <button role="radio" class="@(soloDia ? "on" : "")" aria-checked="@(soloDia ? "true" : "false")" @onclick="() => soloDia = true">Solo este día</button>
+                <button role="radio" class="@(!soloDia ? "on" : "")" aria-checked="@(!soloDia ? "true" : "false")" @onclick="() => soloDia = false">Toda la semana</button>
+            </div>
+        </div>
 
         @* Días: el elegido es blanco con borde (mismo criterio que los chips) *@
         <div class="selector-dias" role="group" aria-label="Días">
@@ -31,15 +41,27 @@
             </div>
             <label class="campo">
                 <span>O cuéntaselo con tus palabras</span>
-                <textarea maxlength="200" rows="3" placeholder="Por ejemplo: clase por la mañana y cena con amigas" value="@Plan.Texto" @oninput="Escribir"></textarea>
+                <textarea maxlength="200" rows="3" placeholder="Por ejemplo: clase por la mañana y gimnasio por la tarde" value="@Plan.Texto" @oninput="Escribir"></textarea>
             </label>
             <small class="sec derecha">@Plan.Texto.Length/200</small>
         </section>
 
-        <Caja Texto="@($"Puedes contarle varios planes en el mismo día (por ejemplo, clase y luego gimnasio): si hay que cambiarse, te preparará un conjunto para cada momento. Cora tiene en cuenta el tiempo ({E.Tiempo.Fuente.ToLower()}), lo que está en la lavadora y lo que te gusta llevar. No repite un conjunto hasta que pasa al menos una semana.")" />
+        @* Aviso de qué días va a cambiar la IA, para que no haya sorpresas *@
+        @if (soloDia)
+        {
+            <Caja Texto="@($"La IA preparará solo el outfit para {Cuando(elegido)}. El resto de la semana no se toca. Si hay varios planes ese día y hay que cambiarse (por ejemplo, para el deporte), te hará un conjunto para cada momento.")" />
+        }
+        else if (DiasConPlan.Count == 0)
+        {
+            <Caja Tipo="error" Texto="Ningún día de esta semana tiene planes todavía. Elige cada día arriba y cuéntale qué vas a hacer." />
+        }
+        else
+        {
+            <Caja Texto="@($"La IA preparará los días con planes: {ListaDias}. Los días sin planes no se tocan. Puedes elegir otro día arriba para añadirle planes.")" />
+        }
     </div>
     <footer class="pie">
-        <button class="btn" @onclick="Generar">@Iconos.Chispa Generar mi semana</button>
+        <button class="btn" @onclick="Generar">@Iconos.Chispa @TextoBoton</button>
     </footer>
 </div>
 
@@ -47,10 +69,20 @@
     [SupplyParameterFromQuery(Name = "dia")] public string? DiaInicial { get; set; }
 
     string elegido = Fechas.Hoy;
+    bool soloDia = true;
     List<string> Dias = new();
 
     PlanDia Plan => E.D.Planes.TryGetValue(elegido, out var p) ? p : new PlanDia();
     Tiempo W => E.Tiempo.De(elegido);
+    /// <summary>«hoy», «mañana» o «el lunes 16», para escribir frases naturales.</summary>
+    static string Cuando(string d) => Fechas.Dif(d) <= 1 ? Fechas.Etiqueta(d).ToLower() : "el " + Fechas.Etiqueta(d).ToLower();
+
+    List<string> DiasConPlan => Dias.Where(d => E.PlanDe(d) != null).ToList();
+    string ListaDias => string.Join(", ", DiasConPlan.Select(Fechas.Etiqueta)).ToLower();
+
+    string TextoBoton => soloDia
+        ? $"Generar outfit para {Cuando(elegido)}"
+        : DiasConPlan.Count == 1 ? "Generar la semana (1 día con planes)" : $"Generar la semana ({DiasConPlan.Count} días con planes)";
 
     protected override void OnParametersSet()
     {
@@ -63,13 +95,14 @@
 
     async Task Generar()
     {
-        if (!Dias.Any(d => E.PlanDe(d) != null))
+        var dias = soloDia ? new List<string> { elegido } : DiasConPlan;
+        if (dias.Count == 0 || dias.Any(d => E.PlanDe(d) == null))
         {
             await E.SonarAsync("error");
-            E.MostrarAviso("Cuéntale a Cora el plan de al menos un día.");
+            E.MostrarAviso(soloDia ? $"Cuéntale a Cora qué vas a hacer {Cuando(elegido)}." : "Cuéntale a Cora el plan de al menos un día.");
             return;
         }
-        _ = E.GenerarSemanaAsync(Dias);
+        _ = E.GenerarSemanaAsync(dias);
         Nav.NavigateTo("calendario");
     }
 }

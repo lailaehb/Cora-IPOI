@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Cora.Modelos;
@@ -49,10 +50,11 @@ public class Estado
         {
             D = Iniciales();
         }
-        LiberarLavadas();
+        PrepararLavadas();
         Listo = true;
         Avisar();
         _ = CargarTiempoAsync();
+        _ = BucleLavadoraAsync();
     }
 
     public async Task GuardarAsync()
@@ -74,7 +76,13 @@ public class Estado
             Prendas = DatosEjemplo.Armario(),
             Favoritas = new() { "vaquero_azul" },
         };
-        foreach (var p in d.Prendas.Where(p => p.Lavando)) p.LavadoDesde = hoy;
+        // La sudadera de ejemplo lleva 20 horas en la lavadora, para que se vea la barra a medias
+        foreach (var p in d.Prendas.Where(p => p.Lavando))
+        {
+            var inicio = DateTime.UtcNow.AddHours(-20);
+            p.LavadoHora = inicio.ToString("o", CultureInfo.InvariantCulture);
+            p.LavadoDesde = Fechas.Iso(inicio.ToLocalTime());
+        }
         d.Planes[hoy] = new PlanDia { Claves = { "uni" } };
         d.Planes[Fechas.Sumar(hoy, 3)] = new PlanDia { Claves = { "cena" } };
         d.Planes[Fechas.Sumar(hoy, 5)] = new PlanDia { Claves = { "fiesta" } };
@@ -89,14 +97,101 @@ public class Estado
         return d;
     }
 
-    /// <summary>Las prendas que llevan 2 días en la lavadora vuelven a estar disponibles solas.</summary>
-    void LiberarLavadas()
+    // ---------------------------------------------------------------- lavadora en tiempo real
+    // La ropa tarda DiasLavado días (48 h) en lavarse y secarse. La barra avanza con las horas reales y,
+    // cuando se cumple el tiempo, Cora avisa (aviso en la app, sonido y notificación del navegador).
+    // La prenda NO vuelve sola al armario: el usuario la marca como disponible cuando la tiene (control explícito).
+    public static readonly TimeSpan DuracionLavado = TimeSpan.FromDays(DiasLavado);
+
+    public static DateTime InicioLavado(Prenda p)
     {
-        foreach (var p in D.Prendas.Where(p => p.Lavando && p.LavadoDesde != null && -Fechas.Dif(p.LavadoDesde) >= DiasLavado))
+        if (p.LavadoHora != null && DateTime.TryParse(p.LavadoHora, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var t))
+            return t.ToUniversalTime();
+        if (p.LavadoDesde != null) return Fechas.De(p.LavadoDesde).ToUniversalTime();
+        return DateTime.UtcNow;
+    }
+
+    /// <summary>De 0 (recién echada a lavar) a 1 (seca).</summary>
+    public static double FraccionLavado(Prenda p) =>
+        Math.Clamp((DateTime.UtcNow - InicioLavado(p)).TotalMinutes / DuracionLavado.TotalMinutes, 0, 1);
+
+    public static bool Seca(Prenda p) => p.Lavando && FraccionLavado(p) >= 1;
+
+    public static TimeSpan Falta(Prenda p)
+    {
+        var f = InicioLavado(p) + DuracionLavado - DateTime.UtcNow;
+        return f < TimeSpan.Zero ? TimeSpan.Zero : f;
+    }
+
+    /// <summary>Fecha y hora (locales) en que estará seca.</summary>
+    public static DateTime FinLavado(Prenda p) => (InicioLavado(p) + DuracionLavado).ToLocalTime();
+
+    /// <summary>Ancho de la barra para el CSS, p. ej. "41.67%".</summary>
+    public static string AnchoLavado(Prenda p) => (FraccionLavado(p) * 100).ToString("0.##", CultureInfo.InvariantCulture) + "%";
+
+    /// <summary>«1 día y 5 h», «5 h y 20 min» o «20 min».</summary>
+    public static string TextoFalta(TimeSpan t)
+    {
+        int dias = (int)t.TotalDays;
+        if (dias >= 1) return $"{dias} {(dias == 1 ? "día" : "días")} y {t.Hours} h";
+        if (t.TotalHours >= 1) return $"{t.Hours} h y {t.Minutes} min";
+        return $"{Math.Max(1, t.Minutes)} min";
+    }
+
+    public List<Prenda> Secas => D.Prendas.Where(Seca).ToList();
+
+    /// <summary>Datos guardados con versiones anteriores: calcula la hora de inicio a partir del día.</summary>
+    void PrepararLavadas()
+    {
+        foreach (var p in D.Prendas.Where(p => p.Lavando && p.LavadoHora == null))
+            p.LavadoHora = InicioLavado(p).ToString("o", CultureInfo.InvariantCulture);
+    }
+
+    bool _bucleLavadora;
+
+    /// <summary>Cada 30 segundos: mueve las barras y avisa de las prendas que ya están secas.</summary>
+    async Task BucleLavadoraAsync()
+    {
+        if (_bucleLavadora) return;
+        _bucleLavadora = true;
+        while (true)
         {
-            p.Lavando = false;
-            p.LavadoDesde = null;
+            await ComprobarLavadoraAsync();
+            await Task.Delay(TimeSpan.FromSeconds(30));
         }
+    }
+
+    async Task ComprobarLavadoraAsync()
+    {
+        if (!D.Prendas.Any(p => p.Lavando)) return;
+        var nuevas = D.Prendas.Where(p => p.Lavando && !p.AvisoSeca && Seca(p)).ToList();
+        if (nuevas.Count > 0)
+        {
+            foreach (var p in nuevas) p.AvisoSeca = true;
+            string titulo = nuevas.Count == 1 ? $"{nuevas[0].Nombre} ya está seca" : $"{nuevas.Count} prendas ya están secas";
+            string texto = nuevas.Count == 1
+                ? "Márcala como disponible en Cora para que vuelva a tu armario."
+                : $"{string.Join(", ", nuevas.Select(p => p.Nombre))}. Márcalas como disponibles en Cora.";
+            await SonarAsync("seca");
+            MostrarAviso(titulo);
+            try { await _js.InvokeVoidAsync("cora.notificar", titulo, texto); } catch { }
+            await GuardarAsync();
+        }
+        Avisar(); // para que las barras avancen
+    }
+
+    /// <summary>Solo para probar: hace como si hubieran pasado unas horas en la lavadora.</summary>
+    public async Task AdelantarLavadoraAsync(int horas)
+    {
+        try { await _js.InvokeVoidAsync("cora.pedirPermiso"); } catch { }
+        foreach (var p in D.Prendas.Where(p => p.Lavando))
+        {
+            var inicio = InicioLavado(p).AddHours(-horas);
+            p.LavadoHora = inicio.ToString("o", CultureInfo.InvariantCulture);
+            p.LavadoDesde = Fechas.Iso(inicio.ToLocalTime());
+        }
+        await ComprobarLavadoraAsync();
+        await CambiadoAsync();
     }
 
     // ---------------------------------------------------------------- tiempo
@@ -295,7 +390,8 @@ public class Estado
         await Task.Delay(250);
         DiasGenerando = new(); Rellenos = -1;
         await SonarAsync("listo");
-        MostrarAviso(respuesta == null ? _ia.ExplicarError() : deIA == dias.Count ? "Tu semana está lista" : "Tu semana está lista (algún día con mis reglas)");
+        string listo = dias.Count == 1 ? "Tu outfit está listo" : "Tu semana está lista";
+        MostrarAviso(respuesta == null ? _ia.ExplicarError() : deIA == dias.Count ? listo : listo + " (algún día con mis reglas)");
         await CambiadoAsync();
     }
 
@@ -317,13 +413,18 @@ public class Estado
     // ---------------------------------------------------------------- armario y lavadora
     public async Task CambiarLavadoAsync(IEnumerable<string> ids, bool lavando)
     {
+        // Se pide permiso para las notificaciones justo al pulsar (el navegador solo deja pedirlo tras un toque)
+        if (lavando) { try { await _js.InvokeVoidAsync("cora.pedirPermiso"); } catch { } }
         var lista = ids.ToList();
         foreach (var p in D.Prendas.Where(p => lista.Contains(p.Id)))
         {
             p.Lavando = lavando;
             p.LavadoDesde = lavando ? Fechas.Hoy : null;
+            p.LavadoHora = lavando ? DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture) : null;
+            p.AvisoSeca = false;
         }
-        await SonarAsync("guardado");
+        // Al echar a lavar, el sonido de «guardado»; al volver al armario, una campanita alegre
+        await SonarAsync(lavando ? "guardado" : "disponible");
         await CambiadoAsync();
     }
 
@@ -417,7 +518,7 @@ public class Estado
     }
 
     // ---------------------------------------------------------------- avisos (reto 1)
-    /// <summary>Sonido + vibración: "leido", "error", "guardado" o "listo".</summary>
+    /// <summary>Sonido + vibración: "leido", "error", "guardado", "listo", "seca" o "disponible".</summary>
     public async Task SonarAsync(string tipo)
     {
         try { await _js.InvokeVoidAsync("cora.aviso", tipo, D.Ajustes.Sonido, D.Ajustes.Vibracion); } catch { }
