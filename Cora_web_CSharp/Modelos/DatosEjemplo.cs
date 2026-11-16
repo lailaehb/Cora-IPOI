@@ -43,8 +43,8 @@ public static class DatosEjemplo
 
     public static readonly Dictionary<Categoria, string[]> Subcategorias = new()
     {
-        [Categoria.Arriba] = new[] { "Camisetas", "Tops", "Camisas", "Sudaderas", "Jerséis" },
-        [Categoria.Abajo] = new[] { "Vaqueros", "Pantalones", "Faldas" },
+        [Categoria.Arriba] = new[] { "Camisetas", "Tops", "Camisas", "Sudaderas", "Jerséis", "Deportiva" },
+        [Categoria.Abajo] = new[] { "Vaqueros", "Pantalones", "Faldas", "Mallas", "Shorts" },
         [Categoria.Calzado] = new[] { "Zapatillas", "Botas", "Tacones" },
         [Categoria.Capa] = new[] { "Chaquetas", "Blazers", "Abrigos" },
     };
@@ -52,20 +52,21 @@ public static class DatosEjemplo
     /// <summary>Valores por defecto para prendas nuevas: (formalidad mínima, máxima, abrigo, apta para lluvia).</summary>
     public static readonly Dictionary<string, (int Min, int Max, int Abrigo, bool Lluvia)> PorDefecto = new()
     {
-        ["Camisetas"] = (0, 1, 0, true), ["Tops"] = (1, 2, 0, true), ["Camisas"] = (1, 2, 0, true), ["Sudaderas"] = (0, 1, 1, true), ["Jerséis"] = (1, 2, 2, true),
-        ["Vaqueros"] = (1, 2, 1, true), ["Pantalones"] = (1, 2, 1, true), ["Faldas"] = (2, 3, 0, true),
+        ["Camisetas"] = (0, 1, 0, true), ["Tops"] = (1, 2, 0, true), ["Camisas"] = (1, 2, 0, true), ["Sudaderas"] = (0, 1, 1, true), ["Jerséis"] = (1, 2, 2, true), ["Deportiva"] = (0, 0, 0, true),
+        ["Vaqueros"] = (1, 2, 1, true), ["Pantalones"] = (1, 2, 1, true), ["Faldas"] = (2, 3, 0, true), ["Mallas"] = (0, 0, 1, true), ["Shorts"] = (0, 1, 0, true),
         ["Zapatillas"] = (0, 1, 0, true), ["Botas"] = (1, 3, 0, true), ["Tacones"] = (2, 3, 0, false),
         ["Chaquetas"] = (1, 2, 2, true), ["Blazers"] = (2, 3, 1, true), ["Abrigos"] = (1, 3, 2, true),
     };
 
     public static readonly List<TipoPlan> Planes = new()
     {
-        new("uni", "Universidad", 1, "uni|clase|facultad|examen|biblio", "ir a clase"),
-        new("trabajo", "Trabajo", 2, "trabaj|oficina|reuni|entrevista|práctica|practica", "trabajar"),
-        new("cena", "Cena", 2, "cena|comida|restaurante|cita", "una cena"),
-        new("fiesta", "Fiesta", 3, "fiesta|discoteca|cumple|boda|concierto|salir", "una fiesta"),
-        new("deporte", "Deporte", 0, "gimnasio|gym|deporte|correr|entren|pádel|padel|yoga", "hacer deporte"),
-        new("casa", "Sin planes", 1, "casa|nada|descanso|recados|sin planes", "un día tranquilo"),
+        // Los patrones se comparan con el texto en minúsculas y sin tildes (MotorIA.Normalizar)
+        new("uni", "Universidad", 1, @"\buni\b|universidad|clase|facultad|examen|biblio|estudi|tutoria|insti", "ir a clase"),
+        new("trabajo", "Trabajo", 2, @"trabaj|oficina|reunion|entrevista|curro|practicas en", "trabajar"),
+        new("cena", "Cena", 2, @"cena|comida|comer fuera|restaurante|\bcita\b|tapas|brunch", "una cena"),
+        new("fiesta", "Fiesta", 3, @"fiesta|discoteca|cumple|boda|concierto|festival|copas|de marcha|salir de noche|salir por la noche", "una fiesta"),
+        new("deporte", "Deporte", 0, @"gimnasio|\bgym\b|deporte|correr|running|entren|padel|tenis|futbol|baloncesto|basket|voley|natacion|nadar|piscina|yoga|pilates|spinning|crossfit|zumba|\bbici|ciclismo|senderismo|\bruta\b|caminar|pesas|boxeo|escalada|partido|baile|danza", "hacer deporte"),
+        new("casa", "Sin planes", 1, @"en casa|\bnada\b|descans|recados|sin planes|compras", "un día tranquilo"),
     };
 
     public static readonly string[] Estilos = { "Casual", "Minimalista", "Clásico", "Deportivo" };

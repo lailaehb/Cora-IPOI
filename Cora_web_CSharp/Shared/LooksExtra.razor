@@ -1,0 +1,22 @@
+@* Otros conjuntos del mismo día: por ejemplo, el de deporte cuando hay clase y luego gimnasio. *@
+@if (O != null)
+{
+    foreach (var l in O.Extra)
+    {
+        <div class="otro-look">
+            <small class="sec">Cambio de ropa</small>
+            <h3 class="momento">@l.Momento</h3>
+            <FilaOutfit Ids="l.Ids" Catalogo="Catalogo" Proporcion="1.2" />
+            <p class="porque">@l.Porque</p>
+        </div>
+    }
+    if (O.DeIA)
+    {
+        <small class="sec origen">@Iconos.Chispa Elegido por la IA con tu armario</small>
+    }
+}
+
+@code {
+    [Parameter] public Outfit? O { get; set; }
+    [Parameter] public List<Prenda> Catalogo { get; set; } = new();
+}

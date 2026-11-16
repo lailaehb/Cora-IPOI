@@ -4,5 +4,6 @@
   "installCommand": "echo \"No hace falta npm: es un proyecto de C#\"",
   "buildCommand": "cd Cora_web_CSharp && bash vercel-build.sh",
   "outputDirectory": "Cora_web_CSharp/salida/wwwroot",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "functions": { "api/ia.js": { "maxDuration": 60 } },
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
 }

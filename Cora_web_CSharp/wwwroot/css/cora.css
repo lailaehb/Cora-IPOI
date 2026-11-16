@@ -265,3 +265,12 @@ small { font-size: 13px; }
 #blazor-error-ui .reload { text-decoration: underline; margin-left: 8px; }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* IA: otros conjuntos del día (p. ej. el de deporte) y análisis de la foto */
+.momento { font-size: 14px; color: var(--acento); }
+.otro-look { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px dashed var(--linea); }
+.origen { display: inline-flex; align-items: center; gap: 4px; }
+.analizando { display: flex; align-items: center; gap: 8px; justify-content: center; color: var(--acento); font-weight: 600; }
+.foto-nueva.pensando { animation: pensar 1.2s ease-in-out infinite; }
+@keyframes pensar { 50% { opacity: .55; } }
+.btn[disabled] { opacity: .6; cursor: progress; }

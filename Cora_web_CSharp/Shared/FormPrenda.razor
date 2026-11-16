@@ -1,4 +1,5 @@
-@* Formulario para dar de alta una prenda (lo usan «Hacer una foto» y «Añadir a mano»). *@
+@* Formulario para dar de alta una prenda (lo usan «Hacer una foto» y «Añadir a mano»).
+   Si viene una Sugerencia (lo que la IA ha visto en la foto), los campos salen rellenos y el usuario los revisa. *@
 @inject Estado E
 @inject NavigationManager Nav
 
@@ -16,7 +17,7 @@
         @foreach (var c in Enum.GetValues<Categoria>())
         {
             var cat = c;
-            <Chip Texto="@(DatosEjemplo.NombreCorto[cat])" Activo="@(categoria == cat)" OnClick="@(() => { categoria = cat; sub = ""; error = ""; })" />
+            <Chip Texto="@(DatosEjemplo.NombreCorto[cat])" Activo="@(categoria == cat)" OnClick="@(() => ElegirCategoria(cat))" />
         }
     </div>
     @if (categoria != null)
@@ -26,9 +27,20 @@
             @foreach (var s in DatosEjemplo.Subcategorias[categoria.Value])
             {
                 var nombreSub = s;
-                <Chip Texto="@nombreSub" Activo="@(sub == nombreSub)" OnClick="@(() => sub = sub == nombreSub ? "" : nombreSub)" />
+                <Chip Texto="@nombreSub" Activo="@(sub == nombreSub)" OnClick="@(() => ElegirTipo(nombreSub))" />
             }
         </div>
+
+        @* Para qué planes sirve: es lo que usa la IA para no proponer unos tacones para el gimnasio *@
+        <span class="etq">¿Para qué la usas?</span>
+        <div class="chips">
+            @for (int f = 0; f < ServicioIA.Usos.Length; f++)
+            {
+                var nivel = f;
+                <Chip Texto="@ServicioIA.Usos[nivel]" Activo="@(min >= 0 && nivel >= min && nivel <= max)" OnClick="@(() => AlternarUso(nivel))" />
+            }
+        </div>
+        <small class="sec">Se marcan seguidos, de lo más cómodo a lo más arreglado.</small>
     }
     <div class="dos">
         <label class="campo"><span>Marca</span><input @bind="marca" /></label>
@@ -53,13 +65,40 @@
     [Parameter] public string? Foto { get; set; }
     [Parameter] public bool ConBotonFoto { get; set; }
     [Parameter] public bool AutoFoco { get; set; }
+    /// <summary>Datos que la IA ha reconocido en la foto (opcional).</summary>
+    [Parameter] public SugerenciaPrenda? Sugerencia { get; set; }
 
     ElementReference campoNombre;
     string nombre = "", marca = "", talla = "", color = "", sub = "", error = "";
     Categoria? categoria;
     string? foto;
+    // Usos: rango de formalidad (0 Deporte · 1 Diario · 2 Arreglado · 3 Fiesta). -1 = sin elegir.
+    int min = -1, max = -1;
+    int abrigo = -1;
+    bool? lluvia;
+    bool sugerenciaAplicada;
 
-    protected override void OnParametersSet() => foto ??= Foto;
+    protected override void OnParametersSet()
+    {
+        foto ??= Foto;
+        if (Sugerencia != null && Sugerencia.EsPrenda && !sugerenciaAplicada)
+        {
+            sugerenciaAplicada = true;
+            var s = Sugerencia;
+            nombre = s.Nombre.Trim();
+            color = s.Color.Trim();
+            if (Enum.TryParse<Categoria>(s.Categoria, true, out var cat))
+            {
+                categoria = cat;
+                if (DatosEjemplo.Subcategorias[cat].Contains(s.Tipo)) sub = s.Tipo;
+            }
+            var niveles = s.Usos.Select(u => Array.IndexOf(ServicioIA.Usos, u)).Where(i => i >= 0).ToList();
+            if (niveles.Count > 0) { min = niveles.Min(); max = niveles.Max(); }
+            else PonerUsosPorDefecto();
+            abrigo = Math.Clamp(s.Abrigo, 0, 2);
+            lluvia = s.Lluvia;
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool primeraVez)
     {
@@ -68,17 +107,49 @@
 
     async Task ElegirFoto(InputFileChangeEventArgs e) => foto = await Fotos.LeerAsync(e.File) ?? foto;
 
+    void ElegirCategoria(Categoria cat)
+    {
+        categoria = cat; sub = ""; error = "";
+        PonerUsosPorDefecto();
+    }
+
+    void ElegirTipo(string s)
+    {
+        sub = sub == s ? "" : s;
+        PonerUsosPorDefecto();
+    }
+
+    /// <summary>Al cambiar de tipo se proponen los usos típicos (unas mallas → Deporte); el usuario los puede cambiar.</summary>
+    void PonerUsosPorDefecto()
+    {
+        if (categoria == null) { min = max = -1; return; }
+        string s = string.IsNullOrEmpty(sub) ? DatosEjemplo.Subcategorias[categoria.Value][0] : sub;
+        var def = DatosEjemplo.PorDefecto.TryGetValue(s, out var d) ? d : (1, 2, 1, true);
+        min = def.Item1; max = def.Item2;
+        abrigo = -1; lluvia = null;
+    }
+
+    void AlternarUso(int nivel)
+    {
+        var r = ServicioIA.AlternarUso(min, max, nivel);
+        if (r == null) { error = "Para quitar ese uso, quita antes los de los extremos."; return; }
+        error = "";
+        (min, max) = r.Value;
+    }
+
     async Task Guardar()
     {
         if (string.IsNullOrWhiteSpace(nombre)) { error = "Escribe un nombre para la prenda."; await E.SonarAsync("error"); return; }
         if (categoria == null) { error = "Elige una categoría."; await E.SonarAsync("error"); return; }
+        if (min < 0) { error = "Elige para qué usas la prenda."; await E.SonarAsync("error"); return; }
         var cat = categoria.Value;
         string s = string.IsNullOrEmpty(sub) ? DatosEjemplo.Subcategorias[cat][0] : sub;
         (int Min, int Max, int Abrigo, bool Lluvia) def = DatosEjemplo.PorDefecto.TryGetValue(s, out var d) ? d : (1, 2, 1, true);
         var p = new Prenda
         {
             Id = "p" + DateTime.Now.Ticks, Nombre = nombre.Trim(), Marca = marca.Trim(), Talla = talla.Trim(), Color = color.Trim(),
-            Cat = cat, Sub = s, Foto = foto, FormMin = def.Min, FormMax = def.Max, Abrigo = def.Abrigo, AptaLluvia = def.Lluvia,
+            Cat = cat, Sub = s, Foto = foto, FormMin = min, FormMax = max,
+            Abrigo = abrigo >= 0 ? abrigo : def.Abrigo, AptaLluvia = lluvia ?? def.Lluvia,
         };
         await E.AnadirPrendaAsync(p);
         Nav.NavigateTo($"categoria/{cat.ToString().ToLower()}", replace: true);

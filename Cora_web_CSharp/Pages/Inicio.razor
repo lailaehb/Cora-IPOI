@@ -21,6 +21,10 @@
             </div>
             @if (outfit != null)
             {
+                if (!string.IsNullOrEmpty(outfit.Momento))
+                {
+                    <h3 class="momento">@outfit.Momento</h3>
+                }
                 <div class="collage">
                     @foreach (var id in outfit.Ids.Take(4))
                     {
@@ -28,9 +32,10 @@
                     }
                 </div>
                 <p class="porque">@outfit.Porque</p>
+                <LooksExtra O="outfit" Catalogo="E.D.Prendas" />
             }
             <div class="fila">
-                <button class="btn secundario redondo" @onclick="() => E.OtraOpcionAsync(Hoy)">@Iconos.Recargar Otra opción</button>
+                <button class="btn secundario redondo" disabled="@(E.PensandoDia == Hoy)" @onclick="() => E.OtraOpcionAsync(Hoy)">@Iconos.Recargar @(E.PensandoDia == Hoy ? "Pensando…" : "Otra opción")</button>
                 <button class="btn secundario redondo" aria-pressed="@(guardado ? "true" : "false")" @onclick="() => E.AlternarGuardadoDiaAsync(Hoy)">@Iconos.Marcador(guardado) @(guardado ? "Guardado" : "Guardar")</button>
             </div>
         </section>

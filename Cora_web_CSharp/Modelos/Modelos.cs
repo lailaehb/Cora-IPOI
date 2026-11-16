@@ -51,6 +51,20 @@ public class Outfit
     /// <summary>Combinación principal (arriba + abajo) para no repetir.</summary>
     public string Clave { get; set; } = "";
     public int Semilla { get; set; }
+    /// <summary>Para qué momento es el conjunto principal, si hay más de uno ese día (p. ej. «Clase y cena»).</summary>
+    public string Momento { get; set; } = "";
+    /// <summary>Otros conjuntos del mismo día (p. ej. el de deporte, porque hay que cambiarse).</summary>
+    public List<Look> Extra { get; set; } = new();
+    /// <summary>true si lo ha elegido la IA (Gemini); false si sale de las reglas de respaldo.</summary>
+    public bool DeIA { get; set; }
+}
+
+/// <summary>Un conjunto para un momento del día.</summary>
+public class Look
+{
+    public string Momento { get; set; } = "";
+    public List<string> Ids { get; set; } = new();
+    public string Porque { get; set; } = "";
 }
 
 public class Guardado

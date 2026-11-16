@@ -14,16 +14,18 @@ public class Estado
 {
     const string Clave = "cora-datos-v1";
     public const int DiasLavado = 2;
-    static readonly string[] Mensajes = { "Mirando el tiempo de la semana…", "Descartando lo que está en la lavadora…", "Evitando repetir conjuntos…", "Combinando tus prendas…" };
+    static readonly string[] Mensajes = { "Mirando el tiempo de la semana…", "Descartando lo que está en la lavadora…", "Pidiendo ideas a la IA…", "Combinando tus prendas…" };
     const int DuracionEspera = 3600;
 
     private readonly IJSRuntime _js;
+    private readonly ServicioIA _ia;
     public ServicioTiempo Tiempo { get; }
 
-    public Estado(IJSRuntime js, ServicioTiempo tiempo)
+    public Estado(IJSRuntime js, ServicioTiempo tiempo, ServicioIA ia)
     {
         _js = js;
         Tiempo = tiempo;
+        _ia = ia;
     }
 
     public Datos D { get; private set; } = new();
@@ -103,11 +105,12 @@ public class Estado
         if (await Tiempo.CargarAsync(D.Perfil.Ciudad))
         {
             // Se recalculan los outfits de hoy en adelante que se hicieron con otro tiempo
+            // (los de la IA se respetan: los ha elegido con los planes y el usuario los ha visto)
             for (int i = 0; i < 16; i++)
             {
                 string dia = Fechas.Sumar(Fechas.Hoy, i);
                 var w = Tiempo.De(dia);
-                if (D.Outfits.TryGetValue(dia, out var o) && !o.Porque.StartsWith($"{w.T}° y {w.Cielo}"))
+                if (D.Outfits.TryGetValue(dia, out var o) && !o.DeIA && !o.Porque.StartsWith($"{w.T}° y {w.Cielo}"))
                     D.Outfits[dia] = Recomendar(dia, o.Semilla);
             }
             await GuardarAsync();
@@ -126,7 +129,75 @@ public class Estado
     Outfit Recomendar(string dia, int? inicio = null, string? evitar = null, Dictionary<string, Outfit>? outfits = null) =>
         MotorIA.Recomendar(dia, D.Prendas, D.Planes.GetValueOrDefault(dia), Tiempo.De(dia), outfits ?? D.Outfits, D.Perfil.Gustos, inicio, evitar);
 
-    // ---------------------------------------------------------------- IA
+    // ---------------------------------------------------------------- IA (Gemini) con las reglas de respaldo
+    /// <summary>Lo que se le manda a la IA: los días con sus planes y tiempo, el armario real y lo ya usado esa semana.</summary>
+    PeticionSemana Peticion(List<string> dias, Dictionary<string, List<string>>? evitar = null)
+    {
+        var p = new PeticionSemana { Gustos = new(D.Perfil.Gustos), Estilos = new(D.Perfil.Estilos) };
+        foreach (var d in dias)
+        {
+            var plan = D.Planes.GetValueOrDefault(d);
+            var w = Tiempo.De(d);
+            p.Dias.Add(new DiaPeticion
+            {
+                Fecha = d,
+                Dia = Fechas.Etiqueta(d),
+                Temperatura = w.T,
+                Cielo = w.Cielo,
+                Planes = plan == null ? new() : plan.Claves
+                    .Select(c => DatosEjemplo.Planes.FirstOrDefault(x => x.Clave == c)?.Nombre)
+                    .Where(n => n != null).Select(n => n!).ToList(),
+                Texto = plan?.Texto ?? "",
+                Evitar = evitar != null && evitar.TryGetValue(d, out var ev) ? ev : new(),
+            });
+        }
+        // Solo lo que no está en la lavadora: la IA no puede elegir lo que no está disponible
+        p.Armario = D.Prendas.Where(x => !x.Lavando).Select(x => new PrendaIA
+        {
+            Id = x.Id, Nombre = x.Nombre, Categoria = x.Cat.ToString(), Tipo = x.Sub, Color = x.Color,
+            Usos = ServicioIA.UsosDe(x), Abrigo = x.Abrigo, Lluvia = x.AptaLluvia,
+        }).ToList();
+        // Conjuntos de los días cercanos que no se piden ahora, para no repetir en 7 días
+        var difs = dias.Select(Fechas.Dif).ToList();
+        foreach (var (fecha, o) in D.Outfits)
+        {
+            if (dias.Contains(fecha) || o.Ids.Count == 0) continue;
+            int df = Fechas.Dif(fecha);
+            if (difs.Any(x => Math.Abs(x - df) <= 6)) p.Usadas.Add(new UsadoIA { Fecha = fecha, Ids = new(o.Ids) });
+        }
+        return p;
+    }
+
+    static readonly Categoria[] OrdenLook = { Categoria.Capa, Categoria.Arriba, Categoria.Abajo, Categoria.Calzado };
+
+    /// <summary>Convierte la respuesta de la IA en un Outfit, comprobando que las prendas existen y no están en la lavadora.</summary>
+    Outfit? OutfitDesdeIA(DiaRespuesta r)
+    {
+        var looks = new List<(Look Look, bool Deporte)>();
+        foreach (var l in r.Looks)
+        {
+            var prendas = l.Ids.Distinct().Select(PrendaPorId).Where(p => p != null && !p.Lavando).Select(p => p!).ToList();
+            // Un conjunto válido necesita, como mínimo, algo de arriba y algo de abajo
+            if (!prendas.Any(p => p.Cat == Categoria.Arriba) || !prendas.Any(p => p.Cat == Categoria.Abajo)) continue;
+            var ids = OrdenLook.Select(c => prendas.FirstOrDefault(p => p.Cat == c)).Where(p => p != null).Select(p => p!.Id).ToList();
+            looks.Add((new Look { Momento = l.Momento.Trim(), Ids = ids, Porque = l.Porque.Trim() }, l.Plan == "deporte"));
+        }
+        if (looks.Count == 0) return null;
+        // El conjunto principal es el de los planes «normales»; el de deporte va como cambio de ropa
+        var orden = looks.OrderBy(x => x.Deporte).Select(x => x.Look).Take(3).ToList();
+        var principal = orden[0];
+        var arribaAbajo = principal.Ids.Select(PrendaPorId).Where(p => p != null && (p.Cat == Categoria.Arriba || p.Cat == Categoria.Abajo));
+        return new Outfit
+        {
+            Ids = principal.Ids,
+            Porque = principal.Porque,
+            Momento = orden.Count > 1 ? principal.Momento : "",
+            Extra = orden.Skip(1).ToList(),
+            Clave = MotorIA.ClaveDe(arribaAbajo),
+            DeIA = true,
+        };
+    }
+
     public async Task AsegurarOutfitAsync(string dia)
     {
         if (D.Outfits.ContainsKey(dia)) return;
@@ -134,10 +205,26 @@ public class Estado
         await CambiadoAsync();
     }
 
+    /// <summary>Día para el que se está pidiendo «Otra opción» a la IA (para mostrar «Pensando…»).</summary>
+    public string? PensandoDia { get; private set; }
+
     public async Task OtraOpcionAsync(string dia)
     {
+        if (PensandoDia != null) return;
         var prev = OutfitDe(dia);
-        var o = Recomendar(dia, (prev?.Semilla ?? 0) + 1, prev?.Clave);
+        Outfit? o = null;
+        if (prev?.DeIA == true)
+        {
+            PensandoDia = dia;
+            Avisar();
+            var evitar = new Dictionary<string, List<string>> { [dia] = new(prev.Ids) };
+            var r = await _ia.PlanificarAsync(Peticion(new List<string> { dia }, evitar));
+            var rd = r?.FirstOrDefault(x => x.Fecha == dia);
+            if (rd != null) o = OutfitDesdeIA(rd);
+            if (o != null && o.Clave == prev.Clave) o = null; // ha repetido: mejor las reglas
+            PensandoDia = null;
+        }
+        o ??= Recomendar(dia, (prev?.Semilla ?? 0) + 1, prev?.Clave);
         D.Outfits[dia] = o;
         foreach (var g in D.Guardados.Where(g => g.Fecha == dia)) g.Ids = new List<string>(o.Ids);
         await SonarAsync("listo");
@@ -163,26 +250,40 @@ public class Estado
         return i >= 0 && !Generando && i == Rellenos;
     }
 
-    /// <summary>Retos 2 y 3: genera la semana con una espera que se ve (mensajes, huecos grises y relleno día a día).</summary>
+    /// <summary>
+    /// Retos 2 y 3: genera la semana con una espera que se ve (mensajes, huecos grises y relleno día a día).
+    /// Primero lo intenta con la IA; los días que la IA no resuelva (o si no hay IA) salen de las reglas.
+    /// </summary>
     public async Task GenerarSemanaAsync(List<string> dias)
     {
         if (Generando || dias.Count == 0) return;
+        var peticion = Peticion(dias);
         foreach (var d in dias) D.Outfits.Remove(d);
         Generando = true; DiasGenerando = dias; Rellenos = -1; Progreso = 0; MensajeEspera = Mensajes[0];
         Avisar();
 
+        var tareaIA = _ia.PlanificarAsync(peticion);
         var inicio = DateTime.Now;
         double pasado;
-        while ((pasado = (DateTime.Now - inicio).TotalMilliseconds) < DuracionEspera)
+        // La espera dura como mínimo DuracionEspera y, si la IA tarda más, hasta que responda
+        while ((pasado = (DateTime.Now - inicio).TotalMilliseconds) < DuracionEspera || !tareaIA.IsCompleted)
         {
             await Task.Delay(150);
-            Progreso = (int)Math.Min(100, pasado / DuracionEspera * 100);
+            Progreso = (int)Math.Min(tareaIA.IsCompleted ? 100 : 95, pasado / DuracionEspera * 100);
             MensajeEspera = Mensajes[Math.Min(Mensajes.Length - 1, (int)(pasado / 900))];
             Avisar();
         }
+        var respuesta = await tareaIA;
 
-        // Se calculan en orden, para que cada día tenga en cuenta los anteriores (no repetir)
-        foreach (var d in dias) D.Outfits[d] = Recomendar(d);
+        // En orden, para que las reglas de respaldo tengan en cuenta los días anteriores (no repetir)
+        int deIA = 0;
+        foreach (var d in dias)
+        {
+            var rd = respuesta?.FirstOrDefault(x => x.Fecha == d);
+            var o = rd != null ? OutfitDesdeIA(rd) : null;
+            if (o != null) deIA++;
+            D.Outfits[d] = o ?? Recomendar(d);
+        }
         Generando = false; Rellenos = 0; Progreso = 100;
         Avisar();
         for (int i = 1; i < dias.Count; i++)
@@ -194,7 +295,7 @@ public class Estado
         await Task.Delay(250);
         DiasGenerando = new(); Rellenos = -1;
         await SonarAsync("listo");
-        MostrarAviso("Tu semana está lista");
+        MostrarAviso(respuesta == null ? _ia.ExplicarError() : deIA == dias.Count ? "Tu semana está lista" : "Tu semana está lista (algún día con mis reglas)");
         await CambiadoAsync();
     }
 
@@ -231,6 +332,16 @@ public class Estado
         D.Prendas.Add(p);
         await SonarAsync("guardado");
         MostrarAviso($"{p.Nombre} guardada en tu armario");
+        await CambiadoAsync();
+    }
+
+    /// <summary>Cambia para qué planes sirve una prenda (de lo más cómodo a lo más arreglado).</summary>
+    public async Task CambiarUsosAsync(string id, int min, int max)
+    {
+        var p = PrendaPorId(id);
+        if (p == null) return;
+        p.FormMin = min;
+        p.FormMax = max;
         await CambiadoAsync();
     }
 

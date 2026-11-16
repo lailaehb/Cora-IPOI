@@ -61,12 +61,17 @@
                 }
                 else if (o != null)
                 {
+                    if (!string.IsNullOrEmpty(o.Momento))
+                    {
+                        <h3 class="momento">@o.Momento</h3>
+                    }
                     <FilaOutfit Ids="o.Ids" Catalogo="E.D.Prendas" Animar="@(E.RecienRelleno(dia))" @key="@(dia + (E.RecienRelleno(dia) ? "-nuevo" : ""))" />
                     <p class="porque">@o.Porque</p>
+                    <LooksExtra O="o" Catalogo="E.D.Prendas" />
                     if (!pasado)
                     {
                         <div class="fila">
-                            <button class="btn secundario bajo" @onclick="() => E.OtraOpcionAsync(dia)">Otra opción</button>
+                            <button class="btn secundario bajo" disabled="@(E.PensandoDia == dia)" @onclick="() => E.OtraOpcionAsync(dia)">@(E.PensandoDia == dia ? "Pensando…" : "Otra opción")</button>
                             <button class="btn secundario bajo" aria-pressed="@(guardado ? "true" : "false")" @onclick="() => E.AlternarGuardadoDiaAsync(dia)">@Iconos.Marcador(guardado) @(guardado ? "Guardado ✓" : "Guardar")</button>
                         </div>
                     }

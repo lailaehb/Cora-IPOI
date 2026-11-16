@@ -1,7 +1,8 @@
 @page "/nueva/foto"
 @inherits PaginaCora
+@inject ServicioIA IA
 
-@* HACER UNA FOTO: abre la cámara del móvil y después se completan los datos. *@
+@* HACER UNA FOTO: abre la cámara del móvil, la IA reconoce la prenda y el usuario revisa los datos. *@
 <div class="pantalla">
     <div class="contenido">
         @if (foto == null)
@@ -25,10 +26,30 @@
                 <Caja Tipo="error" Texto="No se ha podido abrir la foto. Prueba con otra." />
             }
         }
+        else if (analizando)
+        {
+            <Cabecera Volver="true" Titulo="Revisa la prenda" />
+            <section class="tarjeta">
+                <img class="foto-nueva pensando" src="@foto" alt="Tu foto" />
+                <div class="analizando" aria-live="polite">@Iconos.Chispa <span>Cora está mirando tu foto…</span></div>
+            </section>
+        }
         else
         {
             <Cabecera Volver="true" Titulo="Revisa la prenda" Sub="Completa los datos para que Cora la tenga en cuenta" />
-            <FormPrenda @key="foto" Foto="@foto" />
+            if (sugerencia == null)
+            {
+                <Caja Texto="@(IA.ExplicarError() + " Rellena los datos a mano.")" />
+            }
+            else if (!sugerencia.EsPrenda)
+            {
+                <Caja Tipo="error" Texto="No veo ninguna prenda en la foto. Puedes repetirla o rellenar los datos a mano." />
+            }
+            else
+            {
+                <Caja Tipo="ok" Texto="He rellenado los datos a partir de la foto. Revísalos antes de guardar." />
+            }
+            <FormPrenda @key="foto" Foto="@foto" Sugerencia="@sugerencia" />
             <label class="enlace-acento centrado">
                 @Iconos.Camara Repetir la foto
                 <InputFile OnChange="Elegir" accept="image/*" capture="environment" class="oculto" />
@@ -39,12 +60,19 @@
 
 @code {
     string? foto;
-    bool fallo;
+    bool fallo, analizando;
+    SugerenciaPrenda? sugerencia;
 
     async Task Elegir(InputFileChangeEventArgs e)
     {
         var f = await Fotos.LeerAsync(e.File);
         fallo = f == null;
-        if (f != null) foto = f;
+        if (f == null) return;
+        foto = f;
+        sugerencia = null;
+        analizando = true;
+        StateHasChanged();
+        sugerencia = await IA.AnalizarFotoAsync(f);
+        analizando = false;
     }
 }

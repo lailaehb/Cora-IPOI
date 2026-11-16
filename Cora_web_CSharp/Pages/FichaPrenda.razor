@@ -24,6 +24,18 @@
                 <div><span>Marca</span><span>@(string.IsNullOrEmpty(P.Marca) ? "—" : P.Marca)</span></div>
             </section>
             <section class="tarjeta">
+                <h3>¿Para qué la usas?</h3>
+                <p class="sec">Cora solo te la propondrá para estos planes.</p>
+                <div class="chips">
+                    @for (int f = 0; f < ServicioIA.Usos.Length; f++)
+                    {
+                        var nivel = f;
+                        <Chip Texto="@ServicioIA.Usos[nivel]" Activo="@P.Encaja(nivel)" OnClick="@(() => CambiarUso(nivel))" />
+                    }
+                </div>
+                <small class="sec">Se marcan seguidos, de lo más cómodo a lo más arreglado.</small>
+            </section>
+            <section class="tarjeta">
                 @if (P.Lavando)
                 {
                     <div class="fila">@Iconos.Lavadora <h3>En la lavadora</h3></div>
@@ -65,6 +77,15 @@
     string Desde => P?.LavadoDesde ?? Fechas.Hoy;
     int DiaLavado => Math.Clamp(-Fechas.Dif(Desde) + 1, 1, Estado.DiasLavado);
     string Listo => Fechas.Dias[(int)Fechas.De(Fechas.Sumar(Desde, Estado.DiasLavado)).DayOfWeek];
+
+    async Task CambiarUso(int nivel)
+    {
+        if (P == null) return;
+        var r = ServicioIA.AlternarUso(P.FormMin, P.FormMax, nivel);
+        if (r == null) { E.MostrarAviso("Para quitar ese uso, quita antes los de los extremos."); return; }
+        if (r.Value.Min < 0) { E.MostrarAviso("La prenda tiene que servir para algún plan."); return; }
+        await E.CambiarUsosAsync(Id, r.Value.Min, r.Value.Max);
+    }
 
     async Task Lavar()
     {
