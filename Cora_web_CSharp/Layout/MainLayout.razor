@@ -14,12 +14,17 @@
             <div class="vista">@Body</div>
             if (EsPrincipal)
             {
-                <nav class="barra @(E.D.Ajustes.MenosOpciones ? "cuatro" : "")" aria-label="Secciones">
+                <nav class="barra" aria-label="Secciones">
                     <a href="" class="pestana @(Ruta == "" ? "activa" : "")" aria-current="@(Ruta == "" ? "page" : null)">@Iconos.Casa<span>Inicio</span></a>
                     <a href="armario" class="pestana @(Ruta == "armario" ? "activa" : "")" aria-current="@(Ruta == "armario" ? "page" : null)">@Iconos.Percha<span>@E.T("Armario", "Mi ropa")</span></a>
                     <a href="anadir" class="pestana mas" aria-label="Añadir prenda"><span class="circulo">@Iconos.Mas</span><span>@E.T("Añadir", "Añadir ropa")</span></a>
                     <a href="calendario" class="pestana @(Ruta == "calendario" ? "activa" : "")" aria-current="@(Ruta == "calendario" ? "page" : null)">@Iconos.Calendario<span>@E.T("Calendario", "Mis días")</span></a>
-                    @if (!E.D.Ajustes.MenosOpciones)
+                    @if (E.D.Ajustes.MenosOpciones)
+                    {
+                        @* Modo fácil: sin Explorar (es para ver a otras personas); el perfil y los ajustes, a mano *@
+                        <a href="perfil" class="pestana @(Ruta == "perfil" ? "activa" : "")" aria-current="@(Ruta == "perfil" ? "page" : null)">@Iconos.Persona<span>Mi perfil</span></a>
+                    }
+                    else
                     {
                         <a href="explorar" class="pestana @(Ruta == "explorar" ? "activa" : "")" aria-current="@(Ruta == "explorar" ? "page" : null)">@Iconos.Globo<span>Explorar</span></a>
                     }
@@ -34,7 +39,8 @@
     static readonly string[] Principales = { "", "armario", "anadir", "calendario", "explorar" };
 
     string Ruta => Nav.ToBaseRelativePath(Nav.Uri).Split('?', '#')[0].TrimEnd('/');
-    bool EsPrincipal => Principales.Contains(Ruta);
+    // En modo fácil, «Mi perfil» es una pestaña más, así que también lleva la barra de abajo
+    bool EsPrincipal => Principales.Contains(Ruta) || (Ruta == "perfil" && E.D.Ajustes.MenosOpciones);
 
     protected override void OnInitialized()
     {
