@@ -145,6 +145,25 @@ window.cora = (function () {
     });
   }
 
+  // Reduce una foto (data URL) a un lado máximo y la pasa a JPEG, para que quepa en el navegador.
+  // Se pinta sobre fondo blanco por si la foto de la tienda es PNG con transparencia.
+  function reducirImagen(dataUrl, lado) {
+    return new Promise(function (resolve) {
+      const im = new Image();
+      im.onload = function () {
+        const k = Math.min(1, (lado || 480) / Math.max(im.width, im.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(im.width * k); canvas.height = Math.round(im.height * k);
+        const c2 = canvas.getContext('2d');
+        c2.fillStyle = '#fff'; c2.fillRect(0, 0, canvas.width, canvas.height);
+        c2.drawImage(im, 0, 0, canvas.width, canvas.height);
+        try { resolve(canvas.toDataURL('image/jpeg', 0.85)); } catch (e) { resolve(null); }
+      };
+      im.onerror = function () { resolve(null); };
+      im.src = dataUrl;
+    });
+  }
+
   // ---------- Notificaciones del navegador (la ropa ya está seca) ----------
   // Funcionan con la web abierta (aunque esté en otra pestaña) en ordenador y Android.
   // En iPhone solo si la web se añade a la pantalla de inicio (iOS 16.4 o posterior).
@@ -166,5 +185,5 @@ window.cora = (function () {
     } catch (e) { return false; }
   }
 
-  return { leer: leer, guardar: guardar, aviso: aviso, pedirPermiso: pedirPermiso, notificar: notificar, qr: { camaraDisponible: camaraDisponible, iniciar: iniciar, parar: parar, leerImagen: leerImagen } };
+  return { leer: leer, guardar: guardar, aviso: aviso, pedirPermiso: pedirPermiso, notificar: notificar, qr: { camaraDisponible: camaraDisponible, iniciar: iniciar, parar: parar, leerImagen: leerImagen, reducirImagen: reducirImagen } };
 })();

@@ -341,3 +341,8 @@ details.pruebas h4 { margin-top: 8px; }
 
 /* Con letra grande, los textos de las tarjetas pasan a dos líneas en vez de cortarse con «…» */
 .letra-grande .fila-tarjeta small, .letra-muy-grande .fila-tarjeta small { white-space: normal; overflow: visible; }
+
+/* Mientras se descarga la foto de la tienda (QR de Zara, Mango…) */
+.foto-peque.cargando .foto { animation: latido 1.2s ease-in-out infinite; }
+@keyframes latido { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .foto-peque.cargando .foto { animation: none; } }

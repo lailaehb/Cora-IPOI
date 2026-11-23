@@ -1,6 +1,7 @@
 @page "/nueva/qr"
 @inherits PaginaCora
 @inject IJSRuntime JS
+@inject ServicioProducto Producto
 @using System.Text.Json
 
 @* RETO 1: escanear el QR de la etiqueta con confirmación por imagen, sonido y vibración.
@@ -53,10 +54,10 @@
         }
         else if (leida != null)
         {
-            <Caja Tipo="ok" Texto="@(tienda != null ? $"QR de {tienda}: he sacado los datos de la prenda del enlace. Revisa el tipo y, si quieres, hazle una foto." : "Revisa los datos antes de guardar. Puedes corregir lo que haga falta.")" />
+            <Caja Tipo="ok" Texto="@TextoLeido" />
             <section class="tarjeta">
                 <div class="fila">
-                    <div class="foto-peque"><FotoPrenda P="leida" /></div>
+                    <div class="foto-peque @(buscandoFoto ? "cargando" : "")" aria-busy="@buscandoFoto"><FotoPrenda P="leida" Apagada="buscandoFoto" /></div>
                     <div class="crece"><h3>@leida.Nombre</h3><p class="sec">@leida.Marca · @leida.Sub</p></div>
                 </div>
                 <label class="campo"><span>Nombre</span><input @bind="leida.Nombre" /></label>
@@ -102,7 +103,20 @@
     /// <summary>Nombre de la tienda si el QR era un enlace de su web (Zara, Mango…); null si era una etiqueta de Cora.</summary>
     string? tienda;
     string tituloError = "", textoError = "";
+    /// <summary>Enlace de la tienda leído en el QR (para descargar su foto).</summary>
+    string? enlace;
+    bool buscandoFoto;
+    /// <summary>null mientras no se sabe; true si se ha traído la foto de la tienda; false si no se ha podido.</summary>
+    bool? fotoTienda;
+    /// <summary>Cuenta las lecturas, para no poner la foto de una prenda en otra si se escanea otra mientras tanto.</summary>
+    int lectura;
     DotNetObjectReference<NuevaQr>? yo;
+
+    string TextoLeido => tienda == null
+        ? "Revisa los datos antes de guardar. Puedes corregir lo que haga falta."
+        : buscandoFoto ? $"QR de {tienda}: buscando la foto de la prenda en su web…"
+        : fotoTienda == true ? $"QR de {tienda}: he traído la foto y los datos de la prenda. Revisa el tipo antes de guardar."
+        : $"QR de {tienda}: he sacado los datos del enlace. {Producto.ExplicarError()} Si quieres, hazle tú una foto.";
 
     string Clase => fase switch { Fase.Leido => "ok", Fase.Error => "error", _ => directo ? "directo" : "" };
     string TextoEstado => fase switch
@@ -154,11 +168,16 @@
     async Task Procesar(string texto)
     {
         tienda = null;
+        enlace = null;
+        fotoTienda = null;
+        buscandoFoto = false;
+        lectura++;
         var p = LeerEtiqueta(texto);
         if (p == null && LeerEnlaceTienda(texto) is var (deTienda, marca) && deTienda != null)
         {
             p = deTienda;
             tienda = marca;
+            enlace = texto.Trim();
         }
         if (p == null)
         {
@@ -175,6 +194,29 @@
         leida = p;
         fase = Fase.Leido;
         await E.SonarAsync("leido");
+        if (enlace != null) _ = TraerFotoTienda(p, enlace, lectura);
+    }
+
+    /// <summary>Descarga la foto del producto desde la web de la tienda (a través de /api/producto).</summary>
+    async Task TraerFotoTienda(Prenda p, string url, int mia)
+    {
+        buscandoFoto = true;
+        StateHasChanged();
+        var r = await Producto.BuscarAsync(url);
+        string? foto = null;
+        if (r?.Foto != null)
+        {
+            try { foto = await JS.InvokeAsync<string?>("cora.qr.reducirImagen", r.Foto, 480); } catch { foto = null; }
+        }
+        if (mia != lectura || leida != p) return; // ya se está con otra prenda
+        buscandoFoto = false;
+        // Si el usuario ya le ha hecho su propia foto mientras tanto, se respeta la suya
+        bool sinFotoPropia = p.Foto == null || p.Foto.StartsWith("data:image/svg");
+        if (foto != null && sinFotoPropia) p.Foto = foto;
+        fotoTienda = foto != null;
+        // Si el enlace no traía nombre («Prenda de Zara»), se usa el título de la página
+        if (!string.IsNullOrWhiteSpace(r?.Titulo) && p.Nombre.StartsWith("Prenda de ")) p.Nombre = r!.Titulo!;
+        StateHasChanged();
     }
 
     void Error(string titulo, string texto)
@@ -310,6 +352,8 @@
     void Reintentar()
     {
         leida = null;
+        lectura++;
+        buscandoFoto = false;
         sinPermiso = false;
         fase = Fase.Buscando;
         arrancar = directo;
