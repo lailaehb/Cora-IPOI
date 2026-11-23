@@ -9,4 +9,6 @@ export PATH="$DOTNET_ROOT:$PATH"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 echo "→ Compilando Cora…"
 dotnet publish Cora.Web.csproj -c Release -o salida
+# Número de versión (el commit de GitHub): la app lo consulta para saber si hay una versión nueva y recargarse sola
+echo "${VERCEL_GIT_COMMIT_SHA:-$(date +%s)}" > salida/wwwroot/version.txt
 echo "→ Listo: salida/wwwroot"

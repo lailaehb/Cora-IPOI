@@ -1,4 +1,24 @@
 // Funciones del navegador que usa la app desde C# (con IJSRuntime).
+// ---------- Actualizarse sola ----------
+// Las apps añadidas a la pantalla de inicio (sobre todo en iPhone) no se recargan al abrirlas: siguen con la versión vieja.
+// Al volver a la app se mira version.txt (lo crea Vercel al publicar); si ha cambiado, se recarga con la versión nueva.
+(function () {
+  let actual = null;
+  async function mirar() {
+    try {
+      const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) return;
+      const v = (await r.text()).trim();
+      if (!v) return;
+      if (actual === null) actual = v;
+      else if (v !== actual) location.reload();
+    } catch (e) { }
+  }
+  mirar();
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') mirar(); });
+  window.addEventListener('pageshow', function (e) { if (e.persisted) mirar(); });
+})();
+
 window.cora = (function () {
   // ---------- Guardar datos en el navegador ----------
   function leer(clave) {
