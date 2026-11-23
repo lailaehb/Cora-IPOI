@@ -2,6 +2,7 @@
 @implements IDisposable
 @inject Estado E
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <div class="escenario">
     <main class="movil @E.ClasesAccesibilidad">
@@ -55,7 +56,15 @@
             await E.CargarAsync();
             ComprobarRegistro();
         }
+        // Idioma: se aplica al cargar y cada vez que se cambia en Configuración (lo traduce js/idiomas.js)
+        if (E.Listo && E.D.Ajustes.Idioma != idiomaPuesto)
+        {
+            idiomaPuesto = E.D.Ajustes.Idioma;
+            try { await JS.InvokeVoidAsync("coraIdiomas.poner", idiomaPuesto); } catch { }
+        }
     }
+
+    string? idiomaPuesto;
 
     void AlNavegar(object? s, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {

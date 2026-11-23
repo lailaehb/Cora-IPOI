@@ -6,7 +6,7 @@
   --letra: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   --logo: Georgia, "Times New Roman", serif;
   /* Para el modo oscuro: texto encima del color de Cora, huecos de carga y fondo del visor de la cámara */
-  --sobre-acento: #fff; --hueco-a: #EFE3DF; --hueco-b: #F9F2EF; --visor: #2A1F24;
+  --sobre-acento: #fff; --hueco-a: #EFE3DF; --hueco-b: #F9F2EF; --visor: #2A1F24; --interruptor-off: #CFBDB7;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: #efe3df; color: var(--texto); font: calc(15px * var(--esc, 1))/1.4 var(--letra); -webkit-text-size-adjust: 100%; }
@@ -33,7 +33,7 @@ small { font-size: calc(13px * var(--esc, 1)); }
 .arranque { flex: 1; display: grid; place-items: center; font: 600 44px var(--logo); color: var(--acento); min-height: 60vh; }
 .vista { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .pantalla { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.contenido { flex: 1; overflow-y: auto; padding: max(12px, env(safe-area-inset-top)) 20px 28px; display: flex; flex-direction: column; gap: 16px; }
+.contenido { flex: 1; overflow-y: auto; padding: max(10px, env(safe-area-inset-top)) 18px 24px; display: flex; flex-direction: column; gap: 14px; }
 .pie { padding: 10px 20px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--linea); background: var(--fondo); display: flex; flex-direction: column; gap: 8px; }
 .pad { padding: 20px; }
 
@@ -54,7 +54,7 @@ small { font-size: calc(13px * var(--esc, 1)); }
 .volver { width: 40px; height: 44px; border: 0; background: none; display: grid; place-items: center; margin-left: -10px; }
 .logo { font: 600 26px var(--logo); color: var(--acento); }
 .logo.grande { font-size: calc(46px * var(--esc, 1)); font-weight: 400; }
-.avatar { width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--acento-suave); color: var(--acento); font-weight: 700; font-size: calc(18px * var(--esc, 1)); display: grid; place-items: center; }
+.avatar { width: 40px; height: 40px; flex: none; border-radius: 50%; background: var(--acento-suave); color: var(--acento); font-weight: 700; font-size: calc(18px * var(--esc, 1)); display: grid; place-items: center; }
 .avatar.peque { width: 36px; height: 36px; font-size: calc(15px * var(--esc, 1)); }
 .avatar.grande { width: 80px; height: 80px; font-size: calc(34px * var(--esc, 1)); }
 .sec { color: var(--secundario); font-size: calc(13.5px * var(--esc, 1)); }
@@ -63,12 +63,12 @@ small { font-size: calc(13px * var(--esc, 1)); }
 
 /* Chip: seleccionado = blanco con borde de color, negrita y ✓; sin seleccionar = beige apagado */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 2px solid transparent; background: var(--linea); font-size: calc(14px * var(--esc, 1)); display: inline-flex; align-items: center; gap: 5px; }
+.chip { min-height: 38px; padding: 0 13px; border-radius: 999px; border: 2px solid transparent; background: var(--linea); font-size: calc(14px * var(--esc, 1)); display: inline-flex; align-items: center; gap: 5px; }
 .chip.on { background: var(--superficie); border-color: var(--acento); color: var(--acento); font-weight: 700; }
 
 /* Botones */
-.btn { min-height: 48px; border-radius: 12px; border: 0; background: var(--acento); color: var(--sobre-acento); font-weight: 700; padding: 0 16px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; position: relative; overflow: hidden; text-align: center; }
-.btn.secundario { background: var(--superficie); color: var(--acento); border: 1.5px solid var(--acento); font-weight: 500; }
+.btn { min-height: 46px; border-radius: 14px; border: 0; background: var(--acento); background-image: linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, 0)); box-shadow: 0 6px 14px -10px rgba(143, 63, 94, .7); color: var(--sobre-acento); font-weight: 700; padding: 0 16px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; position: relative; overflow: hidden; text-align: center; }
+.btn.secundario { background: var(--acento-suave); background-image: none; box-shadow: none; color: var(--acento); border: 0; font-weight: 600; }
 .btn.redondo { border-radius: 999px; }
 .btn.bajo { min-height: 40px; font-size: calc(14px * var(--esc, 1)); }
 .btn.corto { flex: .7; }
@@ -94,10 +94,11 @@ small { font-size: calc(13px * var(--esc, 1)); }
 .campo input:focus, .campo textarea:focus { border-color: var(--acento); outline: none; }
 .dos { display: flex; gap: 10px; }
 .interruptor { display: flex; justify-content: space-between; align-items: center; min-height: 52px; gap: 12px; }
-.interruptor input { appearance: none; width: 52px; height: 32px; border-radius: 99px; background: var(--linea); position: relative; transition: .2s; flex: none; }
-.interruptor input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; transition: .2s; }
+.interruptor input { appearance: none; width: 50px; height: 30px; border-radius: 99px; background: var(--interruptor-off); position: relative; transition: .2s; flex: none; }
+.interruptor input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: .2s; }
 .interruptor input:checked { background: var(--acento); }
 .interruptor input:checked::after { left: 23px; }
+.interruptor > span { font-weight: 500; }
 .segmentos { display: flex; background: var(--linea); border-radius: 12px; padding: 3px; gap: 3px; }
 .segmentos button { flex: 1; min-height: 40px; border: 0; border-radius: 10px; background: transparent; font-size: calc(13.5px * var(--esc, 1)); }
 .segmentos button.on { background: var(--superficie); font-weight: 700; }
@@ -251,8 +252,8 @@ small { font-size: calc(13px * var(--esc, 1)); }
 .selector-dias button.on small { color: var(--acento); } .selector-dias button.on b { font-weight: 700; }
 
 /* Explorar y perfil */
-.seguir { border: 1.5px solid var(--acento); border-radius: 999px; background: var(--superficie); color: var(--acento); padding: 6px 12px; font-size: calc(13px * var(--esc, 1)); font-weight: 500; }
-.seguir.on { font-weight: 700; }
+.seguir { border: 0; border-radius: 999px; background: var(--acento-suave); color: var(--acento); padding: 6px 12px; font-size: calc(13px * var(--esc, 1)); font-weight: 500; }
+.seguir.on { font-weight: 700; background: var(--acento); color: var(--sobre-acento); }
 .look { display: flex; gap: 8px; }
 .look > img { width: 46%; aspect-ratio: 1 / 1.8; object-fit: cover; border-radius: 12px; }
 .look-prendas { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; }
@@ -300,12 +301,14 @@ small { font-size: calc(13px * var(--esc, 1)); }
 
 /* ================= Modo fácil y accesibilidad =================
    Las clases se ponen en .movil (toda la app) según Configuración › Modo fácil y accesibilidad */
-.movil { font-size: calc(15px * var(--esc, 1)); }
-.letra-grande { --esc: 1.18; }
-.letra-muy-grande { --esc: 1.36; }
+/* El color del texto se vuelve a poner aquí para que siga al modo oscuro y al alto contraste (las variables cambian en .movil) */
+/* Tamaño normal un poco más pequeño (0.93 ≈ 14 px de letra base); el modo fácil lo agranda */
+.movil { --esc: .93; font-size: calc(15px * var(--esc, 1)); color: var(--texto); }
+.letra-grande { --esc: 1.12; }
+.letra-muy-grande { --esc: 1.3; }
 
 /* Alto contraste: textos más oscuros, acento más intenso y bordes marcados */
-.contraste { --texto: #000; --secundario: #2B2224; --linea: #857773; --acento: #74243A; --acento-suave: #F6E6E2; --fondo: #FFFFFF; }
+.contraste { --texto: #140D10; --secundario: #3D3035; --linea: #A08E89; }
 .contraste .tarjeta, .contraste .foto, .contraste .lista { border: 1.5px solid var(--linea); }
 .contraste .enlace, .contraste .enlace-acento { text-decoration: underline; }
 .contraste .chip { border-width: 2px; }
@@ -330,7 +333,7 @@ small { font-size: calc(13px * var(--esc, 1)); }
 /* Panel del modo fácil y Configuración */
 .tarjeta.destacada { border: 2px solid var(--acento-suave); }
 .interruptor span small { display: block; font-weight: 400; margin-top: 2px; }
-.interruptor.grande b { font-size: calc(17px * var(--esc, 1)); }
+.interruptor.grande b { font-size: calc(15.5px * var(--esc, 1)); }
 .panel-facil { display: flex; flex-direction: column; gap: 12px; }
 .grupo-ajustes { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--linea); }
 .grupo-ajustes h4, .pruebas h4 { margin: 0; font-size: calc(13px * var(--esc, 1)); text-transform: uppercase; letter-spacing: .06em; color: var(--acento); }
@@ -406,28 +409,37 @@ details.pruebas h4 { margin-top: 8px; }
 
 /* ================= Modo oscuro (Configuración › Ver › Tema) =================
    «Oscuro» siempre, o «Como el móvil» (sigue el ajuste claro/oscuro del teléfono).
-   Mismo granate de Cora pero en rosa claro para que se lea bien sobre fondo oscuro (contraste de más de 7:1). */
+   Mismo granate de Cora pero en un rosa empolvado, suave, que se lee bien sobre fondo oscuro (más de 7:1). */
 .oscuro {
   --fondo: #1B1517; --superficie: #272023; --texto: #F3EBEE; --secundario: #BFAEB5; --linea: #3E3236;
-  --acento: #E79AB6; --acento-suave: #43293A; --sobre-acento: #2A0F1C;
+  --acento: #D795AB; --acento-suave: #3A2730; --sobre-acento: #2A0F1C;
   --ok: #79D19F; --ok-suave: #1E3528; --aviso: #3A2D22; --error: #F28B8B; --error-suave: #3E2226;
-  --hueco-a: #2C2427; --hueco-b: #3A3034; --visor: #000; color-scheme: dark;
+  --hueco-a: #2C2427; --hueco-b: #3A3034; --visor: #000; --interruptor-off: #4D4045; color-scheme: dark;
 }
 .contraste.oscuro {
-  --fondo: #000; --superficie: #151012; --texto: #fff; --secundario: #E2D6DB; --linea: #8A7880; --acento: #F2B3CA; --acento-suave: #3A2230;
+  --fondo: #000; --superficie: #151012; --texto: #fff; --secundario: #E2D6DB; --linea: #8A7880; --acento: #EDB8CA; --acento-suave: #36222B;
 }
 @media (prefers-color-scheme: dark) {
   .tema-auto {
     --fondo: #1B1517; --superficie: #272023; --texto: #F3EBEE; --secundario: #BFAEB5; --linea: #3E3236;
-    --acento: #E79AB6; --acento-suave: #43293A; --sobre-acento: #2A0F1C;
+    --acento: #D795AB; --acento-suave: #3A2730; --sobre-acento: #2A0F1C;
     --ok: #79D19F; --ok-suave: #1E3528; --aviso: #3A2D22; --error: #F28B8B; --error-suave: #3E2226;
-    --hueco-a: #2C2427; --hueco-b: #3A3034; --visor: #000; color-scheme: dark;
+    --hueco-a: #2C2427; --hueco-b: #3A3034; --visor: #000; --interruptor-off: #4D4045; color-scheme: dark;
   }
   .contraste.tema-auto {
-    --fondo: #000; --superficie: #151012; --texto: #fff; --secundario: #E2D6DB; --linea: #8A7880; --acento: #F2B3CA; --acento-suave: #3A2230;
+    --fondo: #000; --superficie: #151012; --texto: #fff; --secundario: #E2D6DB; --linea: #8A7880; --acento: #EDB8CA; --acento-suave: #36222B;
   }
 }
 .oscuro .foto, .oscuro .collage .foto { box-shadow: none; }
 /* Que el fondo de fuera de la app (lo que se ve al estirar la pantalla en el iPhone) también sea oscuro */
 html:has(.oscuro), html:has(.oscuro) body { background: #120D0F; }
 @media (prefers-color-scheme: dark) { html:has(.tema-auto), html:has(.tema-auto) body { background: #120D0F; } }
+
+/* Segmentos (tamaño de letra, colores…): el texto en una sola línea */
+.segmentos button { white-space: nowrap; padding: 0 6px; }
+/* Títulos de cada tarjeta de Configuración, un poco más marcados que su contenido */
+.tarjeta > h3:first-child { font-size: calc(16px * var(--esc, 1)); }
+/* Al abrir la app en modo oscuro, la pantalla de carga ya sale oscura (ver index.html) */
+/* Solo mientras carga: si luego se cambia a claro, no se queda oscuro */
+html.pre-oscuro:has(.arranque), html.pre-oscuro:has(.arranque) body, html.pre-oscuro .movil:has(.arranque) { background: #1B1517; }
+html.pre-oscuro .arranque { color: #D795AB; }

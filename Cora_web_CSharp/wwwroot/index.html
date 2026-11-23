@@ -10,6 +10,11 @@
         if (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
             document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover');
         }
+        // Si la persona usa el modo oscuro, la pantalla de carga ya sale oscura (sin destello blanco al abrir)
+        try {
+            var tema = (JSON.parse(localStorage.getItem('cora-datos-v1') || '{}').Ajustes || {}).Tema;
+            if (tema === 'oscuro' || (tema === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('pre-oscuro');
+        } catch (e) { }
     </script>
     <meta name="theme-color" content="#FBEFEA" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -29,6 +34,8 @@
     <!-- Lector de códigos QR (jsQR) -->
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script src="js/cora.js"></script>
+    <!-- Idiomas: traduce la app al inglés o al francés si se elige en Configuración -->
+    <script src="js/idiomas.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 </html>

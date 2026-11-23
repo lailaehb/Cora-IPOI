@@ -130,6 +130,8 @@ public class Ajustes
     // ---- Accesibilidad (modo fácil y ajustes sueltos) ----
     /// <summary>Tamaño de letra: "normal", "grande" o "muy-grande".</summary>
     public string Letra { get; set; } = "normal";
+    /// <summary>Idioma de la app: "es", "en" o "fr".</summary>
+    public string Idioma { get; set; } = "es";
     /// <summary>Colores: "claro", "oscuro" o "auto" (como el móvil).</summary>
     public string Tema { get; set; } = "claro";
     public bool AltoContraste { get; set; }
@@ -156,6 +158,8 @@ public class Datos
     public Ajustes Ajustes { get; set; } = new();
     /// <summary>Lo que haces en Explorar: me gusta, a quién sigues y tus comentarios.</summary>
     public Social Social { get; set; } = new();
+    /// <summary>Qué tanda de prendas de ejemplo tiene este armario (para añadir las nuevas una sola vez).</summary>
+    public int VersionEjemplos { get; set; }
 }
 
 public class Social

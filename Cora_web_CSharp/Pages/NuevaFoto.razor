@@ -76,7 +76,7 @@
         analizando = true;
         paso = 0;
         StateHasChanged();
-        var tarea = IA.AnalizarFotoAsync(f);
+        var tarea = IA.AnalizarFotoAsync(f, E.D.Ajustes.Idioma);
         var inicio = DateTime.Now;
         // Como mínimo se ven todos los mensajes (unos 2,4 s); si la IA tarda más, se queda en el último
         while ((DateTime.Now - inicio).TotalMilliseconds < 2400 || !tarea.IsCompleted)

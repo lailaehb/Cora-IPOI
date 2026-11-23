@@ -24,7 +24,7 @@
                     var nombre = DatosEjemplo.PersonaDe(c.Usuario)?.Nombre ?? c.Usuario;
                     <div class="comentario">
                         <a class="avatar peque" href="@($"persona/{c.Usuario}")">@(nombre[..1])</a>
-                        <div class="crece"><b>@nombre</b> <small class="sec">@c.Hace</small><p>@c.Texto</p></div>
+                        <div class="crece"><b>@nombre</b> <small class="sec">@c.Hace</small><p data-sin-traducir>@c.Texto</p></div>
                     </div>
                 }
                 @foreach (var c in E.MisComentarios(Pub.Id))
@@ -32,7 +32,7 @@
                     var id = c.Id;
                     <div class="comentario mio">
                         <span class="avatar peque">@MiInicial</span>
-                        <div class="crece"><b>Tú</b> <small class="sec">@Hace(c.Hora)</small><p>@c.Texto</p></div>
+                        <div class="crece"><b>Tú</b> <small class="sec">@Hace(c.Hora)</small><p data-sin-traducir>@c.Texto</p></div>
                         <button class="enlace" @onclick="() => E.BorrarComentarioAsync(id)" aria-label="Borrar mi comentario">Borrar</button>
                     </div>
                 }

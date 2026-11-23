@@ -16,6 +16,14 @@ const PLANES = ['uni', 'trabajo', 'cena', 'fiesta', 'deporte', 'casa'];
 const USOS = ['Deporte', 'Diario', 'Arreglado', 'Fiesta'];
 const CATEGORIAS = ['Arriba', 'Abajo', 'Calzado', 'Capa'];
 
+// Idioma de la app: la IA escribe sus textos (momento, porque, nombre, color) en ese idioma.
+// Las categorías, tipos y planes siguen en español porque son los valores internos de la app.
+const IDIOMAS = { es: 'español', en: 'inglés (English)', fr: 'francés (français)' };
+function enIdioma(idioma) {
+  if (!idioma || idioma === 'es' || !IDIOMAS[idioma]) return '';
+  return `\n- IMPORTANTE: escribe todos los textos libres para el usuario en ${IDIOMAS[idioma]}. Los valores de las listas cerradas (categorías, tipos, planes, usos e ids) déjalos exactamente como están.`;
+}
+
 let modeloEncontrado = null; // si el modelo por defecto deja de existir, se busca otro y se recuerda
 
 // ------------------------------------------------------------------ llamada a Gemini
@@ -125,7 +133,7 @@ async function semana(clave, b) {
     gustos: b.gustos || [],
     estilos: b.estilos || [],
   };
-  const res = await preguntar(clave, INSTRUCCIONES_SEMANA,
+  const res = await preguntar(clave, INSTRUCCIONES_SEMANA + enIdioma(b.idioma),
     [{ text: 'Prepara los conjuntos con estos datos (JSON):\n' + JSON.stringify(datos) }],
     esquemaSemana(disponibles.map(p => String(p.id))));
   return { ok: true, dias: Array.isArray(res.dias) ? res.dias : [] };
@@ -164,7 +172,7 @@ async function foto(clave, b) {
   const m = /^data:(image\/[a-z+]+);base64,(.+)$/i.exec(b.imagen || '');
   if (!m) return { ok: false, error: 'sin_imagen' };
   const tipos = (b.tipos || []).map(String).slice(0, 60);
-  const res = await preguntar(clave, INSTRUCCIONES_FOTO, [
+  const res = await preguntar(clave, INSTRUCCIONES_FOTO + enIdioma(b.idioma), [
     { inlineData: { mimeType: m[1], data: m[2] } },
     { text: 'Tipos posibles: ' + tipos.join(', ') },
   ], esquemaFoto(tipos));

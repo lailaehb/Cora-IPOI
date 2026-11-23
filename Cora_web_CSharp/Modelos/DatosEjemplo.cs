@@ -6,7 +6,7 @@ public static class DatosEjemplo
     static Prenda P(string id, string n, string m, Categoria c, string sub, string color, string talla, int fmin, int fmax, int abrigo = 1, bool lluvia = true, bool lavando = false) =>
         new() { Id = id, Nombre = n, Marca = m, Cat = c, Sub = sub, Color = color, Talla = talla, FormMin = fmin, FormMax = fmax, Abrigo = abrigo, AptaLluvia = lluvia, Lavando = lavando };
 
-    public static List<Prenda> Armario() => new()
+    public static List<Prenda> Armario() => new List<Prenda>
     {
         P("camiseta_blanca", "Camiseta blanca", "Zara", Categoria.Arriba, "Camisetas", "blanco", "M", 0, 1, abrigo: 0),
         P("top_punto_gris", "Top de punto gris", "Zara", Categoria.Arriba, "Tops", "gris", "S", 1, 2, abrigo: 0),
@@ -22,6 +22,36 @@ public static class DatosEjemplo
         P("zapatillas", "Zapatillas blancas", "Nike", Categoria.Calzado, "Zapatillas", "blanco", "38", 0, 1, abrigo: 0, lluvia: true),
         P("tacones_negros", "Tacones negros", "Zara", Categoria.Calzado, "Tacones", "negro", "38", 2, 3, abrigo: 0, lluvia: false),
         P("botas_negras", "Botas altas", "Mango", Categoria.Calzado, "Botas", "marrón", "38", 1, 3, abrigo: 0, lluvia: true),
+    }.Concat(Nuevas()).ToList();
+
+    /// <summary>
+    /// Prendas añadidas en la segunda tanda de fotos (más variedad). Van aparte para poder añadirlas
+    /// también a los armarios que ya estaban guardados en el navegador (ver Estado.CargarAsync).
+    /// </summary>
+    public const int VersionEjemplos = 3;
+    public static List<Prenda> Nuevas() => new()
+    {
+        P("top_halter_negro", "Top halter satinado negro", "Zara", Categoria.Arriba, "Tops", "negro", "S", 2, 3, abrigo: 0),
+        P("top_halter_caqui", "Top halter satinado caqui", "Zara", Categoria.Arriba, "Tops", "caqui", "S", 2, 3, abrigo: 0),
+        P("body_burdeos", "Body plisado burdeos", "Zara", Categoria.Arriba, "Tops", "burdeos", "S", 2, 3, abrigo: 0),
+        P("top_peplum_rojo", "Top palabra de honor rojo", "Zara", Categoria.Arriba, "Tops", "rojo", "S", 2, 3, abrigo: 0),
+        P("top_asimetrico_negro", "Top asimétrico drapeado", "Zara", Categoria.Arriba, "Tops", "negro", "M", 1, 3, abrigo: 1),
+        P("camiseta_volantes_burdeos", "Camiseta de punto con volantes", "Zara", Categoria.Arriba, "Camisetas", "burdeos", "M", 1, 2, abrigo: 1),
+        P("vaquero_negro", "Vaquero recto negro", "Zara", Categoria.Abajo, "Vaqueros", "negro", "38", 1, 2),
+        P("vaquero_ancho_azul", "Vaquero ancho azul", "Zara", Categoria.Abajo, "Vaqueros", "azul", "38", 1, 2),
+        P("vaquero_crudo", "Vaquero recto crudo", "Zara", Categoria.Abajo, "Vaqueros", "crudo", "38", 1, 2),
+        P("chaqueta_borrego_marron", "Chaqueta de ante con borrego", "Zara", Categoria.Capa, "Chaquetas", "marrón", "M", 1, 2, abrigo: 2),
+        P("chaqueta_peplum_caqui", "Chaqueta peplum caqui", "Zara", Categoria.Capa, "Chaquetas", "caqui", "M", 1, 3, abrigo: 2),
+        P("chaqueta_piel_negra", "Chaqueta de piel con cinturón", "Zara", Categoria.Capa, "Chaquetas", "negro", "M", 1, 3, abrigo: 1),
+        // Tercera tanda: ropa cómoda y de punto
+        P("jersey_amarillo", "Jersey amarillo pastel", "Zara", Categoria.Arriba, "Jerséis", "amarillo", "M", 1, 2, abrigo: 2),
+        P("jersey_pico_marino", "Jersey de pico azul marino", "Zara", Categoria.Arriba, "Jerséis", "azul marino", "M", 1, 2, abrigo: 2),
+        P("polo_rayas_burdeos", "Jersey polo de rayas", "Zara", Categoria.Arriba, "Jerséis", "burdeos", "M", 1, 2, abrigo: 2),
+        P("camiseta_larga_gris", "Camiseta de manga larga gris", "Zara", Categoria.Arriba, "Camisetas", "gris", "M", 0, 2, abrigo: 1),
+        P("sudadera_cremallera_coral", "Sudadera con cremallera coral", "Zara", Categoria.Arriba, "Sudaderas", "coral", "M", 0, 1, abrigo: 1),
+        P("jogger_caqui", "Jogger caqui", "Zara", Categoria.Abajo, "Pantalones", "caqui", "M", 0, 1),
+        P("jogger_coral", "Jogger coral", "Zara", Categoria.Abajo, "Pantalones", "coral", "M", 0, 1),
+        P("pantalon_ancho_gris", "Pantalón ancho de felpa gris", "Zara", Categoria.Abajo, "Pantalones", "gris", "M", 0, 1),
     };
 
     /// <summary>Prendas que llegan por QR (las «etiquetas de prueba» del prototipo).</summary>
@@ -61,12 +91,12 @@ public static class DatosEjemplo
     public static readonly List<TipoPlan> Planes = new()
     {
         // Los patrones se comparan con el texto en minúsculas y sin tildes (MotorIA.Normalizar)
-        new("uni", "Universidad", 1, @"\buni\b|universidad|clase|facultad|examen|biblio|estudi|tutoria|insti", "ir a clase"),
-        new("trabajo", "Trabajo", 2, @"trabaj|oficina|reunion|entrevista|curro|practicas en", "trabajar"),
-        new("cena", "Cena", 2, @"cena|comida|comer fuera|restaurante|\bcita\b|tapas|brunch", "una cena"),
-        new("fiesta", "Fiesta", 3, @"fiesta|discoteca|cumple|boda|concierto|festival|copas|de marcha|salir de noche|salir por la noche", "una fiesta"),
-        new("deporte", "Deporte", 0, @"gimnasio|\bgym\b|deporte|correr|running|entren|padel|tenis|futbol|baloncesto|basket|voley|natacion|nadar|piscina|yoga|pilates|spinning|crossfit|zumba|\bbici|ciclismo|senderismo|\bruta\b|caminar|pesas|boxeo|escalada|partido|baile|danza", "hacer deporte"),
-        new("casa", "Sin planes", 1, @"en casa|\bnada\b|descans|recados|sin planes|compras", "un día tranquilo"),
+        new("uni", "Universidad", 1, @"\buni\b|universidad|clase|facultad|examen|biblio|estudi|tutoria|insti|class|universit|college|lecture|exam|study|library|cours|\bfac\b|bibliotheque|etudi", "ir a clase"),
+        new("trabajo", "Trabajo", 2, @"trabaj|oficina|reunion|entrevista|curro|practicas en|\bwork|office|meeting|interview|\bjob\b|travail|bureau|boulot|entretien", "trabajar"),
+        new("cena", "Cena", 2, @"cena|comida|comer fuera|restaurante|\bcita\b|tapas|brunch|dinner|lunch|restaurant|\bdate\b|diner|dejeuner|rendez-vous", "una cena"),
+        new("fiesta", "Fiesta", 3, @"fiesta|discoteca|cumple|boda|concierto|festival|copas|de marcha|salir de noche|salir por la noche|party|club|birthday|wedding|concert|drinks|night out|fete|soiree|anniversaire|mariage|boite", "una fiesta"),
+        new("deporte", "Deporte", 0, @"gimnasio|\bgym\b|deporte|correr|running|entren|padel|tenis|futbol|baloncesto|basket|voley|natacion|nadar|piscina|yoga|pilates|spinning|crossfit|zumba|\bbici|ciclismo|senderismo|\bruta\b|caminar|pesas|boxeo|escalada|partido|baile|danza|workout|\brun\b|running|training|swim|football|soccer|hike|hiking|entrainement|piscine|natation|randonnee|velo|musculation", "hacer deporte"),
+        new("casa", "Sin planes", 1, @"en casa|\bnada\b|descans|recados|sin planes|compras|at home|nothing|\brest\b|errands|shopping|maison|\brien\b|repos|courses", "un día tranquilo"),
     };
 
     public static readonly string[] Estilos = { "Casual", "Minimalista", "Clásico", "Deportivo" };
@@ -79,17 +109,35 @@ public static class DatosEjemplo
         new("marta", "Marta", "Trabajo en una oficina y busco looks cómodos que no parezcan cómodos.", new[] { "Minimalista", "Clásico" }, 860, 152),
         new("andrea", "Andrea", "Clase por la mañana, biblioteca por la tarde. Zapatillas siempre.", new[] { "Casual", "Deportivo" }, 2030, 420),
         new("carla", "Carla", "Entreno casi todos los días y me gusta ir cómoda también fuera del gimnasio.", new[] { "Deportivo" }, 540, 98),
+        new("pablo", "Pablo", "Estudio Ingeniería. Básicos, punto y zapatillas cómodas para todo el día.", new[] { "Casual", "Minimalista" }, 980, 205),
+        new("javi", "Javi", "Rayas, colores tierra y nada de complicarse por las mañanas.", new[] { "Clásico", "Casual" }, 1410, 260),
+        new("dani", "Dani", "Gimnasio por la mañana y clase por la tarde: si es cómodo, me lo pongo.", new[] { "Deportivo", "Casual" }, 720, 180),
     };
 
     public static readonly List<Publicacion> Publicaciones = new()
     {
+        new("dani3", "dani", "hace 1 h", "Para correr con frío", "Chaqueta de running, manga larga y pantalón corto. Esta mañana hacía 8 grados.", null, new[] { "chaqueta_running_negra", "camiseta_larga_gris_chico", "short_deporte_malva", "zapatillas_retro_blancas" }, 54),
         new("lucia", "lucia", "hace 2 h", "Outfit para una tarde de otoño", "Jersey gris, camisa azul y vaqueros claros.", "look_lucia", new[] { "jersey_gris", "camisa_azul", "vaquero_claro", "botas_negras" }, 124),
+        new("pablo1", "pablo", "hace 3 h", "Punto y tonos tierra", "Jersey marrón, pantalón recto y zapatillas de ante. Para clase y para después.", null, new[] { "jersey_marron_chico", "camiseta_blanca_chico", "pantalon_recto_gris", "zapatillas_ante_caqui" }, 143),
         new("marta", "marta", "hace 5 h", "Look de oficina", "Blazer con top de punto y falda. Fácil y elegante.", null, new[] { "blazer_negro", "top_punto_gris", "falda_negra", "tacones_negros" }, 87),
+        new("dani1", "dani", "hace 8 h", "Comodidad total", "Jersey de cremallera y jogger. Del gimnasio a la biblioteca sin cambiarme.", null, new[] { "jersey_cremallera_amarillo", "jogger_gris_oscuro", "zapatillas_retro_blancas" }, 88),
         new("andrea", "andrea", "ayer", "Para ir a clase", "Cómodo para todo el día: chaqueta de punto, cargo y zapatillas.", null, new[] { "jersey_negro", "camiseta_blanca", "cargo_verde", "zapatillas" }, 203),
         new("carla1", "carla", "ayer", "Del gimnasio a tomar algo", "Sudadera y chándal grises con zapatillas blancas. Cómodo y apañado.", null, new[] { "sudadera_gris", "chandal_gris", "zapatillas" }, 64),
+        new("javi1", "javi", "ayer", "Polo de rayas para cenar", "Un polo de punto con pantalón recto. Arreglado sin pasarse.", null, new[] { "polo_rayas_marino", "pantalon_recto_gris", "zapatillas_retro_blancas" }, 176),
         new("marta2", "marta", "hace 2 días", "Cena de viernes", "Top rojo con falda negra y tacones. Con el blazer por si refresca.", null, new[] { "top_rojo", "falda_negra", "tacones_negros", "blazer_negro" }, 152),
+        new("pablo2", "pablo", "hace 2 días", "Rayas de domingo", "Camiseta de rayas y cargo para un día tranquilo.", null, new[] { "camiseta_rayas_verde", "cargo_caqui_chico", "zapatillas_ante_caqui" }, 92),
         new("lucia2", "lucia", "hace 3 días", "Básicos que siempre funcionan", "Camiseta blanca, vaquero azul y botas. No falla.", null, new[] { "camiseta_blanca", "vaquero_azul", "botas_negras" }, 98),
+        new("pablo3", "pablo", "hace 3 días", "Día de lluvia", "Chaqueta impermeable y jogger. Que llueva lo que quiera.", null, new[] { "chaqueta_impermeable_lima", "camiseta_blanca_chico", "jogger_marino", "zapatillas_retro_blancas" }, 118),
         new("andrea2", "andrea", "hace 4 días", "Día de biblioteca", "Jersey gordito y vaquero claro para estar a gusto muchas horas.", null, new[] { "jersey_gris", "vaquero_claro", "zapatillas" }, 77),
+        new("dani2", "dani", "hace 4 días", "Oversize", "Camiseta oversize granate con jogger gris. Mi uniforme de entreno.", null, new[] { "camiseta_oversize_granate", "jogger_gris_oscuro", "zapatillas_retro_blancas" }, 61),
+        new("lucia3", "lucia", "hace 5 días", "Otoño de los 70", "Chaqueta de ante con borrego, vaquero ancho y botas. Mi favorito del año.", null, new[] { "chaqueta_borrego_marron", "camiseta_volantes_burdeos", "vaquero_ancho_azul", "botas_negras" }, 311),
+        new("carla2", "carla", "hace 5 días", "Conjunto coral", "Sudadera y jogger a juego. Para ir al gimnasio y luego a por un café.", null, new[] { "sudadera_cremallera_coral", "camiseta_larga_gris", "jogger_coral", "zapatillas" }, 96),
+        new("javi3", "javi", "hace 5 días", "Invierno de verdad", "Plumífero encima de rayas y pantalón recto. Abrigado y sin perder estilo.", null, new[] { "plumifero_negro", "camiseta_rayas_azul", "pantalon_recto_gris", "zapatillas_ante_caqui" }, 207),
+        new("marta3", "marta", "hace 6 días", "Noche de cumpleaños", "Top halter negro de satén con vaquero negro y tacones. Sencillo y elegante.", null, new[] { "top_halter_negro", "vaquero_negro", "tacones_negros", "chaqueta_piel_negra" }, 189),
+        new("javi2", "javi", "hace 6 días", "Básicos de rayas", "Camiseta de rayas azul, cargo y zapatillas. Fácil.", null, new[] { "camiseta_rayas_azul", "cargo_caqui_chico", "zapatillas_ante_caqui" }, 104),
+        new("andrea3", "andrea", "hace 1 semana", "Crudo y caqui", "La chaqueta peplum con el vaquero crudo queda genial para ir a clase.", null, new[] { "chaqueta_peplum_caqui", "top_asimetrico_negro", "vaquero_crudo", "zapatillas" }, 142),
+        new("dani4", "dani", "hace 1 semana", "Entreno en el parque", "Polar gris y pantalón técnico. Calentito y cómodo para moverse.", null, new[] { "chaqueta_polar_gris", "camiseta_oversize_granate", "pantalon_tecnico_negro", "zapatillas_retro_blancas" }, 73),
+        new("javi4", "javi", "hace 1 semana", "Monte el sábado", "Chaqueta técnica para la ruta. Ligera y no se moja.", null, new[] { "chaqueta_tecnica_negra", "camiseta_larga_gris_chico", "jogger_gris_oscuro", "zapatillas_ante_caqui" }, 95),
     };
 
     public static readonly Dictionary<string, ComentarioEjemplo[]> ComentariosEjemplo = new()
@@ -98,6 +146,11 @@ public static class DatosEjemplo
         ["marta"] = new ComentarioEjemplo[] { new("lucia", "Elegantísima y nada incómodo", "hace 3 h") },
         ["andrea"] = new ComentarioEjemplo[] { new("carla", "Ese cargo combina con todo", "ayer"), new("lucia", "Copio este para el lunes", "ayer") },
         ["carla1"] = new ComentarioEjemplo[] { new("andrea", "Uniforme oficial de los domingos", "ayer") },
+        ["pablo1"] = new ComentarioEjemplo[] { new("javi", "Esas zapatillas de ante son top", "hace 2 h"), new("lucia", "Muy buen combo de colores", "hace 1 h") },
+        ["javi1"] = new ComentarioEjemplo[] { new("dani", "Ese polo lo quiero", "ayer") },
+        ["dani1"] = new ComentarioEjemplo[] { new("carla", "El amarillo te queda genial", "hace 5 h") },
+        ["dani3"] = new ComentarioEjemplo[] { new("carla", "¡Qué valor con 8 grados!", "hace 30 min") },
+        ["javi3"] = new ComentarioEjemplo[] { new("pablo", "Ese plumífero tiene pinta de abrigar muchísimo", "hace 4 días"), new("marta", "Muy buena combinación", "hace 4 días") },
         ["marta2"] = new ComentarioEjemplo[] { new("lucia", "El rojo te queda genial", "hace 2 días") },
     };
 
@@ -113,5 +166,32 @@ public static class DatosEjemplo
     }
 
     /// <summary>Todas las prendas conocidas (para pintar los looks de Explorar aunque no estén en tu armario).</summary>
-    public static List<Prenda> Catalogo() => Armario().Concat(Etiquetas()).ToList();
+    public static List<Prenda> Catalogo() => Armario().Concat(Etiquetas()).Concat(Chicos()).ToList();
+
+    /// <summary>Ropa de chico de las publicaciones de Explorar (Pablo, Javi y Dani). No va a tu armario.</summary>
+    public static List<Prenda> Chicos() => new()
+    {
+        P("jersey_marron_chico", "Jersey de punto marrón", "Zara", Categoria.Arriba, "Jerséis", "marrón", "L", 1, 2, abrigo: 2),
+        P("jersey_cremallera_amarillo", "Jersey con cremallera amarillo", "Zara", Categoria.Arriba, "Jerséis", "amarillo", "L", 1, 2, abrigo: 2),
+        P("polo_rayas_marino", "Polo de punto de rayas", "Zara", Categoria.Arriba, "Jerséis", "azul marino", "L", 1, 2, abrigo: 1),
+        P("camiseta_blanca_chico", "Camiseta blanca básica", "Zara", Categoria.Arriba, "Camisetas", "blanco", "L", 0, 1, abrigo: 0),
+        P("camiseta_rayas_azul", "Camiseta de rayas azul", "Zara", Categoria.Arriba, "Camisetas", "azul", "L", 0, 1, abrigo: 1),
+        P("camiseta_rayas_verde", "Camiseta de rayas verde", "Zara", Categoria.Arriba, "Camisetas", "verde", "L", 0, 1, abrigo: 1),
+        P("camiseta_oversize_granate", "Camiseta oversize granate", "Zara", Categoria.Arriba, "Camisetas", "granate", "L", 0, 1, abrigo: 0),
+        P("jogger_gris_oscuro", "Jogger gris oscuro", "Zara", Categoria.Abajo, "Pantalones", "gris", "L", 0, 1),
+        P("cargo_caqui_chico", "Pantalón cargo jogger", "Zara", Categoria.Abajo, "Pantalones", "caqui", "L", 0, 1),
+        P("pantalon_recto_gris", "Pantalón recto gris azulado", "Zara", Categoria.Abajo, "Pantalones", "gris", "L", 1, 2),
+        P("zapatillas_retro_blancas", "Zapatillas retro blancas", "Zara", Categoria.Calzado, "Zapatillas", "blanco", "43", 0, 1, abrigo: 0),
+        P("zapatillas_ante_caqui", "Zapatillas de ante caqui", "Zara", Categoria.Calzado, "Zapatillas", "caqui", "43", 0, 2, abrigo: 0, lluvia: false),
+        // Deporte y abrigo
+        P("camiseta_larga_gris_chico", "Camiseta de manga larga gris lavado", "Zara", Categoria.Arriba, "Camisetas", "gris", "L", 0, 1, abrigo: 1),
+        P("short_deporte_malva", "Pantalón corto de deporte", "Zara", Categoria.Abajo, "Shorts", "malva", "L", 0, 0, abrigo: 0),
+        P("jogger_marino", "Jogger azul marino", "Zara", Categoria.Abajo, "Pantalones", "azul marino", "L", 0, 1),
+        P("pantalon_tecnico_negro", "Pantalón técnico negro", "Zara", Categoria.Abajo, "Pantalones", "negro", "L", 0, 1),
+        P("plumifero_negro", "Plumífero negro", "Zara", Categoria.Capa, "Abrigos", "negro", "L", 0, 2, abrigo: 2),
+        P("chaqueta_polar_gris", "Chaqueta polar gris", "Zara", Categoria.Capa, "Chaquetas", "gris", "L", 0, 1, abrigo: 1),
+        P("chaqueta_tecnica_negra", "Chaqueta técnica con capucha", "Zara", Categoria.Capa, "Chaquetas", "negro", "L", 0, 1, abrigo: 2),
+        P("chaqueta_running_negra", "Chaqueta de running negra", "Zara", Categoria.Capa, "Chaquetas", "negro", "L", 0, 0, abrigo: 1),
+        P("chaqueta_impermeable_lima", "Chaqueta impermeable lima", "Zara", Categoria.Capa, "Chaquetas", "lima", "L", 0, 1, abrigo: 1),
+    };
 }

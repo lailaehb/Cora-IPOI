@@ -44,10 +44,10 @@ public class ServicioIA
         return r?.Dias;
     }
 
-    public async Task<SugerenciaPrenda?> AnalizarFotoAsync(string imagen)
+    public async Task<SugerenciaPrenda?> AnalizarFotoAsync(string imagen, string idioma = "es")
     {
         var tipos = DatosEjemplo.Subcategorias.Values.SelectMany(x => x).Distinct().ToList();
-        var r = await EnviarAsync(new PeticionFoto { Imagen = imagen, Tipos = tipos }, IAJson.Default.PeticionFoto, IAJson.Default.RespuestaFoto, 25);
+        var r = await EnviarAsync(new PeticionFoto { Imagen = imagen, Tipos = tipos, Idioma = idioma }, IAJson.Default.PeticionFoto, IAJson.Default.RespuestaFoto, 25);
         return r?.Prenda;
     }
 
@@ -97,6 +97,8 @@ public class PeticionSemana
     public List<UsadoIA> Usadas { get; set; } = new();
     public List<string> Gustos { get; set; } = new();
     public List<string> Estilos { get; set; } = new();
+    /// <summary>Idioma en el que la IA escribe «momento» y «porque» (es, en, fr).</summary>
+    public string Idioma { get; set; } = "es";
 }
 
 public class DiaPeticion
@@ -154,6 +156,7 @@ public class PeticionFoto
 {
     public string Accion { get; set; } = "foto";
     public string Imagen { get; set; } = "";
+    public string Idioma { get; set; } = "es";
     public List<string> Tipos { get; set; } = new();
 }
 

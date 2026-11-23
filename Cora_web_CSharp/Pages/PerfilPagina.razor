@@ -45,10 +45,7 @@
                 <span class="sec">Aún no has elegido tu estilo.</span>
             }
         </div>
-        <div class="fila">
-            <a class="btn secundario" href="configuracion">Editar perfil</a>
-            <a class="btn secundario cuadrado" href="configuracion" aria-label="Configuración">@Iconos.Engranaje</a>
-        </div>
+        <a class="btn secundario" href="configuracion">Editar perfil</a>
 
         @* Tus outfits: los que has guardado de tus días y los que has guardado de Explorar *@
         <div class="segmentos" role="tablist" aria-label="Mis outfits">
@@ -80,14 +77,10 @@
             </div>
         }
 
-        <section class="tarjeta destacada">
-            <PanelFacil />
-            <a class="enlace-acento" href="configuracion">Personalizar letra, botones y textos @Iconos.Siguiente</a>
-        </section>
         <nav class="lista" aria-label="Opciones del perfil">
             <a class="fila-lista" href="armario">@Iconos.Percha<span class="crece">Mis prendas</span><span class="sec">@E.D.Prendas.Count</span>@Iconos.Siguiente</a>
             <a class="fila-lista" href="guardados?tab=prendas">@Iconos.Corazon(false)<span class="crece">Prendas favoritas</span><span class="sec">@E.D.Favoritas.Count</span>@Iconos.Siguiente</a>
-            <a class="fila-lista" href="configuracion">@Iconos.Engranaje<span class="crece">Configuración</span>@Iconos.Siguiente</a>
+            <a class="fila-lista" href="configuracion">@Iconos.Engranaje<span class="crece">Configuración<small class="sec bloque">Modo fácil, colores, avisos y lavadora</small></span>@Iconos.Siguiente</a>
         </nav>
     </div>
 </div>

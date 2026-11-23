@@ -14,6 +14,18 @@
             <PanelFacil Personalizar="true" />
         </section>
 
+        @* Idioma (cada idioma escrito en su propio idioma, para que cualquiera encuentre el suyo) *@
+        <section class="tarjeta">
+            <h3>Idioma</h3>
+            <div class="segmentos" role="radiogroup" aria-label="Idioma" data-sin-traducir>
+                @foreach (var l in new[] { ("es", "Español"), ("en", "English"), ("fr", "Français") })
+                {
+                    var v = l.Item1;
+                    <button role="radio" lang="@v" class="@(E.D.Ajustes.Idioma == v ? "on" : "")" aria-checked="@(E.D.Ajustes.Idioma == v ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Idioma = v))">@l.Item2</button>
+                }
+            </div>
+        </section>
+
         @* 2. Tu cuenta *@
         <section class="tarjeta">
             <h3>Tu cuenta</h3>

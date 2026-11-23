@@ -53,6 +53,13 @@ public class Estado
         {
             D = Iniciales();
         }
+        // Armarios guardados antes de la segunda tanda de fotos: se les añaden las prendas nuevas una vez
+        if (D.VersionEjemplos < DatosEjemplo.VersionEjemplos)
+        {
+            foreach (var p in DatosEjemplo.Nuevas().Where(n => D.Prendas.All(x => x.Id != n.Id))) D.Prendas.Add(p);
+            D.VersionEjemplos = DatosEjemplo.VersionEjemplos;
+            await GuardarAsync();
+        }
         PrepararLavadas();
         Listo = true;
         Avisar();
@@ -327,7 +334,7 @@ public class Estado
     /// <summary>Lo que se le manda a la IA: los días con sus planes y tiempo, el armario real y lo ya usado esa semana.</summary>
     PeticionSemana Peticion(List<string> dias, Dictionary<string, List<string>>? evitar = null)
     {
-        var p = new PeticionSemana { Gustos = new(D.Perfil.Gustos), Estilos = new(D.Perfil.Estilos) };
+        var p = new PeticionSemana { Gustos = new(D.Perfil.Gustos), Estilos = new(D.Perfil.Estilos), Idioma = D.Ajustes.Idioma };
         foreach (var d in dias)
         {
             var plan = D.Planes.GetValueOrDefault(d);

@@ -33,7 +33,8 @@
             }
         </div>
     }
-    <div><h3>@P.Titulo</h3><p class="sec">@P.Texto</p></div>
+    @* Lo que escribe cada persona se queda en su idioma, como en una red social *@
+    <div data-sin-traducir><h3>@P.Titulo</h3><p class="sec">@P.Texto</p></div>
     <div class="sociales">
         <button class="@(Like ? "on" : "")" aria-pressed="@(Like ? "true" : "false")" aria-label="Me gusta" @onclick="() => E.AlternarMeGustaAsync(P.Id)">@Iconos.Corazon(Like) @(P.MeGusta + (Like ? 1 : 0))</button>
         <a class="@(HeComentado ? "on" : "")" href="@($"publicacion/{P.Id}")" aria-label="@($"Comentarios ({E.TotalComentarios(P.Id)})")">@Iconos.Comentario(HeComentado) @E.TotalComentarios(P.Id)</a>

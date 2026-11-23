@@ -13,18 +13,6 @@
         <input type="checkbox" role="switch" aria-label="Modo fácil" checked="@A.ModoFacil" @onchange="@(e => E.ModoFacilAsync((bool)(e.Value ?? false)))" />
     </label>
 
-    @* Claro / oscuro: siempre a mano (aquí y en Configuración), no solo dentro de «Personalizar» *@
-    <div>
-        <span class="etq">Colores</span>
-        <div class="segmentos" role="radiogroup" aria-label="Colores">
-            @foreach (var t in Temas)
-            {
-                var v = t.Valor;
-                <button role="radio" class="@(A.Tema == v ? "on" : "")" aria-checked="@(A.Tema == v ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Tema = v))">@t.Nombre</button>
-            }
-        </div>
-    </div>
-
     @if (Personalizar)
     {
         <div class="grupo-ajustes">
@@ -37,6 +25,14 @@
                     <button role="radio" class="@(A.Letra == v ? "on" : "")" aria-checked="@(A.Letra == v ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Letra = v))">
                         <span style="font-size:@l.Tam" aria-hidden="true">Aa</span> @l.Nombre
                     </button>
+                }
+            </div>
+            <span class="etq">Colores</span>
+            <div class="segmentos" role="radiogroup" aria-label="Colores">
+                @foreach (var t in Temas)
+                {
+                    var v = t.Valor;
+                    <button role="radio" class="@(A.Tema == v ? "on" : "")" aria-checked="@(A.Tema == v ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Tema = v))">@t.Nombre</button>
                 }
             </div>
             <label class="interruptor">
@@ -82,7 +78,7 @@
 
     static readonly (string Valor, string Nombre, string Tam)[] Letras =
     {
-        ("normal", "Normal", "14px"), ("grande", "Grande", "17px"), ("muy-grande", "Muy grande", "20px"),
+        ("normal", "Normal", "13px"), ("grande", "Grande", "15px"), ("muy-grande", "Muy grande", "17px"),
     };
 
     protected override void OnInitialized() => E.Cambio += Repintar;
