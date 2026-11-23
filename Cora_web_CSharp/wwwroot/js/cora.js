@@ -105,7 +105,17 @@ window.cora = (function () {
     }
     video.srcObject = stream;
     video.setAttribute('playsinline', '');
+    video.setAttribute('muted', '');
+    video.muted = true;
     await video.play().catch(function () { });
+    // En algunas apps añadidas a la pantalla de inicio (sobre todo en iPhone) la cámara «arranca» pero no da imagen.
+    // Si en 4 segundos no llega ningún fotograma, se apaga y la app ofrece hacer una foto a la etiqueta.
+    const conImagen = await new Promise(function (ok) {
+      if (video.videoWidth > 0) return ok(true);
+      const t = setTimeout(function () { ok(video.videoWidth > 0); }, 4000);
+      video.addEventListener('loadeddata', function () { clearTimeout(t); ok(true); }, { once: true });
+    });
+    if (!conImagen) { parar(); return 'sin-imagen'; }
     const canvas = document.createElement('canvas');
     const c2 = canvas.getContext('2d', { willReadFrequently: true });
     timer = setInterval(function () {

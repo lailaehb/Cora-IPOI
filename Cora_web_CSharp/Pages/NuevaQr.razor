@@ -40,6 +40,10 @@
                     <InputFile OnChange="LeerFoto" accept="image/*" capture="environment" class="oculto" />
                 </label>
             }
+            if (sinImagen)
+            {
+                <Caja Texto="La cámara en directo no responde en este modo. Usa «Hacer una foto a la etiqueta»: se abre la cámara del móvil y Cora lee el código de la foto." />
+            }
             if (sinPermiso)
             {
                 <Caja Tipo="error" Texto="No hay permiso para usar la cámara. Actívalo en los ajustes del navegador, o usa «Hacer una foto a la etiqueta»." />
@@ -99,6 +103,8 @@
     bool directo;          // cámara en directo (solo en https o localhost)
     bool arrancar;         // hay que encender la cámara después de pintar
     bool sinPermiso;
+    /// <summary>La cámara se abrió pero no daba imagen (pasa en algunas apps de la pantalla de inicio).</summary>
+    bool sinImagen;
     Prenda? leida;
     /// <summary>Nombre de la tienda si el QR era un enlace de su web (Zara, Mango…); null si era una etiqueta de Cora.</summary>
     string? tienda;
@@ -140,7 +146,7 @@
         {
             arrancar = false;
             var r = await JS.InvokeAsync<string>("cora.qr.iniciar", "video-qr", yo);
-            if (r != "ok") { directo = false; sinPermiso = r == "sin-permiso"; StateHasChanged(); }
+            if (r != "ok") { directo = false; sinPermiso = r == "sin-permiso"; sinImagen = r == "sin-imagen"; StateHasChanged(); }
         }
     }
 
@@ -389,6 +395,7 @@
         lectura++;
         buscandoFoto = false;
         sinPermiso = false;
+        sinImagen = false;
         fase = Fase.Buscando;
         arrancar = directo;
     }
