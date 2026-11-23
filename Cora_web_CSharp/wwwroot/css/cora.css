@@ -6,7 +6,7 @@
   --letra: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   --logo: Georgia, "Times New Roman", serif;
   /* Para el modo oscuro: texto encima del color de Cora, huecos de carga y fondo del visor de la cámara */
-  --sobre-acento: #fff; --hueco-a: #EFE3DF; --hueco-b: #F9F2EF; --visor: #2A1F24; --interruptor-off: #CFBDB7;
+  --sobre-acento: #fff; --hueco-a: #EFE3DF; --hueco-b: #F9F2EF; --visor: #2A1F24; --interruptor-off: #CFBDB7; --hoy-fin: #FFF9F6; --foto-hoy: #FBF6F3;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: #efe3df; color: var(--texto); font: calc(15px * var(--esc, 1))/1.4 var(--letra); -webkit-text-size-adjust: 100%; }
@@ -155,7 +155,10 @@ small { font-size: calc(13px * var(--esc, 1)); }
 
 /* Inicio */
 .saludo { font-size: calc(26px * var(--esc, 1)); }
-.hoy { background: var(--acento-suave); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.hoy { background: linear-gradient(180deg, var(--superficie) 0%, var(--hoy-fin) 100%); border: 1px solid var(--linea); box-shadow: 0 10px 28px -18px rgba(120, 50, 75, .35); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.hoy h2 { color: var(--acento); }
+.hoy .pastilla { background: var(--fondo); }
+.hoy .collage .foto { background: var(--foto-hoy); box-shadow: none; }
 .etiquetas { display: flex; flex-wrap: wrap; gap: 8px; }
 .pastilla { display: inline-flex; align-items: center; gap: 6px; background: var(--superficie); border-radius: 999px; padding: 5px 10px; font-size: calc(13px * var(--esc, 1)); font-weight: 500; }
 .pastilla .ico { width: 16px; height: 16px; color: var(--acento); }
@@ -414,7 +417,7 @@ details.pruebas h4 { margin-top: 8px; }
   --fondo: #1B1517; --superficie: #272023; --texto: #F3EBEE; --secundario: #BFAEB5; --linea: #3E3236;
   --acento: #D795AB; --acento-suave: #3A2730; --sobre-acento: #2A0F1C;
   --ok: #79D19F; --ok-suave: #1E3528; --aviso: #3A2D22; --error: #F28B8B; --error-suave: #3E2226;
-  --hueco-a: #2C2427; --hueco-b: #3A3034; --visor: #000; --interruptor-off: #4D4045; color-scheme: dark;
+  --hueco-a: #2C2427; --hueco-b: #3A3034; --visor: #000; --interruptor-off: #4D4045; --hoy-fin: #2A2226; --foto-hoy: #E9E3E5; color-scheme: dark;
 }
 .contraste.oscuro {
   --fondo: #000; --superficie: #151012; --texto: #fff; --secundario: #E2D6DB; --linea: #8A7880; --acento: #EDB8CA; --acento-suave: #36222B;
@@ -424,7 +427,7 @@ details.pruebas h4 { margin-top: 8px; }
     --fondo: #1B1517; --superficie: #272023; --texto: #F3EBEE; --secundario: #BFAEB5; --linea: #3E3236;
     --acento: #D795AB; --acento-suave: #3A2730; --sobre-acento: #2A0F1C;
     --ok: #79D19F; --ok-suave: #1E3528; --aviso: #3A2D22; --error: #F28B8B; --error-suave: #3E2226;
-    --hueco-a: #2C2427; --hueco-b: #3A3034; --visor: #000; --interruptor-off: #4D4045; color-scheme: dark;
+    --hueco-a: #2C2427; --hueco-b: #3A3034; --visor: #000; --interruptor-off: #4D4045; --hoy-fin: #2A2226; --foto-hoy: #E9E3E5; color-scheme: dark;
   }
   .contraste.tema-auto {
     --fondo: #000; --superficie: #151012; --texto: #fff; --secundario: #E2D6DB; --linea: #8A7880; --acento: #EDB8CA; --acento-suave: #36222B;
@@ -487,3 +490,6 @@ html.pre-oscuro .arranque { color: #D795AB; }
 @keyframes pestana-salto { 40% { transform: translateY(-3px); } }
 .sociales button.on .ico { animation: latir .35s ease; }
 @keyframes latir { 40% { transform: scale(1.25); } }
+
+/* El fondo blanco de las fotos de las prendas se funde con el color de su tarjeta (sin rectángulo blanco) */
+.foto img { mix-blend-mode: multiply; }
