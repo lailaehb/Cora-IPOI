@@ -118,8 +118,9 @@ small { font-size: 13px; }
 .lista { background: var(--superficie); border-radius: var(--r); overflow: hidden; }
 
 /* Fotos de prendas */
-.foto { width: 100%; background: var(--superficie); border: 1px solid var(--linea); border-radius: 12px; display: grid; place-items: center; overflow: hidden; }
-.foto img { width: 86%; height: 86%; object-fit: contain; }
+/* La foto se adapta entera al recuadro (sin recortarse), sea alta, ancha o cuadrada */
+.foto { position: relative; display: block; width: 100%; background: var(--superficie); border: 1px solid var(--linea); border-radius: 12px; overflow: hidden; }
+.foto img { position: absolute; inset: 7%; width: 86%; height: 86%; object-fit: contain; }
 .foto img.apagada { opacity: .35; }
 .foto.vacia { background: var(--fondo); border: 0; aspect-ratio: 1; }
 .tprenda { border: 0; background: none; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -134,7 +135,7 @@ small { font-size: 13px; }
 .cuadricula { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .estante { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
 .estante .tprenda { width: 106px; flex: none; }
-.foto-nueva { width: 96px; height: 96px; border-radius: 12px; object-fit: cover; }
+.foto-nueva { width: 120px; height: 150px; border-radius: 12px; object-fit: contain; background: var(--superficie); border: 1px solid var(--linea); align-self: center; }
 .foto-heroe { width: 96px; flex: none; }
 .foto-peque { width: 64px; flex: none; }
 
@@ -252,7 +253,7 @@ small { font-size: 13px; }
 .look { display: flex; gap: 8px; }
 .look > img { width: 46%; aspect-ratio: 1 / 1.8; object-fit: cover; border-radius: 12px; }
 .look-prendas { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; }
-.look-grande { width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; }
+.look-grande { width: 100%; height: 260px; object-fit: contain; background: var(--superficie); border-radius: 12px; }
 .sociales { display: flex; align-items: center; gap: 4px; }
 .sociales button { border: 0; background: none; color: var(--acento); display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 6px; font-weight: 500; }
 .sociales button.on { font-weight: 700; }
