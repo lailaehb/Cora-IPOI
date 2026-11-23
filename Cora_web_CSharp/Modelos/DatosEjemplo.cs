@@ -105,13 +105,13 @@ public static class DatosEjemplo
     // ---------------------------------------------------------------- Explorar
     public static readonly List<Persona> Personas = new()
     {
-        new("lucia", "Lucía", "Estudiante de Bellas Artes. Capas, tonos neutros y botas todo el otoño.", new[] { "Casual", "Clásico" }, 1240, 310),
-        new("marta", "Marta", "Trabajo en una oficina y busco looks cómodos que no parezcan cómodos.", new[] { "Minimalista", "Clásico" }, 860, 152),
-        new("andrea", "Andrea", "Clase por la mañana, biblioteca por la tarde. Zapatillas siempre.", new[] { "Casual", "Deportivo" }, 2030, 420),
+        new("lucia", "Lucía", "Estudiante de Bellas Artes. Vaqueros, botas y prendas con aire setentero.", new[] { "Casual", "Clásico" }, 1240, 310),
+        new("marta", "Marta", "Trabajo en una oficina. Looks sencillos para el día y algo especial para salir de noche.", new[] { "Minimalista", "Clásico" }, 860, 152),
+        new("andrea", "Andrea", "Estudiante. Clase por la mañana, biblioteca por la tarde y zapatillas siempre.", new[] { "Casual", "Deportivo" }, 2030, 420),
         new("carla", "Carla", "Entreno casi todos los días y me gusta ir cómoda también fuera del gimnasio.", new[] { "Deportivo" }, 540, 98),
-        new("pablo", "Pablo", "Estudio Ingeniería. Básicos, punto y zapatillas cómodas para todo el día.", new[] { "Casual", "Minimalista" }, 980, 205),
-        new("javi", "Javi", "Rayas, colores tierra y nada de complicarse por las mañanas.", new[] { "Clásico", "Casual" }, 1410, 260),
-        new("dani", "Dani", "Gimnasio por la mañana y clase por la tarde: si es cómodo, me lo pongo.", new[] { "Deportivo", "Casual" }, 720, 180),
+        new("pablo", "Pablo", "Estudio Ingeniería. Básicos, jerséis de punto y zapatillas cómodas para todo el día.", new[] { "Casual", "Minimalista" }, 980, 205),
+        new("javi", "Javi", "Me encantan las rayas y los colores tierra. Entre semana, sencillo; el finde, al monte.", new[] { "Clásico", "Casual" }, 1410, 260),
+        new("dani", "Dani", "Gimnasio por la mañana y clase por la tarde. Si es cómodo, me lo pongo, haga el frío que haga.", new[] { "Deportivo", "Casual" }, 720, 180),
     };
 
     public static readonly List<Publicacion> Publicaciones = new()
@@ -155,6 +155,22 @@ public static class DatosEjemplo
     };
 
     public static Persona? PersonaDe(string usuario) => Personas.FirstOrDefault(p => p.Usuario == usuario);
+
+    /// <summary>A quién sigue cada persona de ejemplo (dentro de Cora). Los seguidores salen de aquí al revés.</summary>
+    static readonly Dictionary<string, string[]> SigueA = new()
+    {
+        ["lucia"] = new[] { "marta", "andrea", "javi" },
+        ["marta"] = new[] { "lucia", "carla", "pablo" },
+        ["andrea"] = new[] { "lucia", "carla", "dani", "pablo" },
+        ["carla"] = new[] { "andrea", "dani" },
+        ["pablo"] = new[] { "javi", "dani", "lucia" },
+        ["javi"] = new[] { "pablo", "marta" },
+        ["dani"] = new[] { "carla", "pablo", "andrea" },
+    };
+    public static List<Persona> SiguiendoDe(string usuario) =>
+        (SigueA.TryGetValue(usuario, out var l) ? l : Array.Empty<string>()).Select(PersonaDe).Where(p => p != null).Select(p => p!).ToList();
+    public static List<Persona> SeguidoresDe(string usuario) =>
+        Personas.Where(p => SigueA.TryGetValue(p.Usuario, out var l) && l.Contains(usuario)).ToList();
     public static Publicacion? PublicacionDe(string id) => Publicaciones.FirstOrDefault(p => p.Id == id);
     public static ComentarioEjemplo[] ComentariosDe(string id) => ComentariosEjemplo.TryGetValue(id, out var c) ? c : Array.Empty<ComentarioEjemplo>();
 

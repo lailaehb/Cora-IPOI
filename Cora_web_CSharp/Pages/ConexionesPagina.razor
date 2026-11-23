@@ -1,0 +1,80 @@
+@page "/conexiones/{Usuario}/{Tipo}"
+@inherits PaginaCora
+
+@* SEGUIDORES Y SIGUIENDO de una persona de Explorar o tuyos (Usuario = "yo").
+   Se llega tocando los números del perfil. Dos pestañas para pasar de una lista a otra. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="@Titulo" />
+        <div class="segmentos" role="tablist" aria-label="Seguidores o siguiendo">
+            <button role="tab" aria-selected="@(Tipo == "seguidores" ? "true" : "false")" class="@(Tipo == "seguidores" ? "on" : "")" @onclick="@(() => Ir($"conexiones/{Usuario}/seguidores"))">Seguidores</button>
+            <button role="tab" aria-selected="@(Tipo == "siguiendo" ? "true" : "false")" class="@(Tipo == "siguiendo" ? "on" : "")" @onclick="@(() => Ir($"conexiones/{Usuario}/siguiendo"))">Siguiendo</button>
+        </div>
+
+        @if (Lista.Count == 0 && !ConTu)
+        {
+            <Caja Texto="@Vacio" />
+        }
+        <div class="lista-personas">
+            @if (ConTu)
+            {
+                @* Tú también apareces si sigues a esta persona *@
+                <a class="tarjeta fila persona-fila persona-enlace" href="perfil">
+                    <span class="avatar">
+                        @if (E.D.Perfil.Foto != null)
+                        {
+                            <img src="@E.D.Perfil.Foto" alt="" />
+                        }
+                        else
+                        {
+                            @MiInicial
+                        }
+                    </span>
+                    <span class="crece"><b>Tú</b><small class="sec bloque">@(string.IsNullOrWhiteSpace(E.D.Perfil.Usuario) ? "" : "@" + E.D.Perfil.Usuario)</small></span>
+                </a>
+            }
+            @foreach (var per in Lista)
+            {
+                var pe = per;
+                bool sigo = E.Sigo(pe.Usuario);
+                <div class="tarjeta fila persona-fila">
+                    <a href="@($"persona/{pe.Usuario}")" class="fila crece persona-enlace">
+                        <span class="avatar">@(pe.Nombre[..1])</span>
+                        <span class="crece"><b>@pe.Nombre</b><small class="sec bloque">@("@")@pe.Usuario</small></span>
+                    </a>
+                    <button class="seguir @(sigo ? "on" : "")" aria-pressed="@(sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(pe.Usuario)">@(sigo ? "✓ Siguiendo" : "Seguir")</button>
+                </div>
+            }
+        </div>
+        @if (Resto > 0)
+        {
+            <small class="sec centro">@($"Y {Resto} personas más que no usan Cora todavía")</small>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Usuario { get; set; } = "";
+    [Parameter] public string Tipo { get; set; } = "seguidores";
+
+    bool Yo => Usuario == "yo";
+    Persona? Per => Yo ? null : DatosEjemplo.PersonaDe(Usuario);
+    string Nombre => Yo ? "Tú" : Per?.Nombre ?? Usuario;
+    string Titulo => Yo ? "Mi perfil" : Nombre;
+    string MiInicial => string.IsNullOrEmpty(E.D.Perfil.Nombre) ? "T" : E.D.Perfil.Nombre[..1].ToUpper();
+
+    /// <summary>Las personas de la lista (las de ejemplo que hay en Cora).</summary>
+    List<Persona> Lista => Tipo == "siguiendo"
+        ? (Yo ? E.D.Social.Siguiendo.Select(DatosEjemplo.PersonaDe).Where(p => p != null).Select(p => p!).ToList() : DatosEjemplo.SiguiendoDe(Usuario))
+        : (Yo ? new List<Persona>() : DatosEjemplo.SeguidoresDe(Usuario));
+
+    /// <summary>En los seguidores de otra persona sales tú si la sigues.</summary>
+    bool ConTu => !Yo && Tipo == "seguidores" && E.Sigo(Usuario);
+
+    /// <summary>El perfil dice, por ejemplo, 980 seguidores: los que no están en la lista son gente de fuera de Cora.</summary>
+    int Resto => Yo || Per == null ? 0 : Math.Max(0, (Tipo == "siguiendo" ? Per.Siguiendo : Per.Seguidores) - Lista.Count);
+
+    string Vacio => Yo
+        ? (Tipo == "siguiendo" ? "Aún no sigues a nadie. Busca personas en Explorar y pulsa «Seguir»." : "Aún no te sigue nadie. Cuando alguien te siga, aparecerá aquí.")
+        : "Aquí todavía no hay nadie.";
+}

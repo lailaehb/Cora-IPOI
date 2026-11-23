@@ -383,7 +383,7 @@ details.pruebas h4 { margin-top: 8px; }
 .mini-outfit b { font-size: calc(13.5px * var(--esc, 1)); line-height: 1.25; }
 .mini-collage { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px; }
 .mini-collage .foto { border: 0; border-radius: 8px; }
-.numeros { display: flex; justify-content: space-around; text-align: center; }
+.numeros { display: flex; flex-direction: row; justify-content: space-around; align-items: center; text-align: center; gap: 8px; }
 .numeros span { display: flex; flex-direction: column; }
 .numeros b { font-size: calc(18px * var(--esc, 1)); }
 .sociales a { color: var(--acento); display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 6px; font-weight: 500; }
@@ -463,3 +463,27 @@ html.pre-oscuro .arranque { color: #D795AB; }
 .buscador input::-webkit-search-cancel-button { display: none; }
 .buscador .limpiar { border: 0; background: var(--linea); color: var(--texto); width: 32px; height: 32px; border-radius: 50%; font-size: 18px; line-height: 1; flex: none; }
 .resultados { display: flex; flex-direction: column; gap: 14px; }
+
+/* ================= Transiciones =================
+   · Cada pantalla entra con un fundido y un pequeño deslizamiento hacia arriba (no aparece de golpe).
+   · Botones, tarjetas y pestañas se «hunden» un poco al pulsarlos, para que se note el toque.
+   · Con «Reducir movimiento» activado en el móvil, no hay animaciones (regla de más arriba). */
+.vista > .pantalla { animation: entrar-pantalla .28s cubic-bezier(.2, .7, .3, 1) both; }
+@keyframes entrar-pantalla { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.contenido > .tarjeta, .contenido > section, .contenido > .lista { animation: entrar-bloque .35s cubic-bezier(.2, .7, .3, 1) both; }
+.contenido > :nth-child(2) { animation-delay: .03s; } .contenido > :nth-child(3) { animation-delay: .06s; }
+.contenido > :nth-child(4) { animation-delay: .09s; } .contenido > :nth-child(n+5) { animation-delay: .12s; }
+@keyframes entrar-bloque { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.btn, .chip, .seguir, .segmentos button, .pestana, .fila-lista, .mini-outfit, .tprenda, .dia, .sociales button, .sociales a, .avatar, .persona-mini, .dia-enlace, .icono, .volver {
+  transition: transform .15s ease, background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+.btn:active:not(:disabled), .chip:active, .seguir:active, .segmentos button:active, .mini-outfit:active, .tprenda:active,
+.dia:active, .sociales button:active, .sociales a:active, .persona-mini:active, .icono:active, .volver:active { transform: scale(.96); }
+.fila-lista:active, .persona-fila:active { background-color: var(--acento-suave); }
+.pestana:active .ico, .pestana:active .circulo { transform: scale(.9); }
+.pestana .ico, .pestana .circulo { transition: transform .15s ease; }
+.pestana.activa .ico { animation: pestana-salto .3s ease; }
+@keyframes pestana-salto { 40% { transform: translateY(-3px); } }
+.sociales button.on .ico { animation: latir .35s ease; }
+@keyframes latir { 40% { transform: scale(1.25); } }

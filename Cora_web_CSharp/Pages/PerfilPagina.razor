@@ -23,13 +23,13 @@
             </label>
             <div class="crece numeros">
                 <span><b>@MisOutfits.Count</b><small class="sec">outfits</small></span>
-                <span><b>0</b><small class="sec">seguidores</small></span>
-                <a href="explorar"><b>@E.D.Social.Siguiendo.Count</b><small class="sec">siguiendo</small></a>
+                <a href="conexiones/yo/seguidores"><b>0</b><small class="sec">seguidores</small></a>
+                <a href="conexiones/yo/siguiendo"><b>@E.D.Social.Siguiendo.Count</b><small class="sec">siguiendo</small></a>
             </div>
         </div>
         <div>
             <h2>@(string.IsNullOrEmpty(E.D.Perfil.Nombre) ? "Tu nombre" : E.D.Perfil.Nombre)</h2>
-            <p class="sec">@($"@{E.D.Perfil.Usuario}{(string.IsNullOrEmpty(E.D.Perfil.Ciudad) ? "" : $" · {E.D.Perfil.Ciudad}")}")</p>
+            <p class="sec">@string.Join(" · ", new[] { string.IsNullOrWhiteSpace(E.D.Perfil.Usuario) ? "" : "@" + E.D.Perfil.Usuario, E.D.Perfil.Ciudad }.Where(x => !string.IsNullOrWhiteSpace(x)))</p>
         </div>
         @if (!string.IsNullOrWhiteSpace(E.D.Perfil.Bio))
         {

@@ -141,6 +141,10 @@ window.coraIdiomas = (function () {
     'Universidad': ['University', 'Université'], 'Trabajo': ['Work', 'Travail'], 'Cena': ['Dinner', 'Dîner'],
 
     // Explorar
+    'Seguidores': ['Followers', 'Abonnés'], 'Siguiendo': ['Following', 'Abonnements'], 'Seguidores o siguiendo': ['Followers or following', 'Abonnés ou abonnements'],
+    'Aún no sigues a nadie. Busca personas en Explorar y pulsa «Seguir».': ["You don't follow anyone yet. Find people in Explore and tap “Follow”.", "Tu ne suis encore personne. Cherche des personnes dans Explorer et touche « Suivre »."],
+    'Aún no te sigue nadie. Cuando alguien te siga, aparecerá aquí.': ['No one follows you yet. When someone does, they will appear here.', "Personne ne te suit encore. Quand quelqu'un te suivra, il apparaîtra ici."],
+    'Aquí todavía no hay nadie.': ['No one here yet.', "Personne ici pour l'instant."],
     'Buscar personas u outfits': ['Search people or outfits', 'Rechercher des personnes ou des tenues'], 'Borrar búsqueda': ['Clear search', 'Effacer la recherche'],
     'Comprobando…': ['Checking…', 'Vérification…'], 'Escribe una edad real, entre 13 y 100 años.': ['Enter a real age, between 13 and 100.', 'Indique un âge réel, entre 13 et 100 ans.'],
     'Escribe tu ciudad para que Cora sepa qué tiempo hace.': ['Enter your city so Cora knows the weather.', 'Indique ta ville pour que Cora connaisse la météo.'],
@@ -310,6 +314,7 @@ window.coraIdiomas = (function () {
     [/^hace (\d+) días$/, (m) => [`${m[1]} days ago`, `il y a ${m[1]} jours`][i]],
     [/^No encontramos «(.+)»\. Revisa cómo está escrita\.$/, (m) => [`We can't find “${m[1]}”. Check the spelling.`, `Nous ne trouvons pas « ${m[1]} ». Vérifie l'orthographe.`][i]],
     [/^No hay resultados para «(.+)»\. Prueba con un nombre o con una prenda, por ejemplo «vaquero»\.$/, (m) => [`No results for “${m[1]}”. Try a name or an item, for example “jeans”.`, `Aucun résultat pour « ${m[1]} ». Essaie un nom ou un vêtement, par exemple « jean ».`][i]],
+    [/^Y (\d+) personas más que no usan Cora todavía$/, (m) => [`And ${m[1]} more people who don't use Cora yet`, `Et ${m[1]} autres personnes qui n'utilisent pas encore Cora`][i]],
     [/^Seguir a (.+)$/, (m) => [`Follow ${m[1]}`, `Suivre ${m[1]}`][i]], [/^Outfit de (.+)$/, (m) => [`${m[1]}'s outfit`, `Tenue de ${m[1]}`][i]],
     [/^Ver el perfil de (.+)$/, (m) => [`See ${m[1]}'s profile`, `Voir le profil de ${m[1]}`][i]],
     [/^Comentarios \((\d+)\)$/, (m) => [`Comments (${m[1]})`, `Commentaires (${m[1]})`][i]],

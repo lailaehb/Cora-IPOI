@@ -72,10 +72,15 @@
         InvokeAsync(StateHasChanged);
     }
 
-    /// <summary>Si la persona aún no se ha registrado, la lleva al registro.</summary>
+    /// <summary>
+    /// Si la persona aún no se ha registrado, la lleva al registro; y si ya lo está y abre la página de registro
+    /// (por ejemplo, porque añadió la app a la pantalla de inicio estando en el registro), la lleva al inicio.
+    /// </summary>
     void ComprobarRegistro()
     {
-        if (E.Listo && !E.D.Perfil.Registrada && Ruta != "registro") Nav.NavigateTo("registro", replace: true);
+        if (!E.Listo) return;
+        if (!E.D.Perfil.Registrada && Ruta != "registro") Nav.NavigateTo("registro", replace: true);
+        else if (E.D.Perfil.Registrada && Ruta == "registro") Nav.NavigateTo("", replace: true);
     }
 
     void Repintar() => InvokeAsync(StateHasChanged);

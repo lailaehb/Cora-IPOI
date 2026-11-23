@@ -28,7 +28,7 @@ public static class Iconos
     public static MarkupString Marcador(bool lleno) => S("<path d='M6 3h12v18l-6-4-6 4z'/>", 20, 1.8, lleno ? "currentColor" : "none");
     public static MarkupString Corazon(bool lleno) => S("<path d='M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z'/>", 22, 1.8, lleno ? "currentColor" : "none");
     public static MarkupString Comentario(bool lleno) => S("<path d='M4 5h16v11H9l-5 4z'/>", 22, 1.8, lleno ? "currentColor" : "none");
-    public static MarkupString Engranaje => S("<circle cx='12' cy='12' r='3'/><path d='M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1'/>", 22);
+    public static MarkupString Engranaje => S("<circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z'/>", 22);
     public static MarkupString Chispa => S("<path d='M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z'/><path d='M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z'/>", 20);
     public static MarkupString Info => S("<circle cx='12' cy='12' r='9'/><path d='M12 11v5M12 8h.01'/>", 20);
     public static MarkupString Check => S("<path d='M5 12l5 5L20 7'/>", 16, 2.6);

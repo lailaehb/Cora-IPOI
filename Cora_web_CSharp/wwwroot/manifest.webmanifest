@@ -1,0 +1,19 @@
+{
+  "name": "Cora",
+  "short_name": "Cora",
+  "description": "Tu armario, a tu manera",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FBEFEA",
+  "theme_color": "#FBEFEA",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icono.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

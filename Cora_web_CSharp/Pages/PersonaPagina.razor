@@ -16,8 +16,8 @@
                 <span class="avatar grande">@(Per.Nombre[..1])</span>
                 <div class="crece numeros">
                     <span><b>@Suyas.Count</b><small class="sec">outfits</small></span>
-                    <span><b>@(Per.Seguidores + (Sigo ? 1 : 0))</b><small class="sec">seguidores</small></span>
-                    <span><b>@Per.Siguiendo</b><small class="sec">siguiendo</small></span>
+                    <a href="@($"conexiones/{Per.Usuario}/seguidores")"><b>@(Per.Seguidores + (Sigo ? 1 : 0))</b><small class="sec">seguidores</small></a>
+                    <a href="@($"conexiones/{Per.Usuario}/siguiendo")"><b>@Per.Siguiendo</b><small class="sec">siguiendo</small></a>
                 </div>
             </div>
             <p data-sin-traducir>@Per.Bio</p>
