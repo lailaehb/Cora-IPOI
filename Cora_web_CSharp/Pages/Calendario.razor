@@ -71,7 +71,7 @@
                     if (!pasado)
                     {
                         <div class="fila">
-                            <button class="btn secundario bajo" disabled="@(E.PensandoDia == dia)" @onclick="() => E.OtraOpcionAsync(dia)">@(E.PensandoDia == dia ? "Pensando…" : "Otra opción")</button>
+                            <button class="btn secundario bajo extra" disabled="@(E.PensandoDia == dia)" @onclick="() => E.OtraOpcionAsync(dia)">@(E.PensandoDia == dia ? "Pensando…" : E.T("Otra opción", "Ver otra"))</button>
                             <button class="btn secundario bajo" aria-pressed="@(guardado ? "true" : "false")" @onclick="() => E.AlternarGuardadoDiaAsync(dia)">@Iconos.Marcador(guardado) @(guardado ? "Guardado ✓" : "Guardar")</button>
                         </div>
                     }
@@ -96,7 +96,7 @@
         }
         else
         {
-            <a class="btn" href="@($"planificar?dia={(Fechas.Dif(sel) >= 0 ? sel : Hoy)}")">@Iconos.Chispa Planificar con IA</a>
+            <a class="btn" href="@($"planificar?dia={(Fechas.Dif(sel) >= 0 ? sel : Hoy)}")">@Iconos.Chispa @E.T("Planificar con IA", "Elegir mi ropa")</a>
         }
     </footer>
 </div>

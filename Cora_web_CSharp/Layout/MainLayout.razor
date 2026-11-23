@@ -4,7 +4,7 @@
 @inject NavigationManager Nav
 
 <div class="escenario">
-    <main class="movil">
+    <main class="movil @E.ClasesAccesibilidad">
         @if (!E.Listo)
         {
             <div class="arranque">Cora</div>
@@ -14,12 +14,15 @@
             <div class="vista">@Body</div>
             if (EsPrincipal)
             {
-                <nav class="barra" aria-label="Secciones">
+                <nav class="barra @(E.D.Ajustes.MenosOpciones ? "cuatro" : "")" aria-label="Secciones">
                     <a href="" class="pestana @(Ruta == "" ? "activa" : "")" aria-current="@(Ruta == "" ? "page" : null)">@Iconos.Casa<span>Inicio</span></a>
-                    <a href="armario" class="pestana @(Ruta == "armario" ? "activa" : "")" aria-current="@(Ruta == "armario" ? "page" : null)">@Iconos.Percha<span>Armario</span></a>
-                    <a href="anadir" class="pestana mas" aria-label="Añadir prenda"><span class="circulo">@Iconos.Mas</span><span>Añadir</span></a>
-                    <a href="calendario" class="pestana @(Ruta == "calendario" ? "activa" : "")" aria-current="@(Ruta == "calendario" ? "page" : null)">@Iconos.Calendario<span>Calendario</span></a>
-                    <a href="explorar" class="pestana @(Ruta == "explorar" ? "activa" : "")" aria-current="@(Ruta == "explorar" ? "page" : null)">@Iconos.Globo<span>Explorar</span></a>
+                    <a href="armario" class="pestana @(Ruta == "armario" ? "activa" : "")" aria-current="@(Ruta == "armario" ? "page" : null)">@Iconos.Percha<span>@E.T("Armario", "Mi ropa")</span></a>
+                    <a href="anadir" class="pestana mas" aria-label="Añadir prenda"><span class="circulo">@Iconos.Mas</span><span>@E.T("Añadir", "Añadir ropa")</span></a>
+                    <a href="calendario" class="pestana @(Ruta == "calendario" ? "activa" : "")" aria-current="@(Ruta == "calendario" ? "page" : null)">@Iconos.Calendario<span>@E.T("Calendario", "Mis días")</span></a>
+                    @if (!E.D.Ajustes.MenosOpciones)
+                    {
+                        <a href="explorar" class="pestana @(Ruta == "explorar" ? "activa" : "")" aria-current="@(Ruta == "explorar" ? "page" : null)">@Iconos.Globo<span>Explorar</span></a>
+                    }
                 </nav>
             }
         }

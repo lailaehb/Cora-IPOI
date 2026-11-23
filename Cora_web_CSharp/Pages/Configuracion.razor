@@ -1,11 +1,20 @@
 @page "/configuracion"
 @inherits PaginaCora
 
-@* CONFIGURACIÓN: todo lo que se preguntó al registrarse, editable, más los avisos y la prueba del reto 3. *@
+@* CONFIGURACIÓN, ordenada de lo que más se usa a lo que menos:
+   1) Modo fácil y accesibilidad · 2) Tu cuenta · 3) Sobre ti y tu estilo · 4) Avisos · 5) Mi lavadora
+   y, al final y plegado, lo que solo sirve para hacer pruebas en la presentación. *@
 <div class="pantalla">
     <div class="contenido">
         <Cabecera Volver="true" Titulo="Configuración" />
 
+        @* 1. Modo fácil y accesibilidad *@
+        <section class="tarjeta destacada">
+            <h3>Modo fácil y accesibilidad</h3>
+            <PanelFacil Personalizar="true" />
+        </section>
+
+        @* 2. Tu cuenta *@
         <section class="tarjeta">
             <h3>Tu cuenta</h3>
             <label class="campo"><span>Nombre</span><input @bind="p.Nombre" /></label>
@@ -15,16 +24,14 @@
             <div class="entre alto"><span>Cuenta vinculada</span><span class="sec">@p.Cuenta</span></div>
         </section>
 
+        @* 3. Sobre ti y tu estilo *@
         <section class="tarjeta">
-            <h3>Sobre ti</h3>
+            <h3>Sobre ti y tu estilo</h3>
             <div class="dos">
                 <label class="campo"><span>Edad</span><input inputmode="numeric" maxlength="3" @bind="p.Edad" /></label>
                 <label class="campo"><span>Ciudad (para el tiempo)</span><input @bind="p.Ciudad" /></label>
             </div>
-        </section>
-
-        <section class="tarjeta">
-            <h3>Tu estilo</h3>
+            <span class="etq">Tu estilo</span>
             <div class="chips">
                 @foreach (var x in DatosEjemplo.Estilos)
                 {
@@ -40,26 +47,20 @@
                     <Chip Texto="@v" Activo="@(p.Gustos.Contains(v))" OnClick="@(() => Alternar(p.Gustos, v))" />
                 }
             </div>
+            <button class="btn" @onclick="Guardar">Guardar mis datos</button>
         </section>
 
+        @* 4. Avisos *@
         <section class="tarjeta">
             <h3>Avisos</h3>
-            <label class="interruptor"><span>Sonidos de confirmación</span><input type="checkbox" role="switch" checked="@E.D.Ajustes.Sonido" @onchange="@(e => E.CambiarAjustesAsync(a => a.Sonido = (bool)(e.Value ?? false)))" /></label>
-            <label class="interruptor"><span>Vibración (Android)</span><input type="checkbox" role="switch" checked="@E.D.Ajustes.Vibracion" @onchange="@(e => E.CambiarAjustesAsync(a => a.Vibracion = (bool)(e.Value ?? false)))" /></label>
+            <label class="interruptor"><span>Sonidos<small class="sec">Al guardar, al leer una etiqueta o cuando la ropa está lista.</small></span><input type="checkbox" role="switch" checked="@E.D.Ajustes.Sonido" @onchange="@(e => E.CambiarAjustesAsync(a => a.Sonido = (bool)(e.Value ?? false)))" /></label>
+            <label class="interruptor"><span>Vibración<small class="sec">Solo en móviles Android.</small></span><input type="checkbox" role="switch" checked="@E.D.Ajustes.Vibracion" @onchange="@(e => E.CambiarAjustesAsync(a => a.Vibracion = (bool)(e.Value ?? false)))" /></label>
         </section>
 
-        <section class="tarjeta">
-            <h3>Prueba del reto 3: la espera</h3>
-            <p class="sec">Cambia cómo se ve la espera del planificador para comparar con usuarios cuál parece más rápida. Las dos duran lo mismo.</p>
-            <div class="segmentos">
-                <button class="@(E.D.Ajustes.Espera == "mensajes" ? "on" : "")" aria-pressed="@(E.D.Ajustes.Espera == "mensajes" ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Espera = "mensajes"))">Con mensajes</button>
-                <button class="@(E.D.Ajustes.Espera == "clasica" ? "on" : "")" aria-pressed="@(E.D.Ajustes.Espera == "clasica" ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Espera = "clasica"))">Clásica</button>
-            </div>
-        </section>
-
+        @* 5. Mi lavadora *@
         <section class="tarjeta">
             <h3>Mi lavadora</h3>
-            <p class="sec">¿Cuánto sueles tardar en tener la ropa lista (lavar, tender y guardar)? Saldrá marcado al poner la lavadora, y siempre lo puedes cambiar.</p>
+            <span class="etq">¿Cuánto sueles tardar en tener la ropa lista?</span>
             <div class="chips">
                 @for (int d = 2; d <= 7; d++)
                 {
@@ -67,6 +68,7 @@
                     <Chip Texto="@(n == 7 ? "1 semana" : $"{n} días")" Activo="@(E.D.Ajustes.DiasLavadora == n)" OnClick="@(() => E.CambiarAjustesAsync(a => a.DiasLavadora = n))" />
                 }
             </div>
+            <small class="sec">Lavar, tender y guardar. Saldrá marcado al poner la lavadora y siempre lo puedes cambiar.</small>
             <span class="etq">¿Cuándo pones la lavadora?</span>
             <div class="segmentos">
                 <button class="@(Prog == "manual" ? "on" : "")" aria-pressed="@(Prog == "manual" ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Programa = "manual"))">Cuando quiera</button>
@@ -96,36 +98,46 @@
             <small class="sec">@(Prog == "manual" ? "Pones la lavadora cuando quieras desde el cesto." : "Ese día te avisaré si tienes ropa en el cesto. La lavadora no se pone sola: tú la confirmas con un toque.")</small>
         </section>
 
-        <section class="tarjeta">
-            <h3>Probar la lavadora</h3>
-            <p class="sec">La ropa tarda 2 días en lavarse y secarse. Para ver cómo avanza la barra y cómo llega el aviso sin esperar, adelanta el tiempo de lo que hay en la lavadora.</p>
+        <button class="btn secundario" @onclick="CerrarSesion">Cerrar sesión</button>
+
+        @* 6. Solo para la presentación: plegado para que no líe *@
+        <details class="tarjeta pruebas">
+            <summary>Pruebas para la presentación</summary>
+            <p class="sec">Herramientas para enseñar la app sin esperar días. No hacen falta para usar Cora.</p>
+
+            <h4>Espera de la IA (reto 3)</h4>
+            <p class="sec">Cambia cómo se ve la espera del planificador para comparar con usuarios cuál parece más rápida.</p>
+            <div class="segmentos">
+                <button class="@(E.D.Ajustes.Espera == "mensajes" ? "on" : "")" aria-pressed="@(E.D.Ajustes.Espera == "mensajes" ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Espera = "mensajes"))">Con mensajes</button>
+                <button class="@(E.D.Ajustes.Espera == "clasica" ? "on" : "")" aria-pressed="@(E.D.Ajustes.Espera == "clasica" ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Espera = "clasica"))">Clásica</button>
+            </div>
+
+            <h4>Adelantar la lavadora</h4>
+            <p class="sec">Para ver cómo avanza la barra y cómo llega el aviso de «ya está seca».</p>
             <div class="fila">
                 <button class="btn secundario" disabled="@(E.EnLavadora.Count == 0)" @onclick="() => E.AdelantarLavadoraAsync(12)">+12 horas</button>
-                <button class="btn secundario" disabled="@(E.EnLavadora.Count == 0)" @onclick="() => E.AdelantarLavadoraAsync(48)">Ya seca</button>
+                <button class="btn secundario" disabled="@(E.EnLavadora.Count == 0)" @onclick="() => E.AdelantarLavadoraAsync(24 * 14)">Ya seca</button>
             </div>
             @if (E.EnLavadora.Count == 0)
             {
-                <small class="sec">Ahora no tienes nada en la lavadora.</small>
+                <small class="sec">Ahora no hay nada en la lavadora: pon una desde el cesto.</small>
             }
-        </section>
 
-        @if (!confirmar)
-        {
-            <button class="enlace" @onclick="() => confirmar = true">Restablecer datos de ejemplo</button>
-        }
-        else
-        {
-            <Caja Tipo="error" Texto="Se borrarán tus prendas, planes y guardados y volverán los datos de ejemplo." />
-            <div class="fila">
-                <button class="btn secundario" @onclick="() => confirmar = false">Cancelar</button>
-                <button class="btn peligro" @onclick="Restablecer">Restablecer</button>
-            </div>
-        }
-        <button class="enlace" @onclick="CerrarSesion">Cerrar sesión</button>
+            <h4>Datos de ejemplo</h4>
+            @if (!confirmar)
+            {
+                <button class="btn secundario" @onclick="() => confirmar = true">Restablecer datos de ejemplo</button>
+            }
+            else
+            {
+                <Caja Tipo="error" Texto="Se borrarán tus prendas, planes y guardados y volverán los datos de ejemplo." />
+                <div class="fila">
+                    <button class="btn secundario" @onclick="() => confirmar = false">Cancelar</button>
+                    <button class="btn peligro" @onclick="Restablecer">Restablecer</button>
+                </div>
+            }
+        </details>
     </div>
-    <footer class="pie">
-        <button class="btn" @onclick="Guardar">Guardar cambios</button>
-    </footer>
 </div>
 
 @code {
@@ -145,8 +157,7 @@
     {
         await E.GuardarPerfilAsync(p);
         await E.SonarAsync("guardado");
-        E.MostrarAviso("Cambios guardados");
-        await E.Atras();
+        E.MostrarAviso("Datos guardados");
     }
 
     async Task Restablecer()

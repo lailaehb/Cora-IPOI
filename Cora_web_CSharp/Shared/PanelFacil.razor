@@ -1,0 +1,77 @@
+@* MODO FÁCIL: un interruptor que pone de golpe letra y botones grandes, palabras sencillas,
+   menos cosas en pantalla y avisos más largos. Con Personalizar = true se ve también cada ajuste por separado,
+   porque no todas las personas necesitan lo mismo (vista, manos, entender la app…). *@
+@inject Estado E
+@implements IDisposable
+
+<div class="panel-facil">
+    <label class="interruptor grande">
+        <span>
+            <b>Modo fácil</b>
+            <small class="sec">Letra y botones más grandes, palabras más sencillas y menos cosas en pantalla.</small>
+        </span>
+        <input type="checkbox" role="switch" aria-label="Modo fácil" checked="@A.ModoFacil" @onchange="@(e => E.ModoFacilAsync((bool)(e.Value ?? false)))" />
+    </label>
+
+    @if (Personalizar)
+    {
+        <div class="grupo-ajustes">
+            <h4>Ver</h4>
+            <span class="etq">Tamaño de la letra</span>
+            <div class="segmentos" role="radiogroup" aria-label="Tamaño de la letra">
+                @foreach (var l in Letras)
+                {
+                    var v = l.Valor;
+                    <button role="radio" class="@(A.Letra == v ? "on" : "")" aria-checked="@(A.Letra == v ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Letra = v))">
+                        <span style="font-size:@l.Tam" aria-hidden="true">Aa</span> @l.Nombre
+                    </button>
+                }
+            </div>
+            <label class="interruptor">
+                <span>Alto contraste<small class="sec">Textos más oscuros y bordes más marcados.</small></span>
+                <input type="checkbox" role="switch" checked="@A.AltoContraste" @onchange="@(e => E.CambiarAjustesAsync(a => a.AltoContraste = (bool)(e.Value ?? false)))" />
+            </label>
+        </div>
+
+        <div class="grupo-ajustes">
+            <h4>Tocar</h4>
+            <label class="interruptor">
+                <span>Botones más grandes<small class="sec">Más fáciles de pulsar y más separados.</small></span>
+                <input type="checkbox" role="switch" checked="@A.BotonesGrandes" @onchange="@(e => E.CambiarAjustesAsync(a => a.BotonesGrandes = (bool)(e.Value ?? false)))" />
+            </label>
+            <label class="interruptor">
+                <span>Mensajes más largos<small class="sec">Los avisos de abajo se quedan más tiempo en pantalla.</small></span>
+                <input type="checkbox" role="switch" checked="@A.AvisosLargos" @onchange="@(e => E.CambiarAjustesAsync(a => a.AvisosLargos = (bool)(e.Value ?? false)))" />
+            </label>
+        </div>
+
+        <div class="grupo-ajustes">
+            <h4>Entender</h4>
+            <label class="interruptor">
+                <span>Palabras más sencillas<small class="sec">Menos frases y palabras fáciles, por ejemplo «Ropa sucia» en vez de «Cesto».</small></span>
+                <input type="checkbox" role="switch" checked="@A.TextosSencillos" @onchange="@(e => E.CambiarAjustesAsync(a => a.TextosSencillos = (bool)(e.Value ?? false)))" />
+            </label>
+            <label class="interruptor">
+                <span>Menos cosas en pantalla<small class="sec">Oculta Explorar y otras opciones que no son básicas.</small></span>
+                <input type="checkbox" role="switch" checked="@A.MenosOpciones" @onchange="@(e => E.CambiarAjustesAsync(a => a.MenosOpciones = (bool)(e.Value ?? false)))" />
+            </label>
+        </div>
+        <small class="sec">Los cambios se ven al momento. Puedes volver a dejarlo como estaba cuando quieras.</small>
+    }
+</div>
+
+@code {
+    /// <summary>true en Configuración: enseña cada ajuste por separado.</summary>
+    [Parameter] public bool Personalizar { get; set; }
+
+    Ajustes A => E.D.Ajustes;
+
+    static readonly (string Valor, string Nombre, string Tam)[] Letras =
+    {
+        ("normal", "Normal", "14px"), ("grande", "Grande", "17px"), ("muy-grande", "Muy grande", "20px"),
+    };
+
+    protected override void OnInitialized() => E.Cambio += Repintar;
+    void Repintar() => InvokeAsync(StateHasChanged);
+    public void Dispose() => E.Cambio -= Repintar;
+}

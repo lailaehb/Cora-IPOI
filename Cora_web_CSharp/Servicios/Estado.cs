@@ -599,6 +599,39 @@ public class Estado
         if (cambiaCiudad) _ = CargarTiempoAsync();
     }
 
+    // ---------------------------------------------------------------- accesibilidad
+    /// <summary>Texto normal o, con «Palabras más sencillas», su versión fácil.</summary>
+    public string T(string normal, string sencillo) => D.Ajustes.TextosSencillos ? sencillo : normal;
+
+    /// <summary>Clases que se ponen en la app entera según los ajustes de accesibilidad.</summary>
+    public string ClasesAccesibilidad
+    {
+        get
+        {
+            var a = D.Ajustes;
+            var l = new List<string>();
+            if (a.Letra == "grande") l.Add("letra-grande");
+            else if (a.Letra == "muy-grande") l.Add("letra-muy-grande");
+            if (a.AltoContraste) l.Add("contraste");
+            if (a.BotonesGrandes) l.Add("botones-grandes");
+            if (a.TextosSencillos) l.Add("sencillo");
+            if (a.MenosOpciones) l.Add("menos-opciones");
+            return string.Join(" ", l);
+        }
+    }
+
+    /// <summary>Un solo interruptor que pone (o quita) todos los ajustes del modo fácil.</summary>
+    public async Task ModoFacilAsync(bool activar)
+    {
+        var a = D.Ajustes;
+        if (activar && a.Letra == "normal") a.Letra = "grande";
+        if (!activar) a.Letra = "normal";
+        a.BotonesGrandes = a.TextosSencillos = a.MenosOpciones = a.AvisosLargos = activar;
+        await SonarAsync("guardado");
+        MostrarAviso(activar ? "Modo fácil activado" : "Modo fácil desactivado");
+        await CambiadoAsync();
+    }
+
     public async Task CambiarAjustesAsync(Action<Ajustes> cambio)
     {
         cambio(D.Ajustes);
@@ -630,7 +663,7 @@ public class Estado
         int id = ++_avisoId;
         TextoAviso = texto;
         Avisar();
-        await Task.Delay(2600);
+        await Task.Delay(D.Ajustes.AvisosLargos ? 6000 : 2600);
         if (id == _avisoId) { TextoAviso = null; Avisar(); }
     }
 

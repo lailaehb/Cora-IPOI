@@ -5,7 +5,7 @@
    Al ponerla, el usuario elige cuánto tardará en estar lista (mínimo 2 días) y Cora le avisa ese día. *@
 <div class="pantalla">
     <div class="contenido">
-        <Cabecera Volver="true" Titulo="Cesto de la ropa" Sub="@Subtitulo" VolverA="armario" />
+        <Cabecera Volver="true" Titulo="@E.T("Cesto de la ropa", "Ropa sucia")" Sub="@Subtitulo" VolverA="armario" />
 
         @if (Prendas.Count == 0)
         {

@@ -4,12 +4,12 @@
 @* MI ARMARIO: categorías (cada una abre su pantalla), favoritas y añadidas hace poco. *@
 <div class="pantalla">
     <div class="contenido">
-        <Cabecera Titulo="Mi armario" Sub="@($"{E.D.Prendas.Count} prendas")" Avatar="true" />
+        <Cabecera Titulo="@E.T("Mi armario", "Mi ropa")" Sub="@($"{E.D.Prendas.Count} prendas")" Avatar="true" />
         @if (E.EnCesto.Count > 0)
         {
             <a class="tarjeta fila-tarjeta @(E.TocaLavadoraHoy ? "aviso" : "")" href="cesto">
                 <span class="ico-caja blanca">@Iconos.Cesto</span>
-                <span class="crece"><b>Cesto de la ropa (@E.EnCesto.Count)</b><small>@(E.TocaLavadoraHoy ? "Hoy toca poner la lavadora" : "Toca para poner la lavadora")</small></span>
+                <span class="crece"><b>@E.T("Cesto de la ropa", "Ropa sucia") (@E.EnCesto.Count)</b><small>@(E.TocaLavadoraHoy ? "Hoy toca poner la lavadora" : "Toca para poner la lavadora")</small></span>
                 @Iconos.Siguiente
             </a>
         }
@@ -59,8 +59,8 @@
             </div>
         }
 
-        <div class="seccion"><h2>Añadidas hace poco</h2></div>
-        <div class="estante">
+        <div class="seccion extra"><h2>Añadidas hace poco</h2></div>
+        <div class="estante extra">
             @foreach (var p in Enumerable.Reverse(E.D.Prendas).Take(6))
             {
                 var id = p.Id;

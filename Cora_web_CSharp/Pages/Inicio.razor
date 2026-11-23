@@ -11,7 +11,7 @@
         </div>
 
         <section class="hoy" aria-label="Tu outfit de hoy">
-            <h2>Tu outfit de hoy</h2>
+            <h2>@E.T("Tu outfit de hoy", "Tu ropa de hoy")</h2>
             <div class="etiquetas">
                 @if (plan != null)
                 {
@@ -35,12 +35,12 @@
                 <LooksExtra O="outfit" Catalogo="E.D.Prendas" />
             }
             <div class="fila">
-                <button class="btn secundario redondo" disabled="@(E.PensandoDia == Hoy)" @onclick="() => E.OtraOpcionAsync(Hoy)">@Iconos.Recargar @(E.PensandoDia == Hoy ? "Pensando…" : "Otra opción")</button>
+                <button class="btn secundario redondo extra" disabled="@(E.PensandoDia == Hoy)" @onclick="() => E.OtraOpcionAsync(Hoy)">@Iconos.Recargar @(E.PensandoDia == Hoy ? "Pensando…" : E.T("Otra opción", "Ver otra"))</button>
                 <button class="btn secundario redondo" aria-pressed="@(guardado ? "true" : "false")" @onclick="() => E.AlternarGuardadoDiaAsync(Hoy)">@Iconos.Marcador(guardado) @(guardado ? "Guardado" : "Guardar")</button>
             </div>
         </section>
 
-        <div class="seccion"><h2>Esta semana</h2><a href="calendario">Ver calendario</a></div>
+        <div class="seccion"><h2>@E.T("Esta semana", "Próximos días")</h2><a href="calendario">Ver calendario</a></div>
         <div class="lista">
             @for (int n = 1; n <= 4; n++)
             {
@@ -65,7 +65,7 @@
                     }
                     else
                     {
-                        <a class="enlace-acento" href="planificar">Planificar @Iconos.Siguiente</a>
+                        <a class="enlace-acento" href="planificar">@E.T("Planificar", "Elegir") @Iconos.Siguiente</a>
                     }
                 </div>
             }
@@ -75,7 +75,7 @@
         {
             <a class="tarjeta fila-tarjeta @(E.TocaLavadoraHoy ? "aviso" : "")" href="cesto">
                 <span class="ico-caja blanca">@Iconos.Cesto</span>
-                <span class="crece"><b>Cesto de la ropa (@E.EnCesto.Count)</b><small>@(E.TocaLavadoraHoy ? "Hoy toca poner la lavadora" : "Toca para poner la lavadora")</small></span>
+                <span class="crece"><b>@E.T("Cesto de la ropa", "Ropa sucia") (@E.EnCesto.Count)</b><small>@(E.TocaLavadoraHoy ? "Hoy toca poner la lavadora" : "Toca para poner la lavadora")</small></span>
                 @Iconos.Siguiente
             </a>
         }
@@ -92,7 +92,7 @@
                 @Iconos.Siguiente
             </a>
         }
-        <a class="tarjeta fila-tarjeta" href="explorar">
+        <a class="tarjeta fila-tarjeta extra" href="explorar">
             <img class="ico-caja" src="img/look_lucia.png" alt="" style="object-fit:cover" />
             <span class="crece"><b>Inspírate</b><small>@("@lucia") ha publicado un outfit de otoño</small></span>
             @Iconos.Siguiente

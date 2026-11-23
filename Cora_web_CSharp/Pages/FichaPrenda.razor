@@ -24,7 +24,7 @@
                 <div><span>Talla</span><span>@(string.IsNullOrEmpty(P.Talla) ? "—" : P.Talla)</span></div>
                 <div><span>Marca</span><span>@(string.IsNullOrEmpty(P.Marca) ? "—" : P.Marca)</span></div>
             </section>
-            <section class="tarjeta">
+            <section class="tarjeta extra">
                 <h3>¿Para qué la usas?</h3>
                 <p class="sec">Cora solo te la propondrá para estos planes.</p>
                 <div class="chips">
@@ -47,7 +47,7 @@
                          aria-valuemin="0" aria-valuemax="100" aria-valuenow="@((int)(Estado.FraccionLavado(P) * 100))">
                         <div style="width:@Estado.AnchoLavado(P)"></div>
                     </div>
-                    <button class="btn" @onclick="Disponible">Marcar como disponible</button>
+                    <button class="btn" @onclick="Disponible">@E.T("Marcar como disponible", "Ya está limpia")</button>
                     <Caja Tipo="@(seca ? "ok" : "info")" Texto="@(seca ? "Cuando la tengas en el armario, márcala como disponible y Cora volverá a usarla en tus conjuntos." : "Mientras se lava, Cora no la tendrá en cuenta en tus conjuntos. Te avisaré cuando esté seca.")" />
                 }
                 else if (P.EnCesto)
@@ -61,7 +61,7 @@
                 {
                     <h3>Disponible</h3>
                     <p class="sec">Cora la puede usar en tus conjuntos.</p>
-                    <button class="btn secundario" @onclick="AlCesto">@Iconos.Cesto Echar al cesto</button>
+                    <button class="btn secundario" @onclick="AlCesto">@Iconos.Cesto @E.T("Echar al cesto", "Está sucia")</button>
                 }
             </section>
             if (!confirmarBorrado)

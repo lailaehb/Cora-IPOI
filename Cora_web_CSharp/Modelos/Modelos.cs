@@ -122,6 +122,20 @@ public class Ajustes
     public string? UltimaLavadora { get; set; }
     /// <summary>Último día que se avisó de que tocaba lavadora (para avisar una vez al día).</summary>
     public string? UltimoRecordatorio { get; set; }
+
+    // ---- Accesibilidad (modo fácil y ajustes sueltos) ----
+    /// <summary>Tamaño de letra: "normal", "grande" o "muy-grande".</summary>
+    public string Letra { get; set; } = "normal";
+    public bool AltoContraste { get; set; }
+    public bool BotonesGrandes { get; set; }
+    /// <summary>Menos frases y palabras más fáciles.</summary>
+    public bool TextosSencillos { get; set; }
+    /// <summary>Oculta lo que no es básico (Explorar, «Otra opción»…).</summary>
+    public bool MenosOpciones { get; set; }
+    /// <summary>Los mensajes de abajo se quedan más tiempo en pantalla.</summary>
+    public bool AvisosLargos { get; set; }
+    /// <summary>El modo fácil está activo cuando están puestos todos sus ajustes.</summary>
+    [JsonIgnore] public bool ModoFacil => Letra != "normal" && BotonesGrandes && TextosSencillos && MenosOpciones && AvisosLargos;
 }
 
 /// <summary>Todo lo que se guarda en el navegador.</summary>
