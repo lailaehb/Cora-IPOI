@@ -31,7 +31,7 @@
             <Cabecera Volver="true" Titulo="Revisa la prenda" />
             <section class="tarjeta">
                 <img class="foto-nueva pensando" src="@foto" alt="Tu foto" />
-                <div class="analizando" aria-live="polite">@Iconos.Chispa <span>Cora está mirando tu foto…</span></div>
+                <div class="analizando" aria-live="polite">@Iconos.Chispa <span>@(E.D.Ajustes.Espera == "clasica" ? "Cargando…" : MensajesFoto[paso])</span></div>
             </section>
         }
         else
@@ -61,6 +61,9 @@
 @code {
     string? foto;
     bool fallo, analizando;
+    // Reto 3: mientras la IA mira la foto, el mensaje va contando qué hace
+    static readonly string[] MensajesFoto = { "Cora está mirando tu foto…", "Reconociendo la prenda…", "Fijándome en el color…", "Eligiendo la categoría…" };
+    int paso;
     SugerenciaPrenda? sugerencia;
 
     async Task Elegir(InputFileChangeEventArgs e)
@@ -71,8 +74,18 @@
         foto = f;
         sugerencia = null;
         analizando = true;
+        paso = 0;
         StateHasChanged();
-        sugerencia = await IA.AnalizarFotoAsync(f);
+        var tarea = IA.AnalizarFotoAsync(f);
+        var inicio = DateTime.Now;
+        // Como mínimo se ven todos los mensajes (unos 2,4 s); si la IA tarda más, se queda en el último
+        while ((DateTime.Now - inicio).TotalMilliseconds < 2400 || !tarea.IsCompleted)
+        {
+            await Task.Delay(150);
+            paso = Math.Min(MensajesFoto.Length - 1, (int)((DateTime.Now - inicio).TotalMilliseconds / 650));
+            StateHasChanged();
+        }
+        sugerencia = await tarea;
         analizando = false;
     }
 }

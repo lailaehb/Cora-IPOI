@@ -17,6 +17,9 @@ public class Estado
     public const int DiasLavado = 2;
     static readonly string[] Mensajes = { "Mirando el tiempo de la semana…", "Descartando lo que está en la lavadora…", "Pidiendo ideas a la IA…", "Combinando tus prendas…" };
     const int DuracionEspera = 3600;
+    /// <summary>Mensajes mientras se busca «Otra opción» para un día.</summary>
+    static readonly string[] MensajesOtra = { "Buscando otra combinación…", "Probando con otras prendas…", "Teniendo en cuenta el tiempo…", "Casi lo tengo…" };
+    const int DuracionOtra = 2400;
 
     private readonly IJSRuntime _js;
     private readonly ServicioIA _ia;
@@ -399,22 +402,41 @@ public class Estado
     /// <summary>Día para el que se está pidiendo «Otra opción» a la IA (para mostrar «Pensando…»).</summary>
     public string? PensandoDia { get; private set; }
 
+    /// <summary>Mensaje que se ve mientras se busca «Otra opción» (reto 3: la espera se explica).</summary>
+    public string MensajeOtra { get; private set; } = "";
+
     public async Task OtraOpcionAsync(string dia)
     {
         if (PensandoDia != null) return;
         var prev = OutfitDe(dia);
         Outfit? o = null;
+        PensandoDia = dia;
+        MensajeOtra = MensajesOtra[0];
+        Avisar();
+        // Si el outfit era de la IA, se le pide otro; si no, salen de las reglas. En los dos casos hay una espera
+        // corta con mensajes, para que se note que Cora está trabajando y no parezca que no ha pasado nada.
+        Task<List<DiaRespuesta>?>? tareaIA = null;
         if (prev?.DeIA == true)
         {
-            PensandoDia = dia;
-            Avisar();
             var evitar = new Dictionary<string, List<string>> { [dia] = new(prev.Ids) };
-            var r = await _ia.PlanificarAsync(Peticion(new List<string> { dia }, evitar));
+            tareaIA = _ia.PlanificarAsync(Peticion(new List<string> { dia }, evitar));
+        }
+        var inicio = DateTime.Now;
+        double pasado;
+        while ((pasado = (DateTime.Now - inicio).TotalMilliseconds) < DuracionOtra || (tareaIA != null && !tareaIA.IsCompleted))
+        {
+            await Task.Delay(150);
+            MensajeOtra = MensajesOtra[Math.Min(MensajesOtra.Length - 1, (int)(pasado / 650))];
+            Avisar();
+        }
+        if (tareaIA != null)
+        {
+            var r = await tareaIA;
             var rd = r?.FirstOrDefault(x => x.Fecha == dia);
             if (rd != null) o = OutfitDesdeIA(rd);
-            if (o != null && o.Clave == prev.Clave) o = null; // ha repetido: mejor las reglas
-            PensandoDia = null;
+            if (o != null && prev != null && o.Clave == prev.Clave) o = null; // ha repetido: mejor las reglas
         }
+        PensandoDia = null;
         o ??= Recomendar(dia, (prev?.Semilla ?? 0) + 1, prev?.Clave);
         D.Outfits[dia] = o;
         foreach (var g in D.Guardados.Where(g => g.Fecha == dia)) g.Ids = new List<string>(o.Ids);
@@ -590,10 +612,18 @@ public class Estado
     }
 
     // ---------------------------------------------------------------- perfil y ajustes
+    public async Task CambiarFotoPerfilAsync(string? foto)
+    {
+        D.Perfil.Foto = foto;
+        await SonarAsync("guardado");
+        await CambiadoAsync();
+    }
+
     public async Task GuardarPerfilAsync(Perfil p)
     {
         bool cambiaCiudad = p.Ciudad != D.Perfil.Ciudad;
         if (string.IsNullOrWhiteSpace(p.Usuario)) p.Usuario = p.Nombre.Trim().ToLower().Replace(" ", "");
+        p.Foto = D.Perfil.Foto; // la foto se cambia desde «Mi perfil»
         D.Perfil = p;
         await CambiadoAsync();
         if (cambiaCiudad) _ = CargarTiempoAsync();

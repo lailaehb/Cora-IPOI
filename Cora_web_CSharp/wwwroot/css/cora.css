@@ -9,8 +9,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: #efe3df; color: var(--texto); font: calc(15px * var(--esc, 1))/1.4 var(--letra); -webkit-text-size-adjust: 100%; }
 button, input, textarea { font: inherit; color: inherit; }
-/* En iPhone, Safari hace zoom (y se queda) al tocar un campo con letra de menos de 16 px. Con 16 px o más no lo hace. */
-input, textarea, select { font-size: max(16px, 1em); }
+/* Los campos llevan la misma letra que el resto (15 px). En iPhone, el zoom al tocarlos se evita en index.html. */
 button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }
 h1 { font-size: calc(24px * var(--esc, 1)); margin: 0; line-height: 1.25; }
@@ -390,3 +389,15 @@ details.pruebas h4 { margin-top: 8px; }
 .comentario .enlace { flex: none; min-height: 44px; }
 .escribir-comentario { display: flex; gap: 8px; align-items: flex-end; }
 .escribir-comentario .btn { width: auto; flex: none; }
+
+/* Mi perfil: foto que se puede cambiar, como en los perfiles de Explorar */
+.avatar { overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.cambiar-foto { position: relative; cursor: pointer; overflow: visible; }
+.cambiar-foto img { border-radius: 50%; }
+.cambiar-foto .insignia { position: absolute; right: -2px; bottom: -2px; width: 30px; height: 30px; border-radius: 50%; background: var(--acento); color: #fff; display: grid; place-items: center; border: 2px solid var(--fondo); }
+.cambiar-foto .insignia svg { width: 16px; height: 16px; }
+.cambiar-foto:focus-within { outline: 3px solid var(--acento); outline-offset: 2px; }
+.numeros a { display: flex; flex-direction: column; color: inherit; }
+.btn.cuadrado { flex: none; width: 52px; padding: 0; }
+.mensaje-espera { justify-content: flex-start; font-size: calc(14px * var(--esc, 1)); margin: 0; }

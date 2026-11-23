@@ -3,6 +3,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+        // En iPhone/iPad, Safari hace zoom (y se queda) al tocar un campo con letra de menos de 16 px.
+        // Con maximum-scale=1 no lo hace, y en iOS se sigue pudiendo ampliar con dos dedos.
+        // Solo en iOS: en Android esto impediría ampliar, y eso es malo para la accesibilidad.
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+            document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover');
+        }
+    </script>
     <meta name="theme-color" content="#FBEFEA" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Cora</title>

@@ -1,0 +1,17 @@
+@inject Estado E
+@* RETO 3: lo que se ve mientras la IA prepara un outfit.
+   «Con mensajes» (por defecto): un mensaje que va cambiando (qué está haciendo Cora) y huecos grises que parpadean.
+   «Clásica» (Configuración › Espera de la IA): solo «Cargando…», para poder comparar las dos. *@
+@if (E.D.Ajustes.Espera == "clasica")
+{
+    <p class="sec">Cargando…</p>
+}
+else
+{
+    <p class="analizando mensaje-espera" aria-live="polite">@Iconos.Chispa <span>@Mensaje</span></p>
+    <FilaOutfit Cargando="true" />
+}
+
+@code {
+    [Parameter] public string Mensaje { get; set; } = "";
+}

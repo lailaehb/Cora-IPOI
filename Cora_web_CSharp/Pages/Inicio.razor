@@ -19,7 +19,15 @@
                 }
                 <span class="pastilla">@ServicioTiempo.Icono(tiempoHoy.Cielo) @tiempoHoy.T° · @tiempoHoy.Cielo</span>
             </div>
-            @if (outfit != null)
+            @if (E.PensandoDia == Hoy)
+            {
+                <EsperaIA Mensaje="@E.MensajeOtra" />
+            }
+            else if (E.EsperandoDia(Hoy))
+            {
+                <EsperaIA Mensaje="@E.MensajeEspera" />
+            }
+            else if (outfit != null)
             {
                 if (!string.IsNullOrEmpty(outfit.Momento))
                 {

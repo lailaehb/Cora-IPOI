@@ -51,14 +51,11 @@
                 <a class="entre dia-enlace" href="@($"dia/{dia}")" aria-label="@($"Abrir {Fechas.Larga(dia)}")"><b>@Fechas.Etiqueta(dia) · @(pl != null ? Fechas.Cap(pl.Etiqueta) : "Sin planes")</b><small class="sec">@w.T° @w.Cielo @Iconos.Siguiente</small></a>
                 @if (E.EsperandoDia(dia))
                 {
-                    if (Clasica)
-                    {
-                        <p class="sec">Cargando…</p>
-                    }
-                    else
-                    {
-                        <FilaOutfit Cargando="true" />
-                    }
+                    <EsperaIA Mensaje="@E.MensajeEspera" />
+                }
+                else if (E.PensandoDia == dia)
+                {
+                    <EsperaIA Mensaje="@E.MensajeOtra" />
                 }
                 else if (o != null)
                 {

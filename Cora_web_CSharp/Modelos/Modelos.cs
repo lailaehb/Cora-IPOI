@@ -97,10 +97,14 @@ public class Perfil
     public List<string> Estilos { get; set; } = new();
     public List<string> Gustos { get; set; } = new();
     public bool Registrada { get; set; }
+    /// <summary>Foto de perfil (data URL). Si es null, se ve la inicial.</summary>
+    public string? Foto { get; set; }
+    /// <summary>Frase sobre ti que sale en tu perfil, como en los de Explorar.</summary>
+    public string Bio { get; set; } = "";
 
     public Perfil Copia() => new()
     {
-        Nombre = Nombre, Usuario = Usuario, Email = Email, Edad = Edad, Ciudad = Ciudad, Cuenta = Cuenta,
+        Nombre = Nombre, Usuario = Usuario, Email = Email, Edad = Edad, Ciudad = Ciudad, Cuenta = Cuenta, Foto = Foto, Bio = Bio,
         Estilos = new List<string>(Estilos), Gustos = new List<string>(Gustos), Registrada = Registrada,
     };
 }

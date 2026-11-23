@@ -22,7 +22,16 @@
     </div>
     @if (Avatar)
     {
-        <a class="avatar" href="perfil" aria-label="Mi perfil">@Inicial</a>
+        <a class="avatar" href="perfil" aria-label="Mi perfil">
+            @if (E.D.Perfil.Foto != null)
+            {
+                <img src="@E.D.Perfil.Foto" alt="" />
+            }
+            else
+            {
+                @Inicial
+            }
+        </a>
     }
 </header>
 

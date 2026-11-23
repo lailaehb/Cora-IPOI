@@ -14,14 +14,11 @@
             <div class="entre"><h2>@E.T("Tu ropa", "Tu ropa")</h2><span>@ServicioTiempo.Icono(W.Cielo)</span></div>
             @if (E.EsperandoDia(elegido))
             {
-                if (Clasica)
-                {
-                    <p class="sec">Cargando…</p>
-                }
-                else
-                {
-                    <FilaOutfit Cargando="true" />
-                }
+                <EsperaIA Mensaje="@E.MensajeEspera" />
+            }
+            else if (E.PensandoDia == elegido)
+            {
+                <EsperaIA Mensaje="@E.MensajeOtra" />
             }
             else if (O != null)
             {

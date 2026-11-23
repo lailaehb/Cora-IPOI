@@ -1,38 +1,91 @@
 @page "/perfil"
 @inherits PaginaCora
 
-@* MI PERFIL: datos, estilo (como etiquetas; se cambia en «Editar perfil») y accesos. *@
+@* MI PERFIL: igual que los perfiles de Explorar (foto, números, estilo y tus outfits),
+   y debajo los accesos a tus prendas, el modo fácil y la configuración. *@
 <div class="pantalla">
     <div class="contenido">
         <Cabecera Volver="@(!E.D.Ajustes.MenosOpciones)" Titulo="Mi perfil" />
+
+        <div class="fila heroe">
+            @* Se toca la foto para cambiarla *@
+            <label class="avatar grande cambiar-foto" aria-label="@(Foto == null ? "Poner foto de perfil" : "Cambiar foto de perfil")">
+                @if (Foto != null)
+                {
+                    <img src="@Foto" alt="" />
+                }
+                else
+                {
+                    @Inicial
+                }
+                <span class="insignia">@Iconos.Camara</span>
+                <InputFile OnChange="CambiarFoto" accept="image/*" class="oculto" />
+            </label>
+            <div class="crece numeros">
+                <span><b>@MisOutfits.Count</b><small class="sec">outfits</small></span>
+                <span><b>0</b><small class="sec">seguidores</small></span>
+                <a href="explorar"><b>@E.D.Social.Siguiendo.Count</b><small class="sec">siguiendo</small></a>
+            </div>
+        </div>
+        <div>
+            <h2>@(string.IsNullOrEmpty(E.D.Perfil.Nombre) ? "Tu nombre" : E.D.Perfil.Nombre)</h2>
+            <p class="sec">@($"@{E.D.Perfil.Usuario}{(string.IsNullOrEmpty(E.D.Perfil.Ciudad) ? "" : $" · {E.D.Perfil.Ciudad}")}")</p>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(E.D.Perfil.Bio))
+        {
+            <p>@E.D.Perfil.Bio</p>
+        }
+        <div class="etiquetas">
+            @foreach (var e in E.D.Perfil.Estilos.Concat(E.D.Perfil.Gustos))
+            {
+                <span class="etiqueta">@e</span>
+            }
+            @if (E.D.Perfil.Estilos.Count + E.D.Perfil.Gustos.Count == 0)
+            {
+                <span class="sec">Aún no has elegido tu estilo.</span>
+            }
+        </div>
+        <div class="fila">
+            <a class="btn secundario" href="configuracion">Editar perfil</a>
+            <a class="btn secundario cuadrado" href="configuracion" aria-label="Configuración">@Iconos.Engranaje</a>
+        </div>
+
+        @* Tus outfits: los que has guardado de tus días y los que has guardado de Explorar *@
+        <div class="segmentos" role="tablist" aria-label="Mis outfits">
+            <button role="tab" aria-selected="@(pestana == "mios" ? "true" : "false")" class="@(pestana == "mios" ? "on" : "")" @onclick="@(() => pestana = "mios")">Mis outfits (@MisOutfits.Count)</button>
+            <button role="tab" aria-selected="@(pestana == "explorar" ? "true" : "false")" class="@(pestana == "explorar" ? "on" : "")" @onclick="@(() => pestana = "explorar")">De Explorar (@DeExplorar.Count)</button>
+        </div>
+        @{
+            var lista = pestana == "mios" ? MisOutfits : DeExplorar;
+        }
+        @if (lista.Count == 0)
+        {
+            <Caja Texto="@(pestana == "mios" ? "Aún no tienes outfits. En el calendario, entra en un día y pulsa «Guardar» en el conjunto que te guste." : "Pulsa «Guardar» en un outfit de Explorar para tenerlo aquí.")" />
+        }
+        else
+        {
+            <div class="rejilla-outfits">
+                @foreach (var g in lista)
+                {
+                    <a class="mini-outfit" href="@Enlace(g)">
+                        <div class="mini-collage">
+                            @foreach (var id in g.Ids.Take(4))
+                            {
+                                <FotoPrenda P="@(E.PrendaPorId(id) ?? Catalogo.FirstOrDefault(x => x.Id == id))" />
+                            }
+                        </div>
+                        <b>@g.Titulo</b>
+                    </a>
+                }
+            </div>
+        }
+
         <section class="tarjeta destacada">
             <PanelFacil />
             <a class="enlace-acento" href="configuracion">Personalizar letra, botones y textos @Iconos.Siguiente</a>
         </section>
-        <div class="fila heroe">
-            <span class="avatar grande">@Inicial</span>
-            <div class="crece">
-                <h2>@E.D.Perfil.Nombre</h2>
-                <p class="sec">@("@")@E.D.Perfil.Usuario · @E.D.Prendas.Count prendas · @E.D.Guardados.Count outfits guardados</p>
-            </div>
-        </div>
-        <section class="tarjeta">
-            <h3>Mi estilo</h3>
-            <div class="etiquetas">
-                @foreach (var e in E.D.Perfil.Estilos.Concat(E.D.Perfil.Gustos))
-                {
-                    <span class="etiqueta">@e</span>
-                }
-                @if (E.D.Perfil.Estilos.Count + E.D.Perfil.Gustos.Count == 0)
-                {
-                    <span class="sec">Aún no has elegido tu estilo.</span>
-                }
-            </div>
-            <a class="btn secundario" href="configuracion">Editar perfil</a>
-        </section>
         <nav class="lista" aria-label="Opciones del perfil">
             <a class="fila-lista" href="armario">@Iconos.Percha<span class="crece">Mis prendas</span><span class="sec">@E.D.Prendas.Count</span>@Iconos.Siguiente</a>
-            <a class="fila-lista" href="guardados?tab=outfits">@Iconos.Marcador(false)<span class="crece">Outfits guardados</span><span class="sec">@E.D.Guardados.Count</span>@Iconos.Siguiente</a>
             <a class="fila-lista" href="guardados?tab=prendas">@Iconos.Corazon(false)<span class="crece">Prendas favoritas</span><span class="sec">@E.D.Favoritas.Count</span>@Iconos.Siguiente</a>
             <a class="fila-lista" href="configuracion">@Iconos.Engranaje<span class="crece">Configuración</span>@Iconos.Siguiente</a>
         </nav>
@@ -40,5 +93,23 @@
 </div>
 
 @code {
+    string pestana = "mios";
+    static readonly List<Prenda> Catalogo = DatosEjemplo.Catalogo();
+
+    string? Foto => E.D.Perfil.Foto;
     string Inicial => string.IsNullOrEmpty(E.D.Perfil.Nombre) ? "P" : E.D.Perfil.Nombre[..1].ToUpper();
+    List<Guardado> MisOutfits => Enumerable.Reverse(E.D.Guardados).Where(g => !g.Id.StartsWith("post-")).ToList();
+    List<Guardado> DeExplorar => Enumerable.Reverse(E.D.Guardados).Where(g => g.Id.StartsWith("post-")).ToList();
+
+    /// <summary>Tus outfits abren su día; los de Explorar, su publicación.</summary>
+    static string Enlace(Guardado g) =>
+        g.Id.StartsWith("post-") ? $"publicacion/{g.Id[5..]}" : g.Fecha != null ? $"dia/{g.Fecha}" : "guardados";
+
+    async Task CambiarFoto(InputFileChangeEventArgs e)
+    {
+        var f = await Fotos.LeerAsync(e.File, 300);
+        if (f == null) { E.MostrarAviso("No se ha podido abrir la foto. Prueba con otra."); return; }
+        await E.CambiarFotoPerfilAsync(f);
+        E.MostrarAviso("Foto de perfil cambiada");
+    }
 }
