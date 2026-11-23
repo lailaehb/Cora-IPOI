@@ -11,10 +11,7 @@
         {
             <FotoPrenda P="@(Catalogo.FirstOrDefault(p => p.Id == id))" Proporcion="Proporcion" />
         }
-        else
-        {
-            <div class="vacio" style="aspect-ratio: 1 / @Ratio"></div>
-        }
+        @* Si el conjunto tiene menos de 4 prendas, el hueco se queda sin recuadro *@
     }
 </div>
 

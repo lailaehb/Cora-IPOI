@@ -435,11 +435,31 @@ details.pruebas h4 { margin-top: 8px; }
 html:has(.oscuro), html:has(.oscuro) body { background: #120D0F; }
 @media (prefers-color-scheme: dark) { html:has(.tema-auto), html:has(.tema-auto) body { background: #120D0F; } }
 
-/* Segmentos (tamaño de letra, colores…): el texto en una sola línea */
-.segmentos button { white-space: nowrap; padding: 0 6px; }
+/* Segmentos (tamaño de letra, colores…): si no cabe (letra grande), el texto baja de línea en vez de salirse */
+.segmentos button { min-width: 0; padding: 6px; line-height: 1.15; overflow-wrap: anywhere; }
+/* Tamaño de la letra: «Aa» encima del nombre, así cabe siempre */
+.segmentos.tamanos button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.segmentos.tamanos button span { margin: 0; }
 /* Títulos de cada tarjeta de Configuración, un poco más marcados que su contenido */
 .tarjeta > h3:first-child { font-size: calc(16px * var(--esc, 1)); }
 /* Al abrir la app en modo oscuro, la pantalla de carga ya sale oscura (ver index.html) */
 /* Solo mientras carga: si luego se cambia a claro, no se queda oscuro */
 html.pre-oscuro:has(.arranque), html.pre-oscuro:has(.arranque) body, html.pre-oscuro .movil:has(.arranque) { background: #1B1517; }
 html.pre-oscuro .arranque { color: #D795AB; }
+
+/* Modo oscuro: las fotos de las prendas tienen fondo blanco. En vez de un rectángulo blanco flotando,
+   cada foto va en una tarjetita clara y suave y el blanco de la foto se funde con ella (multiply). */
+.oscuro .foto { background: #E9E3E5; border-color: transparent; }
+.oscuro .foto img { mix-blend-mode: multiply; }
+@media (prefers-color-scheme: dark) {
+  .tema-auto .foto { background: #E9E3E5; border-color: transparent; }
+  .tema-auto .foto img { mix-blend-mode: multiply; }
+}
+
+/* Explorar: buscador */
+.buscador { display: flex; align-items: center; gap: 8px; background: var(--superficie); border: 1.5px solid var(--linea); border-radius: 999px; padding: 0 6px 0 14px; min-height: 46px; color: var(--secundario); }
+.buscador:focus-within { border-color: var(--acento); }
+.buscador input { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; min-height: 44px; }
+.buscador input::-webkit-search-cancel-button { display: none; }
+.buscador .limpiar { border: 0; background: var(--linea); color: var(--texto); width: 32px; height: 32px; border-radius: 50%; font-size: 18px; line-height: 1; flex: none; }
+.resultados { display: flex; flex-direction: column; gap: 14px; }

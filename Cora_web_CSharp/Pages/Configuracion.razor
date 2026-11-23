@@ -168,6 +168,9 @@
 
     async Task Guardar()
     {
+        var fallo = await E.Tiempo.ValidarAsync(p.Edad, p.Ciudad);
+        if (fallo != null) { await E.SonarAsync("error"); E.MostrarAviso(fallo); return; }
+        p.Ciudad = p.Ciudad.Trim();
         await E.GuardarPerfilAsync(p);
         await E.SonarAsync("guardado");
         E.MostrarAviso("Datos guardados");

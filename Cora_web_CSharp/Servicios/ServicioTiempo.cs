@@ -35,6 +35,34 @@ public class ServicioTiempo
 
     public Dictionary<string, Tiempo>? Prevision => _prevision;
 
+    /// <summary>
+    /// ¿Existe esa ciudad? Lo pregunta al buscador de lugares de Open-Meteo (el mismo que usa la previsión).
+    /// true: existe · false: no la encuentra · null: no hay conexión (entonces no se puede comprobar y se deja pasar).
+    /// </summary>
+    public async Task<bool?> CiudadExisteAsync(string ciudad)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(await _http.GetStringAsync($"https://geocoding-api.open-meteo.com/v1/search?count=1&language=es&name={Uri.EscapeDataString(ciudad.Trim())}"));
+            return doc.RootElement.TryGetProperty("results", out var res) && res.GetArrayLength() > 0;
+        }
+        catch { return null; }
+    }
+
+    /// <summary>Comprueba edad y ciudad del perfil. Devuelve el texto del error, o null si todo está bien.</summary>
+    public async Task<string?> ValidarAsync(string edad, string ciudad)
+    {
+        edad = edad.Trim(); ciudad = ciudad.Trim();
+        if (edad.Length > 0 && (!int.TryParse(edad, out int años) || años < 13 || años > 100))
+            return "Escribe una edad real, entre 13 y 100 años.";
+        if (ciudad.Length == 0) return "Escribe tu ciudad para que Cora sepa qué tiempo hace.";
+        if (!System.Text.RegularExpressions.Regex.IsMatch(ciudad, @"^[\p{L}][\p{L} .'\-]{1,59}$"))
+            return "La ciudad solo puede tener letras, por ejemplo «Ciudad Real».";
+        if (await CiudadExisteAsync(ciudad) == false)
+            return $"No encontramos «{ciudad}». Revisa cómo está escrita.";
+        return null;
+    }
+
     /// <summary>Busca la ciudad y descarga la previsión de 16 días. Devuelve true si lo consigue.</summary>
     public async Task<bool> CargarAsync(string ciudad)
     {

@@ -117,7 +117,7 @@ public static class DatosEjemplo
     public static readonly List<Publicacion> Publicaciones = new()
     {
         new("dani3", "dani", "hace 1 h", "Para correr con frío", "Chaqueta de running, manga larga y pantalón corto. Esta mañana hacía 8 grados.", null, new[] { "chaqueta_running_negra", "camiseta_larga_gris_chico", "short_deporte_malva", "zapatillas_retro_blancas" }, 54),
-        new("lucia", "lucia", "hace 2 h", "Outfit para una tarde de otoño", "Jersey gris, camisa azul y vaqueros claros.", "look_lucia", new[] { "jersey_gris", "camisa_azul", "vaquero_claro", "botas_negras" }, 124),
+        new("lucia", "lucia", "hace 2 h", "Outfit para una tarde de otoño", "Jersey gris, camisa azul y vaqueros claros.", null, new[] { "jersey_gris", "camisa_azul", "vaquero_claro", "botas_negras" }, 124),
         new("pablo1", "pablo", "hace 3 h", "Punto y tonos tierra", "Jersey marrón, pantalón recto y zapatillas de ante. Para clase y para después.", null, new[] { "jersey_marron_chico", "camiseta_blanca_chico", "pantalon_recto_gris", "zapatillas_ante_caqui" }, 143),
         new("marta", "marta", "hace 5 h", "Look de oficina", "Blazer con top de punto y falda. Fácil y elegante.", null, new[] { "blazer_negro", "top_punto_gris", "falda_negra", "tacones_negros" }, 87),
         new("dani1", "dani", "hace 8 h", "Comodidad total", "Jersey de cremallera y jogger. Del gimnasio a la biblioteca sin cambiarme.", null, new[] { "jersey_cremallera_amarillo", "jogger_gris_oscuro", "zapatillas_retro_blancas" }, 88),

@@ -13,6 +13,7 @@ public static class Iconos
     public static MarkupString PerchaGrande => S("<path d='M12 8a2 2 0 1 0-2-2'/><path d='M12 8v1L3 16a1.4 1.4 0 0 0 .9 2.5h16.2A1.4 1.4 0 0 0 21 16l-9-7'/>", 64, 1.4);
     public static MarkupString Mas => S("<path d='M12 5v14M5 12h14'/>", 28, 2.4);
     public static MarkupString Calendario => S("<rect x='3.5' y='5' width='17' height='15' rx='2'/><path d='M3.5 10h17M8 3v4M16 3v4'/>");
+    public static MarkupString Lupa => S("<circle cx='11' cy='11' r='7'/><path d='M20 20l-4-4'/>", 20);
     public static MarkupString Persona => S("<circle cx='12' cy='8' r='4'/><path d='M4 21c0-4 3.6-7 8-7s8 3 8 7'/>");
     public static MarkupString Globo => S("<circle cx='12' cy='12' r='9'/><path d='M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z'/>");
     public static MarkupString Atras => S("<path d='M15 5l-7 7 7 7'/>", 26, 2);

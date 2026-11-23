@@ -31,9 +31,13 @@
             <h1>Cuéntanos sobre ti</h1>
             <Caja Texto="Así Cora sabe qué tiempo hace y qué ropa te pega. Podrás cambiarlo en tu perfil." />
             <div class="dos">
-                <label class="campo"><span>Edad</span><input inputmode="numeric" maxlength="3" @bind="p.Edad" /></label>
-                <label class="campo"><span>Ciudad</span><input @bind="p.Ciudad" /></label>
+                <label class="campo"><span>Edad</span><input inputmode="numeric" maxlength="3" @bind="p.Edad" @bind:event="oninput" /></label>
+                <label class="campo"><span>Ciudad</span><input @bind="p.Ciudad" @bind:event="oninput" autocomplete="address-level2" /></label>
             </div>
+            if (!string.IsNullOrEmpty(error))
+            {
+                <Caja Tipo="error" Texto="@error" />
+            }
             <h3>¿Cuál es tu estilo?</h3>
             <div class="chips">
                 @foreach (var x in DatosEjemplo.Estilos)
@@ -61,7 +65,7 @@
         }
         else
         {
-            <button class="btn" @onclick="Terminar">Empezar</button>
+            <button class="btn" disabled="@comprobando" @onclick="Empezar">@(comprobando ? "Comprobando…" : "Empezar")</button>
         }
     </footer>
 </div>
@@ -70,6 +74,19 @@
     int paso;
     Perfil p = new();
     string clave = "", error = "";
+    bool comprobando;
+
+    /// <summary>Paso 2: antes de entrar, comprueba que la edad tiene sentido y que la ciudad existe.</summary>
+    async Task Empezar()
+    {
+        error = "";
+        comprobando = true;
+        var fallo = await E.Tiempo.ValidarAsync(p.Edad, p.Ciudad);
+        comprobando = false;
+        if (fallo != null) { error = fallo; await E.SonarAsync("error"); return; }
+        p.Ciudad = p.Ciudad.Trim();
+        await Terminar();
+    }
 
     protected override void OnParametersSet()
     {
@@ -91,6 +108,7 @@
         if (string.IsNullOrWhiteSpace(p.Nombre)) error = "Escribe tu nombre.";
         else if (!System.Text.RegularExpressions.Regex.IsMatch(p.Email.Trim(), @"^\S+@\S+\.\S+$")) error = "Escribe un correo válido, por ejemplo pilar@correo.es.";
         else if (clave.Length < 6) error = "La contraseña necesita al menos 6 caracteres.";
+        else if (p.Nombre.Trim().Length < 2 || !System.Text.RegularExpressions.Regex.IsMatch(p.Nombre.Trim(), @"^[\p{L}][\p{L} '\-]*$")) error = "El nombre solo puede tener letras.";
         else paso = 1;
     }
 

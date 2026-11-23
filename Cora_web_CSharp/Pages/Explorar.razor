@@ -8,6 +8,58 @@
 <div class="pantalla">
     <div class="contenido">
         <Cabecera Titulo="Explorar" Sub="Inspírate con los conjuntos de otras personas" Avatar="true" />
+        @* Buscador: personas (nombre o @usuario) y outfits (título, texto o prendas) *@
+        <label class="buscador">
+            @Iconos.Lupa
+            <span class="oculto">Buscar personas u outfits</span>
+            <input type="search" placeholder="Buscar personas u outfits" @bind="busqueda" @bind:event="oninput" enterkeyhint="search" autocomplete="off" />
+            @if (Buscando)
+            {
+                <button class="limpiar" aria-label="Borrar búsqueda" @onclick="@(() => busqueda = "")">×</button>
+            }
+        </label>
+
+        @if (Buscando)
+        {
+            var personas = PersonasEncontradas;
+            var outfits = OutfitsEncontrados;
+            <div aria-live="polite" class="resultados">
+                @if (personas.Count + outfits.Count == 0)
+                {
+                    <Caja Texto="@($"No hay resultados para «{busqueda.Trim()}». Prueba con un nombre o con una prenda, por ejemplo «vaquero».")" />
+                }
+                @if (personas.Count > 0)
+                {
+                    <div class="seccion"><h2>Personas</h2></div>
+                    <div class="lista-personas">
+                        @foreach (var per in personas)
+                        {
+                            var pe = per;
+                            bool sigo = E.Sigo(pe.Usuario);
+                            <div class="tarjeta fila persona-fila">
+                                <a href="@($"persona/{pe.Usuario}")" class="fila crece persona-enlace">
+                                    <span class="avatar">@(pe.Nombre[..1])</span>
+                                    <span class="crece"><b>@pe.Nombre</b><small class="sec bloque">@("@")@pe.Usuario</small></span>
+                                </a>
+                                <button class="seguir @(sigo ? "on" : "")" aria-pressed="@(sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(pe.Usuario)">@(sigo ? "✓ Siguiendo" : "Seguir")</button>
+                            </div>
+                        }
+                    </div>
+                }
+                @if (outfits.Count > 0)
+                {
+                    <div class="seccion"><h2>Outfits</h2></div>
+                    <div class="rejilla-outfits">
+                        @foreach (var pub in outfits)
+                        {
+                            <MiniOutfit P="pub" @key="pub.Id" />
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
         <div class="chips" role="group" aria-label="Qué ver">
             @foreach (var f in new[] { "Todo", "Outfits", "Personas" })
             {
@@ -16,7 +68,7 @@
             }
         </div>
 
-        @if (filtro == "Todo")
+        if (filtro == "Todo")
         {
             <div class="seccion"><h2>Personas que quizá te gusten</h2><button class="enlace" @onclick="@(() => filtro = "Personas")">Ver todas</button></div>
             <div class="personas-sugeridas">
@@ -67,9 +119,22 @@
                 }
             </div>
         }
+        }
     </div>
 </div>
 
 @code {
     string filtro = "Todo";
+    string busqueda = "";
+    bool Buscando => busqueda.Trim().Length > 0;
+
+    /// <summary>Sin tildes ni mayúsculas, para que «lucia» encuentre a «Lucía».</summary>
+    static string N(string s) => MotorIA.Normalizar(s);
+    string Q => N(busqueda.Trim().TrimStart('@'));
+
+    List<Persona> PersonasEncontradas => DatosEjemplo.Personas.Where(p => N(p.Nombre).Contains(Q) || N(p.Usuario).Contains(Q)).ToList();
+
+    List<Publicacion> OutfitsEncontrados => DatosEjemplo.Publicaciones.Where(p =>
+        N(p.Titulo).Contains(Q) || N(p.Texto).Contains(Q) || N(p.Usuario).Contains(Q)
+        || DatosEjemplo.PrendasDe(p).Any(x => N(x.Nombre).Contains(Q) || N(x.Sub).Contains(Q) || N(x.Color).Contains(Q))).ToList();
 }

@@ -141,6 +141,11 @@ window.coraIdiomas = (function () {
     'Universidad': ['University', 'Université'], 'Trabajo': ['Work', 'Travail'], 'Cena': ['Dinner', 'Dîner'],
 
     // Explorar
+    'Buscar personas u outfits': ['Search people or outfits', 'Rechercher des personnes ou des tenues'], 'Borrar búsqueda': ['Clear search', 'Effacer la recherche'],
+    'Comprobando…': ['Checking…', 'Vérification…'], 'Escribe una edad real, entre 13 y 100 años.': ['Enter a real age, between 13 and 100.', 'Indique un âge réel, entre 13 et 100 ans.'],
+    'Escribe tu ciudad para que Cora sepa qué tiempo hace.': ['Enter your city so Cora knows the weather.', 'Indique ta ville pour que Cora connaisse la météo.'],
+    'La ciudad solo puede tener letras, por ejemplo «Ciudad Real».': ['The city can only contain letters, for example “Paris”.', 'La ville ne peut contenir que des lettres, par exemple « Paris ».'],
+    'El nombre solo puede tener letras.': ['The name can only contain letters.', 'Le nom ne peut contenir que des lettres.'],
     'Inspírate con los conjuntos de otras personas': ["Get inspired by other people's outfits", "Inspire-toi des tenues des autres"],
     'Inspírate': ['Get inspired', 'Inspire-toi'], 'Qué ver': ['What to see', 'Quoi voir'], 'Todo': ['All', 'Tout'], 'Outfits': ['Outfits', 'Tenues'],
     'Personas': ['People', 'Personnes'], 'Personas que quizá te gusten': ['People you may like', 'Des personnes qui pourraient te plaire'],
@@ -303,6 +308,8 @@ window.coraIdiomas = (function () {
     [/^(\d+) días$/, (m) => [`${m[1]} days`, `${m[1]} jours`][i]], [/^Cada (\d+) días$/, (m) => [`Every ${m[1]} days`, `Tous les ${m[1]} jours`][i]],
     [/^hace (\d+) min$/, (m) => [`${m[1]} min ago`, `il y a ${m[1]} min`][i]], [/^hace (\d+) h$/, (m) => [`${m[1]} h ago`, `il y a ${m[1]} h`][i]],
     [/^hace (\d+) días$/, (m) => [`${m[1]} days ago`, `il y a ${m[1]} jours`][i]],
+    [/^No encontramos «(.+)»\. Revisa cómo está escrita\.$/, (m) => [`We can't find “${m[1]}”. Check the spelling.`, `Nous ne trouvons pas « ${m[1]} ». Vérifie l'orthographe.`][i]],
+    [/^No hay resultados para «(.+)»\. Prueba con un nombre o con una prenda, por ejemplo «vaquero»\.$/, (m) => [`No results for “${m[1]}”. Try a name or an item, for example “jeans”.`, `Aucun résultat pour « ${m[1]} ». Essaie un nom ou un vêtement, par exemple « jean ».`][i]],
     [/^Seguir a (.+)$/, (m) => [`Follow ${m[1]}`, `Suivre ${m[1]}`][i]], [/^Outfit de (.+)$/, (m) => [`${m[1]}'s outfit`, `Tenue de ${m[1]}`][i]],
     [/^Ver el perfil de (.+)$/, (m) => [`See ${m[1]}'s profile`, `Voir le profil de ${m[1]}`][i]],
     [/^Comentarios \((\d+)\)$/, (m) => [`Comments (${m[1]})`, `Commentaires (${m[1]})`][i]],
