@@ -30,6 +30,12 @@ public class Prenda
     public string? LavadoHora { get; set; }
     /// <summary>Ya se avisó de que está seca (para no avisar dos veces).</summary>
     public bool AvisoSeca { get; set; }
+    /// <summary>Está sucia en el cesto, esperando a que el usuario ponga la lavadora.</summary>
+    public bool EnCesto { get; set; }
+    /// <summary>Días que el usuario eligió al poner la lavadora (mínimo 2).</summary>
+    public int? LavadoDias { get; set; }
+    /// <summary>En el cesto o en la lavadora: Cora no la usa en los conjuntos.</summary>
+    [JsonIgnore] public bool NoDisponible => Lavando || EnCesto;
     /// <summary>Foto hecha por el usuario (data URL). Si es null se usa la foto de ejemplo.</summary>
     public string? Foto { get; set; }
 
@@ -105,6 +111,17 @@ public class Ajustes
     public bool Vibracion { get; set; } = true;
     /// <summary>Reto 3: "mensajes" (espera con mensajes y huecos grises) o "clasica".</summary>
     public string Espera { get; set; } = "mensajes";
+    /// <summary>Días que suele tardar la ropa en estar lista (sale marcado al poner la lavadora). Mínimo 2.</summary>
+    public int DiasLavadora { get; set; } = 2;
+    /// <summary>Cuándo pone la lavadora el usuario: "manual" (cuando quiera), "cada" (cada X días) o "semana" (un día fijo).</summary>
+    public string Programa { get; set; } = "manual";
+    public int CadaDias { get; set; } = 7;
+    /// <summary>Día fijo de la semana (0 domingo … 6 sábado).</summary>
+    public int DiaSemana { get; set; } = 6;
+    /// <summary>Último día que se puso la lavadora (AAAA-MM-DD).</summary>
+    public string? UltimaLavadora { get; set; }
+    /// <summary>Último día que se avisó de que tocaba lavadora (para avisar una vez al día).</summary>
+    public string? UltimoRecordatorio { get; set; }
 }
 
 /// <summary>Todo lo que se guarda en el navegador.</summary>

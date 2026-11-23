@@ -1,0 +1,123 @@
+@page "/cesto"
+@inherits PaginaCora
+
+@* CESTO DE LA ROPA: la ropa sucia se va juntando y, cuando el usuario pone la lavadora, va toda junta.
+   Al ponerla, el usuario elige cuánto tardará en estar lista (mínimo 2 días) y Cora le avisa ese día. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="Cesto de la ropa" Sub="@Subtitulo" VolverA="armario" />
+
+        @if (Prendas.Count == 0)
+        {
+            <Caja Tipo="ok" Texto="El cesto está vacío. Cuando una prenda esté sucia, ábrela y pulsa «Echar al cesto»." />
+        }
+        else
+        {
+            if (E.TocaLavadoraHoy)
+            {
+                <Caja Tipo="ok" Texto="Hoy toca poner la lavadora según tu programación." />
+            }
+            <div class="cuadricula">
+                @foreach (var p in Prendas)
+                {
+                    var id = p.Id;
+                    <TarjetaPrenda P="p" ModoSeleccion="seleccionando" Seleccionada="@(elegidas.Contains(id))" OnClick="@(() => Tocar(id))" />
+                }
+            </div>
+
+            if (poniendo)
+            {
+                <section class="tarjeta">
+                    <h3>¿Cuánto tardará en estar lista?</h3>
+                    <p class="sec">Lo que sueles tardar en lavar, tender y guardar la ropa. Mínimo 2 días.</p>
+                    <div class="chips">
+                        @for (int d = 2; d <= 7; d++)
+                        {
+                            var n = d;
+                            <Chip Texto="@(n == 7 ? "1 semana" : $"{n} días")" Activo="@(dias == n)" OnClick="@(() => dias = n)" />
+                        }
+                    </div>
+                    <Caja Texto="@($"Estará lista {FinTexto}. Ese día te avisaré para que la marques como disponible.")" />
+                </section>
+            }
+        }
+
+        @if (!string.IsNullOrEmpty(E.TextoPrograma))
+        {
+            <small class="sec">@E.TextoPrograma · <a class="enlace-acento" href="configuracion">Cambiar</a></small>
+        }
+    </div>
+    @if (Prendas.Count > 0)
+    {
+        <footer class="pie">
+            @if (seleccionando)
+            {
+                <div class="fila">
+                    <button class="btn" disabled="@(elegidas.Count == 0)" @onclick="Sacar">Sacar del cesto (@elegidas.Count)</button>
+                    <button class="btn secundario corto" @onclick="Terminar">Cancelar</button>
+                </div>
+            }
+            else if (poniendo)
+            {
+                <button class="btn" @onclick="Poner">@Iconos.Lavadora Poner la lavadora (@Cuantas)</button>
+                <button class="btn secundario" @onclick="() => poniendo = false">Cancelar</button>
+            }
+            else
+            {
+                <button class="btn" @onclick="Empezar">@Iconos.Lavadora Poner la lavadora</button>
+                <button class="btn secundario" @onclick="() => seleccionando = true">Sacar alguna prenda</button>
+            }
+        </footer>
+    }
+</div>
+
+@code {
+    bool seleccionando, poniendo;
+    int dias = 2;
+    HashSet<string> elegidas = new();
+
+    List<Prenda> Prendas => E.EnCesto;
+    string Cuantas => Prendas.Count == 1 ? "1 prenda" : $"{Prendas.Count} prendas";
+    string Subtitulo => Prendas.Count > 0 ? $"{Cuantas} esperando a la lavadora" : "";
+
+    /// <summary>«el sábado 28 a las 12:30».</summary>
+    string FinTexto
+    {
+        get
+        {
+            var f = DateTime.Now.AddDays(dias);
+            return $"el {Fechas.Dias[(int)f.DayOfWeek]} {f.Day} a las {f.ToString("H:mm", System.Globalization.CultureInfo.InvariantCulture)}";
+        }
+    }
+
+    void Empezar()
+    {
+        Terminar();
+        dias = Math.Clamp(E.D.Ajustes.DiasLavadora, 2, 7);
+        poniendo = true;
+    }
+
+    void Tocar(string id)
+    {
+        if (!seleccionando) { Ir($"prenda/{id}"); return; }
+        if (!elegidas.Remove(id)) elegidas.Add(id);
+    }
+
+    void Terminar() { seleccionando = false; elegidas.Clear(); }
+
+    async Task Sacar()
+    {
+        int n = elegidas.Count;
+        await E.SacarDelCestoAsync(elegidas.ToList());
+        E.MostrarAviso(n == 1 ? "Prenda fuera del cesto: disponible de nuevo" : $"{n} prendas fuera del cesto: disponibles de nuevo");
+        Terminar();
+    }
+
+    async Task Poner()
+    {
+        int n = Prendas.Count;
+        await E.PonerLavadoraAsync(dias);
+        E.MostrarAviso($"Lavadora puesta con {(n == 1 ? "1 prenda" : $"{n} prendas")}. Te avisaré cuando esté lista.");
+        Nav.NavigateTo("categoria/lavadora");
+    }
+}

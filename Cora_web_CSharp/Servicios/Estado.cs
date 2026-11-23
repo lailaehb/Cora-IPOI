@@ -77,6 +77,8 @@ public class Estado
             Favoritas = new() { "vaquero_azul" },
         };
         // La sudadera de ejemplo lleva 20 horas en la lavadora, para que se vea la barra a medias
+        // Y el pantalón de chándal está en el cesto, esperando a la próxima lavadora
+        foreach (var p in d.Prendas.Where(p => p.Id == "chandal_gris")) p.EnCesto = true;
         foreach (var p in d.Prendas.Where(p => p.Lavando))
         {
             var inicio = DateTime.UtcNow.AddHours(-20);
@@ -101,7 +103,8 @@ public class Estado
     // La ropa tarda DiasLavado días (48 h) en lavarse y secarse. La barra avanza con las horas reales y,
     // cuando se cumple el tiempo, Cora avisa (aviso en la app, sonido y notificación del navegador).
     // La prenda NO vuelve sola al armario: el usuario la marca como disponible cuando la tiene (control explícito).
-    public static readonly TimeSpan DuracionLavado = TimeSpan.FromDays(DiasLavado);
+    /// <summary>Lo que el usuario eligió al poner la lavadora (de 2 a 14 días; por defecto 2).</summary>
+    public static TimeSpan DuracionDe(Prenda p) => TimeSpan.FromDays(Math.Clamp(p.LavadoDias ?? DiasLavado, DiasLavado, 14));
 
     public static DateTime InicioLavado(Prenda p)
     {
@@ -113,18 +116,18 @@ public class Estado
 
     /// <summary>De 0 (recién echada a lavar) a 1 (seca).</summary>
     public static double FraccionLavado(Prenda p) =>
-        Math.Clamp((DateTime.UtcNow - InicioLavado(p)).TotalMinutes / DuracionLavado.TotalMinutes, 0, 1);
+        Math.Clamp((DateTime.UtcNow - InicioLavado(p)).TotalMinutes / DuracionDe(p).TotalMinutes, 0, 1);
 
     public static bool Seca(Prenda p) => p.Lavando && FraccionLavado(p) >= 1;
 
     public static TimeSpan Falta(Prenda p)
     {
-        var f = InicioLavado(p) + DuracionLavado - DateTime.UtcNow;
+        var f = InicioLavado(p) + DuracionDe(p) - DateTime.UtcNow;
         return f < TimeSpan.Zero ? TimeSpan.Zero : f;
     }
 
     /// <summary>Fecha y hora (locales) en que estará seca.</summary>
-    public static DateTime FinLavado(Prenda p) => (InicioLavado(p) + DuracionLavado).ToLocalTime();
+    public static DateTime FinLavado(Prenda p) => (InicioLavado(p) + DuracionDe(p)).ToLocalTime();
 
     /// <summary>Ancho de la barra para el CSS, p. ej. "41.67%".</summary>
     public static string AnchoLavado(Prenda p) => (FraccionLavado(p) * 100).ToString("0.##", CultureInfo.InvariantCulture) + "%";
@@ -163,6 +166,7 @@ public class Estado
 
     async Task ComprobarLavadoraAsync()
     {
+        await RecordarLavadoraAsync();
         if (!D.Prendas.Any(p => p.Lavando)) return;
         var nuevas = D.Prendas.Where(p => p.Lavando && !p.AvisoSeca && Seca(p)).ToList();
         if (nuevas.Count > 0)
@@ -178,6 +182,98 @@ public class Estado
             await GuardarAsync();
         }
         Avisar(); // para que las barras avancen
+    }
+
+    // ---------------------------------------------------------------- cesto y programación de la lavadora
+    /// <summary>Ropa sucia esperando a que se ponga la lavadora.</summary>
+    public List<Prenda> EnCesto => D.Prendas.Where(p => p.EnCesto && !p.Lavando).ToList();
+
+    /// <summary>Según la programación que ha elegido el usuario en Configuración.</summary>
+    public bool TocaLavadoraHoy
+    {
+        get
+        {
+            var a = D.Ajustes;
+            if (a.Programa == "semana") return (int)DateTime.Today.DayOfWeek == a.DiaSemana;
+            if (a.Programa == "cada") return a.UltimaLavadora == null || -Fechas.Dif(a.UltimaLavadora) >= a.CadaDias;
+            return false;
+        }
+    }
+
+    /// <summary>«Sueles poner la lavadora los sábados», «Pones la lavadora cada 7 días · la próxima, el jueves 26» o "".</summary>
+    public string TextoPrograma
+    {
+        get
+        {
+            var a = D.Ajustes;
+            if (a.Programa == "semana")
+            {
+                string dia = Fechas.Dias[Math.Clamp(a.DiaSemana, 0, 6)];
+                return $"Sueles poner la lavadora los {(dia.EndsWith("s") ? dia : dia + "s")}";
+            }
+            if (a.Programa == "cada")
+            {
+                string t = $"Pones la lavadora cada {a.CadaDias} días";
+                if (a.UltimaLavadora != null)
+                {
+                    string prox = Fechas.Sumar(a.UltimaLavadora, a.CadaDias);
+                    t += Fechas.Dif(prox) <= 0 ? " · toca hoy" : $" · la próxima, {Fechas.Etiqueta(prox).ToLower()}";
+                }
+                return t;
+            }
+            return "";
+        }
+    }
+
+    public async Task EcharAlCestoAsync(IEnumerable<string> ids)
+    {
+        var lista = ids.ToList();
+        foreach (var p in D.Prendas.Where(p => lista.Contains(p.Id) && !p.Lavando)) p.EnCesto = true;
+        await SonarAsync("guardado");
+        await CambiadoAsync();
+    }
+
+    public async Task SacarDelCestoAsync(IEnumerable<string> ids)
+    {
+        var lista = ids.ToList();
+        foreach (var p in D.Prendas.Where(p => lista.Contains(p.Id))) p.EnCesto = false;
+        await SonarAsync("disponible");
+        await CambiadoAsync();
+    }
+
+    /// <summary>Todo lo del cesto va a la vez a la lavadora; estará lista en los días que elija el usuario.</summary>
+    public async Task PonerLavadoraAsync(int dias)
+    {
+        // Se pide permiso para las notificaciones justo al pulsar (el navegador solo deja pedirlo tras un toque)
+        try { await _js.InvokeVoidAsync("cora.pedirPermiso"); } catch { }
+        dias = Math.Clamp(dias, DiasLavado, 14);
+        string ahora = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
+        foreach (var p in EnCesto)
+        {
+            p.EnCesto = false;
+            p.Lavando = true;
+            p.LavadoHora = ahora;
+            p.LavadoDesde = Fechas.Hoy;
+            p.LavadoDias = dias;
+            p.AvisoSeca = false;
+        }
+        D.Ajustes.UltimaLavadora = Fechas.Hoy;
+        await SonarAsync("guardado");
+        await CambiadoAsync();
+    }
+
+    /// <summary>Si hoy toca lavadora (según la programación) y hay ropa en el cesto, avisa una vez al día.</summary>
+    async Task RecordarLavadoraAsync()
+    {
+        var cesto = EnCesto;
+        if (!TocaLavadoraHoy || cesto.Count == 0 || D.Ajustes.UltimoRecordatorio == Fechas.Hoy) return;
+        D.Ajustes.UltimoRecordatorio = Fechas.Hoy;
+        string titulo = "Hoy toca poner la lavadora";
+        string texto = $"Tienes {cesto.Count} {(cesto.Count == 1 ? "prenda" : "prendas")} en el cesto. Entra en Cora para poner la lavadora.";
+        await SonarAsync("seca");
+        MostrarAviso(titulo);
+        try { await _js.InvokeVoidAsync("cora.notificar", titulo, texto); } catch { }
+        await GuardarAsync();
     }
 
     /// <summary>Solo para probar: hace como si hubieran pasado unas horas en la lavadora.</summary>
@@ -247,7 +343,7 @@ public class Estado
             });
         }
         // Solo lo que no está en la lavadora: la IA no puede elegir lo que no está disponible
-        p.Armario = D.Prendas.Where(x => !x.Lavando).Select(x => new PrendaIA
+        p.Armario = D.Prendas.Where(x => !x.NoDisponible).Select(x => new PrendaIA
         {
             Id = x.Id, Nombre = x.Nombre, Categoria = x.Cat.ToString(), Tipo = x.Sub, Color = x.Color,
             Usos = ServicioIA.UsosDe(x), Abrigo = x.Abrigo, Lluvia = x.AptaLluvia,
@@ -271,7 +367,7 @@ public class Estado
         var looks = new List<(Look Look, bool Deporte)>();
         foreach (var l in r.Looks)
         {
-            var prendas = l.Ids.Distinct().Select(PrendaPorId).Where(p => p != null && !p.Lavando).Select(p => p!).ToList();
+            var prendas = l.Ids.Distinct().Select(PrendaPorId).Where(p => p != null && !p.NoDisponible).Select(p => p!).ToList();
             // Un conjunto válido necesita, como mínimo, algo de arriba y algo de abajo
             if (!prendas.Any(p => p.Cat == Categoria.Arriba) || !prendas.Any(p => p.Cat == Categoria.Abajo)) continue;
             var ids = OrdenLook.Select(c => prendas.FirstOrDefault(p => p.Cat == c)).Where(p => p != null).Select(p => p!.Id).ToList();
@@ -422,6 +518,7 @@ public class Estado
             p.LavadoDesde = lavando ? Fechas.Hoy : null;
             p.LavadoHora = lavando ? DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture) : null;
             p.AvisoSeca = false;
+            if (!lavando) p.EnCesto = false;
         }
         // Al echar a lavar, el sonido de «guardado»; al volver al armario, una campanita alegre
         await SonarAsync(lavando ? "guardado" : "disponible");

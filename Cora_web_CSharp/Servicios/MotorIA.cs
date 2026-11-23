@@ -86,7 +86,7 @@ public static class MotorIA
         int fPedida = plan == null ? 1 : (otros.Count > 0 ? otros.Max(x => x.Formalidad) : 0);
         string frase = plan == null ? "un día tranquilo" : (deporteAparte ? Lista(otros.Select(x => x.Frase).ToList()) : plan.Frase);
 
-        var disponibles = prendas.Where(p => !p.Lavando).ToList();
+        var disponibles = prendas.Where(p => !p.NoDisponible).ToList();
         bool frio = w.T < 15, fresco = w.T < 19, llueve = w.Cielo == "lluvia";
 
         // Orden: con frío primero lo que más abriga; después lo que más le gusta al usuario
@@ -162,8 +162,8 @@ public static class MotorIA
         if (choque != null && !repetido) porque.Add($"Cambio la combinación para no repetir la del {Fechas.Dias[(int)Fechas.De(choque).DayOfWeek]}.");
         if (rebajado) porque.Add("Elijo algo un poco menos arreglado para no repetir conjunto en la misma semana.");
         if (repetido) porque.Add("Con tu armario no puedo evitar repetir esta semana: añade alguna prenda más.");
-        var fuera = prendas.Where(p => p.Lavando && p.Encaja(f) && p.Cat != Categoria.Calzado).Select(p => p.Nombre).ToList();
-        if (fuera.Count > 0) porque.Add($"{string.Join(", ", fuera)} no entra: está en la lavadora.");
+        var fuera = prendas.Where(p => p.NoDisponible && p.Encaja(f) && p.Cat != Categoria.Calzado).Select(p => p.Nombre).ToList();
+        if (fuera.Count > 0) porque.Add($"{string.Join(", ", fuera)} no entra: está para lavar.");
         if (ids.Count < 3) porque.Add(f == 0
             ? "Te falta ropa de deporte: añade alguna prenda y márcala como «Deporte»."
             : "Te faltan prendas para este plan: añade alguna más.");

@@ -41,7 +41,7 @@
                 {
                     bool seca = Estado.Seca(P);
                     <div class="fila">@Iconos.Lavadora <h3>@(seca ? "Ya debería estar seca" : "En la lavadora")</h3></div>
-                    <p class="sec">@(seca ? "Han pasado los 2 días de lavado y secado." : $"Quedan {Estado.TextoFalta(Estado.Falta(P))} · Estará seca {FinTexto}")</p>
+                    <p class="sec">@(seca ? "Ya ha pasado el tiempo que elegiste al poner la lavadora." : $"Quedan {Estado.TextoFalta(Estado.Falta(P))} · Estará seca {FinTexto}")</p>
                     @* La barra avanza con las horas reales (se actualiza cada 30 segundos) *@
                     <div class="progreso @(seca ? "completo" : "")" role="progressbar" aria-label="Lavado y secado"
                          aria-valuemin="0" aria-valuemax="100" aria-valuenow="@((int)(Estado.FraccionLavado(P) * 100))">
@@ -50,11 +50,18 @@
                     <button class="btn" @onclick="Disponible">Marcar como disponible</button>
                     <Caja Tipo="@(seca ? "ok" : "info")" Texto="@(seca ? "Cuando la tengas en el armario, márcala como disponible y Cora volverá a usarla en tus conjuntos." : "Mientras se lava, Cora no la tendrá en cuenta en tus conjuntos. Te avisaré cuando esté seca.")" />
                 }
+                else if (P.EnCesto)
+                {
+                    <div class="fila">@Iconos.Cesto <h3>En el cesto</h3></div>
+                    <p class="sec">Está sucia, así que Cora no la usará en tus conjuntos. Irá a la lavadora con el resto del cesto.</p>
+                    <a class="btn" href="cesto">Ir al cesto</a>
+                    <button class="btn secundario" @onclick="SacarDelCesto">Sacar del cesto</button>
+                }
                 else
                 {
                     <h3>Disponible</h3>
                     <p class="sec">Cora la puede usar en tus conjuntos.</p>
-                    <button class="btn secundario" @onclick="Lavar">@Iconos.Lavadora Echar a lavar</button>
+                    <button class="btn secundario" @onclick="AlCesto">@Iconos.Cesto Echar al cesto</button>
                 }
             </section>
             if (!confirmarBorrado)
@@ -100,10 +107,16 @@
         await E.CambiarUsosAsync(Id, r.Value.Min, r.Value.Max);
     }
 
-    async Task Lavar()
+    async Task AlCesto()
     {
-        await E.CambiarLavadoAsync(new[] { Id }, true);
-        E.MostrarAviso("En la lavadora. Te avisaré cuando esté seca, en 2 días.");
+        await E.EcharAlCestoAsync(new[] { Id });
+        E.MostrarAviso("Al cesto. Cuando pongas la lavadora, irá con el resto.");
+    }
+
+    async Task SacarDelCesto()
+    {
+        await E.SacarDelCestoAsync(new[] { Id });
+        E.MostrarAviso("Fuera del cesto: disponible de nuevo");
     }
 
     async Task Disponible()

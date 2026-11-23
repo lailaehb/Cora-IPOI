@@ -20,6 +20,7 @@ public static class Iconos
     public static MarkupString Qr => S("<rect x='3' y='3' width='7' height='7' rx='1'/><rect x='14' y='3' width='7' height='7' rx='1'/><rect x='3' y='14' width='7' height='7' rx='1'/><path d='M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3'/>", 28);
     public static MarkupString Camara => S("<path d='M4 8h3l2-3h6l2 3h3v11H4z'/><circle cx='12' cy='13' r='3.5'/>", 28);
     public static MarkupString Lapiz => S("<path d='M4 20h4L19 9l-4-4L4 16z'/>", 28);
+    public static MarkupString Cesto => S("<path d='M3.5 9h17l-1.7 10.3a2 2 0 0 1-2 1.7H7.2a2 2 0 0 1-2-1.7L3.5 9z'/><path d='M8 9l2.5-5M16 9l-2.5-5M9 13v4M12 13v4M15 13v4'/>", 22, 2);
     public static MarkupString Lavadora => S("<rect x='4' y='3' width='16' height='18' rx='2'/><circle cx='12' cy='13' r='4'/><path d='M8 6.5h.01M11 6.5h.01'/>", 22, 2);
     public static MarkupString Recargar => S("<path d='M20 11a8 8 0 0 0-14.6-4.5M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5M20 20v-4h-4'/>", 18);
     public static MarkupString Marcador(bool lleno) => S("<path d='M6 3h12v18l-6-4-6 4z'/>", 20, 1.8, lleno ? "currentColor" : "none");

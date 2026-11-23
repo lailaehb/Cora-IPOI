@@ -40,7 +40,7 @@
                 <div class="fila">
                     @if (!EsLavadora)
                     {
-                        <button class="btn" disabled="@(ALavar.Count == 0)" @onclick="Lavar">A lavar (@ALavar.Count)</button>
+                        <button class="btn" disabled="@(ALavar.Count == 0)" @onclick="Lavar">Al cesto (@ALavar.Count)</button>
                     }
                     <button class="btn" disabled="@(ALiberar.Count == 0)" @onclick="Liberar">Disponibles (@ALiberar.Count)</button>
                     <button class="btn secundario corto" @onclick="Terminar">Cancelar</button>
@@ -69,8 +69,8 @@
     List<Prenda> Todas => EsLavadora ? E.EnLavadora : E.D.Prendas.Where(p => p.Cat == CatEnum).ToList();
     List<string> Subs => CatEnum is Categoria c ? DatosEjemplo.Subcategorias[c].Where(s => Todas.Any(p => p.Sub == s)).ToList() : new();
     List<Prenda> Lista => sub == "Todas" ? Todas : Todas.Where(p => p.Sub == sub).ToList();
-    List<string> ALavar => Lista.Where(p => elegidas.Contains(p.Id) && !p.Lavando).Select(p => p.Id).ToList();
-    List<string> ALiberar => Lista.Where(p => elegidas.Contains(p.Id) && p.Lavando).Select(p => p.Id).ToList();
+    List<string> ALavar => Lista.Where(p => elegidas.Contains(p.Id) && !p.NoDisponible).Select(p => p.Id).ToList();
+    List<string> ALiberar => Lista.Where(p => elegidas.Contains(p.Id) && p.NoDisponible).Select(p => p.Id).ToList();
 
     protected override void OnParametersSet() { sub = "Todas"; Terminar(); }
 
@@ -87,8 +87,8 @@
     async Task Lavar()
     {
         var ids = ALavar;
-        await E.CambiarLavadoAsync(ids, true);
-        E.MostrarAviso($"{Plural(ids.Count, "prenda", "prendas")} a lavar. Cora no las usará hasta que estén listas.");
+        await E.EcharAlCestoAsync(ids);
+        E.MostrarAviso($"{Plural(ids.Count, "prenda", "prendas")} al cesto. Cora no las usará hasta que estén limpias.");
         Terminar();
     }
 

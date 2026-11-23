@@ -5,6 +5,14 @@
 <div class="pantalla">
     <div class="contenido">
         <Cabecera Titulo="Mi armario" Sub="@($"{E.D.Prendas.Count} prendas")" Avatar="true" />
+        @if (E.EnCesto.Count > 0)
+        {
+            <a class="tarjeta fila-tarjeta @(E.TocaLavadoraHoy ? "aviso" : "")" href="cesto">
+                <span class="ico-caja blanca">@Iconos.Cesto</span>
+                <span class="crece"><b>Cesto de la ropa (@E.EnCesto.Count)</b><small>@(E.TocaLavadoraHoy ? "Hoy toca poner la lavadora" : "Toca para poner la lavadora")</small></span>
+                @Iconos.Siguiente
+            </a>
+        }
         @if (E.EnLavadora.Count > 0)
         {
             <a class="tarjeta fila-tarjeta aviso" href="categoria/lavadora">

@@ -58,6 +58,45 @@
         </section>
 
         <section class="tarjeta">
+            <h3>Mi lavadora</h3>
+            <p class="sec">¿Cuánto sueles tardar en tener la ropa lista (lavar, tender y guardar)? Saldrá marcado al poner la lavadora, y siempre lo puedes cambiar.</p>
+            <div class="chips">
+                @for (int d = 2; d <= 7; d++)
+                {
+                    var n = d;
+                    <Chip Texto="@(n == 7 ? "1 semana" : $"{n} días")" Activo="@(E.D.Ajustes.DiasLavadora == n)" OnClick="@(() => E.CambiarAjustesAsync(a => a.DiasLavadora = n))" />
+                }
+            </div>
+            <span class="etq">¿Cuándo pones la lavadora?</span>
+            <div class="segmentos">
+                <button class="@(Prog == "manual" ? "on" : "")" aria-pressed="@(Prog == "manual" ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Programa = "manual"))">Cuando quiera</button>
+                <button class="@(Prog == "cada" ? "on" : "")" aria-pressed="@(Prog == "cada" ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Programa = "cada"))">Cada X días</button>
+                <button class="@(Prog == "semana" ? "on" : "")" aria-pressed="@(Prog == "semana" ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Programa = "semana"))">Un día fijo</button>
+            </div>
+            @if (Prog == "cada")
+            {
+                <div class="chips">
+                    @foreach (var c in new[] { 3, 4, 5, 7, 10, 14 })
+                    {
+                        var n = c;
+                        <Chip Texto="@($"Cada {n} días")" Activo="@(E.D.Ajustes.CadaDias == n)" OnClick="@(() => E.CambiarAjustesAsync(a => a.CadaDias = n))" />
+                    }
+                </div>
+            }
+            else if (Prog == "semana")
+            {
+                <div class="chips">
+                    @foreach (var dia in new[] { 1, 2, 3, 4, 5, 6, 0 })
+                    {
+                        var n = dia;
+                        <Chip Texto="@(Fechas.Cap(Fechas.Dias[n]))" Activo="@(E.D.Ajustes.DiaSemana == n)" OnClick="@(() => E.CambiarAjustesAsync(a => a.DiaSemana = n))" />
+                    }
+                </div>
+            }
+            <small class="sec">@(Prog == "manual" ? "Pones la lavadora cuando quieras desde el cesto." : "Ese día te avisaré si tienes ropa en el cesto. La lavadora no se pone sola: tú la confirmas con un toque.")</small>
+        </section>
+
+        <section class="tarjeta">
             <h3>Probar la lavadora</h3>
             <p class="sec">La ropa tarda 2 días en lavarse y secarse. Para ver cómo avanza la barra y cómo llega el aviso sin esperar, adelanta el tiempo de lo que hay en la lavadora.</p>
             <div class="fila">
@@ -90,6 +129,8 @@
 </div>
 
 @code {
+    string Prog => E.D.Ajustes.Programa;
+
     Perfil p = new();
     bool confirmar;
 
