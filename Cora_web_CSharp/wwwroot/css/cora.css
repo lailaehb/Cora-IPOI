@@ -284,3 +284,13 @@ small { font-size: 13px; }
 .mini-progreso span { display: block; height: 100%; background: var(--acento); transition: width .8s ease; }
 .etq-lavadora.seca + .mini-progreso span { background: var(--ok); }
 .texto-ok { color: var(--ok); font-weight: 600; display: block; }
+
+/* Móvil: que nada se aplaste cuando la pantalla es baja (antes las filas de Favoritas
+   y Añadidas hace poco se encogían y cortaban las fotos); la pantalla hace scroll */
+.contenido > * { flex-shrink: 0; }
+/* Hueco vacío en las categorías: borde discontinuo en vez de un cuadro de color */
+.foto.vacia { background: transparent; border: 1.5px dashed var(--linea); }
+/* Estantes horizontales: llegan hasta el borde de la pantalla y se paran en cada prenda al deslizar */
+.estante { scroll-snap-type: x proximity; padding: 2px 20px 4px; margin: 0 -20px; scroll-padding: 0 20px; }
+.estante .tprenda { scroll-snap-align: start; }
+.tp-nombre, .tp-marca { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
