@@ -13,6 +13,18 @@
         <input type="checkbox" role="switch" aria-label="Modo fácil" checked="@A.ModoFacil" @onchange="@(e => E.ModoFacilAsync((bool)(e.Value ?? false)))" />
     </label>
 
+    @* Claro / oscuro: siempre a mano (aquí y en Configuración), no solo dentro de «Personalizar» *@
+    <div>
+        <span class="etq">Colores</span>
+        <div class="segmentos" role="radiogroup" aria-label="Colores">
+            @foreach (var t in Temas)
+            {
+                var v = t.Valor;
+                <button role="radio" class="@(A.Tema == v ? "on" : "")" aria-checked="@(A.Tema == v ? "true" : "false")" @onclick="@(() => E.CambiarAjustesAsync(a => a.Tema = v))">@t.Nombre</button>
+            }
+        </div>
+    </div>
+
     @if (Personalizar)
     {
         <div class="grupo-ajustes">
@@ -28,7 +40,7 @@
                 }
             </div>
             <label class="interruptor">
-                <span>Alto contraste<small class="sec">Textos más oscuros y bordes más marcados.</small></span>
+                <span>Alto contraste<small class="sec">Textos y bordes más marcados.</small></span>
                 <input type="checkbox" role="switch" checked="@A.AltoContraste" @onchange="@(e => E.CambiarAjustesAsync(a => a.AltoContraste = (bool)(e.Value ?? false)))" />
             </label>
         </div>
@@ -65,6 +77,8 @@
     [Parameter] public bool Personalizar { get; set; }
 
     Ajustes A => E.D.Ajustes;
+
+    static readonly (string Valor, string Nombre)[] Temas = { ("claro", "Claro"), ("oscuro", "Oscuro"), ("auto", "Como el móvil") };
 
     static readonly (string Valor, string Nombre, string Tam)[] Letras =
     {

@@ -643,6 +643,8 @@ public class Estado
             if (a.Letra == "grande") l.Add("letra-grande");
             else if (a.Letra == "muy-grande") l.Add("letra-muy-grande");
             if (a.AltoContraste) l.Add("contraste");
+            if (a.Tema == "oscuro") l.Add("oscuro");
+            else if (a.Tema == "auto") l.Add("tema-auto");
             if (a.BotonesGrandes) l.Add("botones-grandes");
             if (a.TextosSencillos) l.Add("sencillo");
             if (a.MenosOpciones) l.Add("menos-opciones");

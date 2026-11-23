@@ -130,6 +130,8 @@ public class Ajustes
     // ---- Accesibilidad (modo fácil y ajustes sueltos) ----
     /// <summary>Tamaño de letra: "normal", "grande" o "muy-grande".</summary>
     public string Letra { get; set; } = "normal";
+    /// <summary>Colores: "claro", "oscuro" o "auto" (como el móvil).</summary>
+    public string Tema { get; set; } = "claro";
     public bool AltoContraste { get; set; }
     public bool BotonesGrandes { get; set; }
     /// <summary>Menos frases y palabras más fáciles.</summary>
