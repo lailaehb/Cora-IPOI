@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace Cora.Servicios;
 
 /// <summary>
-/// Pide a la función de Vercel <c>/api/producto</c> la foto de un producto de tienda (Zara, Mango…).
+/// Pide a la función de Vercel <c>/api/producto</c> la foto de un producto de cualquier tienda online.
 /// Las tiendas no dejan que el navegador lea sus páginas, por eso lo hace el servidor.
 /// </summary>
 public class ServicioProducto
@@ -15,7 +15,7 @@ public class ServicioProducto
     /// <summary>Motivo del último fallo ("sin_api", "tienda_bloquea", "sin_foto", "tarda"…).</summary>
     public string? UltimoError { get; private set; }
 
-    public record Resultado(string? Foto, string? Titulo);
+    public record Resultado(string? Foto, string? Titulo, string? Tienda);
 
     public async Task<Resultado?> BuscarAsync(string enlace)
     {
@@ -30,8 +30,8 @@ public class ServicioProducto
             var j = doc.RootElement;
             string? S(string k) => j.TryGetProperty(k, out var x) && x.ValueKind == JsonValueKind.String ? x.GetString() : null;
             var ok = j.TryGetProperty("ok", out var o) && o.ValueKind == JsonValueKind.True;
-            if (!ok) { UltimoError = S("error") ?? "fallo"; return new Resultado(null, S("titulo")); }
-            return new Resultado(S("foto"), S("titulo"));
+            if (!ok) { UltimoError = S("error") ?? "fallo"; return new Resultado(null, S("titulo"), S("tienda")); }
+            return new Resultado(S("foto"), S("titulo"), S("tienda"));
         }
         catch (OperationCanceledException) { UltimoError = "tarda"; return null; }
         catch { UltimoError = "sin_conexion"; return null; }

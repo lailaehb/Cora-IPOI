@@ -181,7 +181,7 @@
         }
         if (p == null)
         {
-            Error("Este código no es de una prenda.", "Cora entiende los QR de las etiquetas de Cora y los enlaces de producto de tiendas como Zara, Mango o H&M. Prueba con otro.");
+            Error("Este código no es de una prenda.", "Cora entiende los QR de las etiquetas de Cora y los enlaces de producto de cualquier tienda online. Prueba con otro.");
             await E.SonarAsync("error");
             return;
         }
@@ -216,6 +216,14 @@
         fotoTienda = foto != null;
         // Si el enlace no traía nombre («Prenda de Zara»), se usa el título de la página
         if (!string.IsNullOrWhiteSpace(r?.Titulo) && p.Nombre.StartsWith("Prenda de ")) p.Nombre = r!.Titulo!;
+        // Si la tienda no era de las conocidas, se usa el nombre que da su propia web (og:site_name), si es corto
+        var nombreWeb = r?.Tienda?.Trim();
+        if (!EsConocida(p.Marca) && !string.IsNullOrWhiteSpace(nombreWeb) && nombreWeb.Length <= 30)
+        {
+            if (p.Nombre == $"Prenda de {p.Marca}") p.Nombre = $"Prenda de {nombreWeb}";
+            p.Marca = nombreWeb;
+            tienda = nombreWeb;
+        }
         StateHasChanged();
     }
 
@@ -251,13 +259,40 @@
         }
     }
 
-    // ---------------------------------------------------------------- QR de tiendas (Zara, Mango, H&M…)
+    // ---------------------------------------------------------------- QR de tiendas (cualquier tienda online)
+    // Vale el enlace de cualquier tienda. Esta lista solo sirve para escribir bien el nombre de las conocidas;
+    // para las demás, la marca se saca de la dirección (www.asos.com → «Asos») o del nombre que da su web.
     static readonly (string Clave, string Marca)[] Tiendas =
     {
         ("zara.", "Zara"), ("mango.", "Mango"), ("bershka.", "Bershka"), ("pullandbear.", "Pull&Bear"), ("stradivarius.", "Stradivarius"),
         ("massimodutti.", "Massimo Dutti"), ("oysho.", "Oysho"), ("lefties.", "Lefties"), ("hm.com", "H&M"), ("primark.", "Primark"),
         ("uniqlo.", "Uniqlo"), ("shein.", "Shein"), ("nike.", "Nike"), ("adidas.", "Adidas"), ("elcorteingles.", "El Corte Inglés"), ("springfield.", "Springfield"),
+        ("cortefiel.", "Cortefiel"), ("asos.", "ASOS"), ("zalando.", "Zalando"), ("decathlon.", "Decathlon"), ("kiabi.", "Kiabi"), ("cos.com", "COS"),
+        ("arket.", "Arket"), ("andotherstories.", "& Other Stories"), ("desigual.", "Desigual"), ("tezenis.", "Tezenis"), ("calzedonia.", "Calzedonia"),
+        ("intimissimi.", "Intimissimi"), ("levi.", "Levi's"), ("pepejeans.", "Pepe Jeans"), ("tommy.", "Tommy Hilfiger"), ("ralphlauren.", "Ralph Lauren"),
+        ("vans.", "Vans"), ("converse.", "Converse"), ("newbalance.", "New Balance"), ("puma.", "Puma"), ("reebok.", "Reebok"), ("thenorthface.", "The North Face"),
+        ("primor.", "Primor"), ("amazon.", "Amazon"), ("aliexpress.", "AliExpress"), ("vinted.", "Vinted"), ("wallapop.", "Wallapop"), ("parfois.", "Parfois"),
+        ("sfera.", "Sfera"), ("guess.", "Guess"), ("calvinklein.", "Calvin Klein"), ("lacoste.", "Lacoste"), ("benetton.", "Benetton"), ("superdry.", "Superdry"),
     };
+
+    // Trozos de la dirección que no son el nombre de la tienda
+    static readonly HashSet<string> NoEsMarca = new() { "www", "www2", "m", "shop", "store", "tienda", "es", "en", "eu", "com", "co", "org", "net", "online" };
+
+    /// <summary>Nombre de la tienda a partir de la dirección: «www.mitienda.es» → «Mitienda».</summary>
+    static string MarcaDeHost(string host)
+    {
+        var conocida = Tiendas.FirstOrDefault(t => host.Contains(t.Clave));
+        if (conocida.Marca != null) return conocida.Marca;
+        var partes = host.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        // Se quita la terminación (.es, .com, .co.uk…) y se coge el trozo con nombre más a la derecha
+        var sinFinal = partes.Length > 1 ? partes[..^1] : partes;
+        string nombre = Enumerable.Reverse(sinFinal).FirstOrDefault(x => !NoEsMarca.Contains(x) && x.Length > 1) ?? partes[0];
+        nombre = nombre.Replace('-', ' ');
+        return char.ToUpper(nombre[0]) + nombre[1..];
+    }
+
+    /// <summary>True si la marca salió de la lista de tiendas conocidas (está bien escrita).</summary>
+    static bool EsConocida(string marca) => Tiendas.Any(t => t.Marca == marca);
 
     // Palabras del enlace → categoría y tipo (el primero que encaje). Abrigos antes que «punto» para que «chaqueta punto» sea chaqueta.
     static readonly (string Palabra, Categoria Cat, string Sub)[] PorPalabra =
@@ -284,8 +319,7 @@
     {
         if (!Uri.TryCreate(texto.Trim(), UriKind.Absolute, out var uri) || (uri.Scheme != "http" && uri.Scheme != "https")) return (null, null);
         string host = uri.Host.ToLowerInvariant();
-        var tienda = Tiendas.FirstOrDefault(t => host.Contains(t.Clave));
-        if (tienda.Marca == null) return (null, null);
+        var tienda = (Clave: host, Marca: MarcaDeHost(host));
 
         // El trozo del enlace con el nombre: el más largo con guiones (sin la extensión ni el código del producto)
         var trozos = Uri.UnescapeDataString(uri.AbsolutePath).Replace(' ', ' ').Split('/', StringSplitOptions.RemoveEmptyEntries);

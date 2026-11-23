@@ -4,5 +4,6 @@
   "installCommand": "echo \"No hace falta instalar nada con npm\"",
   "buildCommand": "bash vercel-build.sh",
   "outputDirectory": "salida/wwwroot",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "functions": { "api/ia.js": { "maxDuration": 60 }, "api/producto.js": { "maxDuration": 20 } },
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
 }
