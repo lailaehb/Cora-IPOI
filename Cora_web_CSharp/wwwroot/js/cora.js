@@ -60,7 +60,7 @@ window.cora = (function () {
   // Sonidos tipo campana (notas en Hz)
   const CAMPANAS = {
     seca: [[784, 988, 1175], 0.16, 0.7],              // sol-si-re: «tu ropa está lista», suave y tranquilo
-    disponible: [[523, 659, 784, 1047], 0.09, 0.55],  // do-mi-sol-do: arpegio alegre que sube, «de vuelta al armario»
+    disponible: [[1047, 1568], 0.08, 0.3],           // do-sol agudos y cortitos: un «ding-ding» suave, «de vuelta al armario»
   };
 
   const SONIDOS = {

@@ -1,0 +1,20 @@
+@* Outfit en pequeño (para la rejilla de Explorar › Outfits y el perfil de cada persona). Se toca para abrirlo. *@
+<a class="mini-outfit" href="@($"publicacion/{P.Id}")" aria-label="@($"{P.Titulo}, de {Nombre}")">
+    <div class="mini-collage">
+        @foreach (var x in DatosEjemplo.PrendasDe(P).Take(4))
+        {
+            <FotoPrenda P="x" />
+        }
+    </div>
+    <b>@P.Titulo</b>
+    @if (ConAutor)
+    {
+        <small class="sec">@Nombre</small>
+    }
+</a>
+
+@code {
+    [Parameter, EditorRequired] public Publicacion P { get; set; } = default!;
+    [Parameter] public bool ConAutor { get; set; } = true;
+    string Nombre => DatosEjemplo.PersonaDe(P.Usuario)?.Nombre ?? P.Usuario;
+}

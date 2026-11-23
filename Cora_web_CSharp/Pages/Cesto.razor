@@ -7,6 +7,16 @@
     <div class="contenido">
         <Cabecera Volver="true" Titulo="@E.T("Cesto de la ropa", "Ropa sucia")" Sub="@Subtitulo" VolverA="armario" />
 
+        @* Cómo funciona, en 3 pasos (se puede plegar para que no moleste) *@
+        <details class="como-funciona" open="@(Prendas.Count == 0)">
+            <summary>¿Cómo funciona?</summary>
+            <ol>
+                <li><b>Ropa sucia al cesto.</b> Abre la prenda y pulsa «Echar al cesto». Mientras está aquí, Cora no te la propone.</li>
+                <li><b>Pones la lavadora.</b> Cuando la pongas de verdad, pulsa «Poner la lavadora»: va todo lo del cesto a la vez.</li>
+                <li><b>Te aviso cuando esté lista.</b> Dices cuántos días tardas en lavarla y secarla, y ese día Cora te avisa para que vuelva a tu armario.</li>
+            </ol>
+        </details>
+
         @if (Prendas.Count == 0)
         {
             <Caja Tipo="ok" Texto="El cesto está vacío. Cuando una prenda esté sucia, ábrela y pulsa «Echar al cesto»." />
@@ -28,8 +38,8 @@
             if (poniendo)
             {
                 <section class="tarjeta">
-                    <h3>¿Cuánto tardará en estar lista?</h3>
-                    <p class="sec">Lo que sueles tardar en lavar, tender y guardar la ropa. Mínimo 2 días.</p>
+                    <h3>¿Cuándo estará lista para ponértela?</h3>
+                    <p class="sec">Cuenta lo que tardas en lavarla, tenderla y que se seque (mínimo 2 días). Lo de siempre se cambia en Configuración.</p>
                     <div class="chips">
                         @for (int d = 2; d <= 7; d++)
                         {
@@ -37,7 +47,7 @@
                             <Chip Texto="@(n == 7 ? "1 semana" : $"{n} días")" Activo="@(dias == n)" OnClick="@(() => dias = n)" />
                         }
                     </div>
-                    <Caja Texto="@($"Estará lista {FinTexto}. Ese día te avisaré para que la marques como disponible.")" />
+                    <Caja Texto="@($"Estará lista {FinTexto}. Ese día te avisaré y la ropa volverá a tu armario cuando la marques como disponible.")" />
                 </section>
             }
         }

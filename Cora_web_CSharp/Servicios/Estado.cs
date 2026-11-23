@@ -649,6 +649,44 @@ public class Estado
 
     // ---------------------------------------------------------------- avisos (reto 1)
     /// <summary>Sonido + vibración: "leido", "error", "guardado", "listo", "seca" o "disponible".</summary>
+    // ---------------------------------------------------------------- Explorar: me gusta, seguir y comentarios
+    public bool LeGusta(string pubId) => D.Social.MeGusta.Contains(pubId);
+    public bool Sigo(string usuario) => D.Social.Siguiendo.Contains(usuario);
+    public List<Comentario> MisComentarios(string pubId) => D.Social.Comentarios.Where(c => c.PubId == pubId).ToList();
+    public int TotalComentarios(string pubId) => DatosEjemplo.ComentariosDe(pubId).Length + D.Social.Comentarios.Count(c => c.PubId == pubId);
+
+    public async Task AlternarMeGustaAsync(string pubId)
+    {
+        if (!D.Social.MeGusta.Remove(pubId)) { D.Social.MeGusta.Add(pubId); await SonarAsync("guardado"); }
+        await CambiadoAsync();
+    }
+
+    public async Task AlternarSeguirAsync(string usuario)
+    {
+        if (!D.Social.Siguiendo.Remove(usuario)) D.Social.Siguiendo.Add(usuario);
+        await CambiadoAsync();
+    }
+
+    public async Task ComentarAsync(string pubId, string texto)
+    {
+        texto = texto.Trim();
+        if (texto.Length == 0) return;
+        if (texto.Length > 300) texto = texto[..300];
+        D.Social.Comentarios.Add(new Comentario
+        {
+            Id = Guid.NewGuid().ToString("N")[..10], PubId = pubId, Texto = texto,
+            Hora = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
+        });
+        await SonarAsync("guardado");
+        await CambiadoAsync();
+    }
+
+    public async Task BorrarComentarioAsync(string id)
+    {
+        D.Social.Comentarios.RemoveAll(c => c.Id == id);
+        await CambiadoAsync();
+    }
+
     public async Task SonarAsync(string tipo)
     {
         try { await _js.InvokeVoidAsync("cora.aviso", tipo, D.Ajustes.Sonido, D.Ajustes.Vibracion); } catch { }

@@ -1,7 +1,7 @@
 @page "/calendario"
 @inherits PaginaCora
 
-@* CALENDARIO mensual + «Mi semana».
+@* CALENDARIO mensual + «Mi semana». Al tocar un día se abre ese día (ropa, planes y la IA).
    RETO 3: mientras la IA trabaja, los días se ven como huecos grises, el botón cambia de mensaje
    y los días se rellenan uno a uno al terminar. *@
 <div class="pantalla">
@@ -23,10 +23,10 @@
                 {
                     var dia = d;
                     var fecha = Fechas.De(dia);
-                    bool fuera = fecha.Month != mes.Month, elegido = dia == sel, enSemana = Semana.Contains(dia);
+                    bool fuera = fecha.Month != mes.Month, elegido = dia == sel;
                     bool conOutfit = E.OutfitDe(dia) != null, conPlan = E.PlanDe(dia) != null;
-                    <button class="dia @(fuera ? "fuera" : "") @(elegido ? "elegido" : "") @(enSemana && !elegido ? "semana" : "") @(dia == Hoy ? "hoy" : "")"
-                            aria-pressed="@(elegido ? "true" : "false")" aria-label="@($"{fecha.Day} de {Fechas.Meses[fecha.Month - 1]}{(conOutfit ? ", con outfit" : conPlan ? ", con planes" : "")}")"
+                    <button class="dia @(fuera ? "fuera" : "") @(elegido ? "elegido" : "") @(dia == Hoy ? "hoy" : "")"
+                            aria-label="@($"Abrir el {fecha.Day} de {Fechas.Meses[fecha.Month - 1]}{(conOutfit ? ", con outfit" : conPlan ? ", con planes" : "")}")"
                             @onclick="() => Elegir(dia)">
                         <span>@fecha.Day</span>
                         <i class="@(conOutfit ? "punto" : conPlan ? "aro" : "")"></i>
@@ -34,6 +34,7 @@
                 }
             </div>
             <div class="leyenda"><span><i class="punto"></i>Con outfit</span><span><i class="aro"></i>Con planes</span></div>
+            <small class="sec centro">@E.T("Toca un día para ver tu ropa y contarle tus planes a la IA.", "Toca un día para elegir tu ropa.")</small>
         </section>
 
         <div class="seccion"><h2>Mi semana</h2><small class="sec">@RangoSemana</small></div>
@@ -47,7 +48,7 @@
             bool pasado = Fechas.Dif(dia) < 0;
             bool guardado = E.DiaGuardado(dia);
             <section class="tarjeta dia-tarjeta @(dia == sel ? "elegida" : "") @(pasado ? "pasado" : "")">
-                <div class="entre"><b>@Fechas.Etiqueta(dia) · @(pl != null ? Fechas.Cap(pl.Etiqueta) : "Sin planes")</b><small class="sec">@w.T° @w.Cielo</small></div>
+                <a class="entre dia-enlace" href="@($"dia/{dia}")" aria-label="@($"Abrir {Fechas.Larga(dia)}")"><b>@Fechas.Etiqueta(dia) · @(pl != null ? Fechas.Cap(pl.Etiqueta) : "Sin planes")</b><small class="sec">@w.T° @w.Cielo @Iconos.Siguiente</small></a>
                 @if (E.EsperandoDia(dia))
                 {
                     if (Clasica)
@@ -78,14 +79,19 @@
                 }
                 else
                 {
-                    <p class="sec">@(pasado ? "Sin outfit registrado." : "Todavía sin outfit. Cuéntale tus planes a la IA.")</p>
+                    <p class="sec">@(pasado ? "Sin outfit registrado." : "Todavía sin outfit.")</p>
+                    if (!pasado)
+                    {
+                        <a class="enlace-acento" href="@($"dia/{dia}")">@E.T("Contarle mis planes a la IA", "Elegir mi ropa") @Iconos.Siguiente</a>
+                    }
                 }
             </section>
         }
     </div>
-    <footer class="pie" aria-live="polite">
-        @if (E.Generando)
-        {
+    @* Sin botón fijo abajo: se entra a cada día tocándolo. Solo aparece mientras la IA prepara la semana (reto 3). *@
+    @if (E.Generando)
+    {
+        <footer class="pie" aria-live="polite">
             <div class="btn ocupado">
                 <span>@(Clasica ? "Cargando…" : E.MensajeEspera)</span>
                 @if (!Clasica)
@@ -93,15 +99,13 @@
                     <span class="barra-progreso" style="width:@(E.Progreso)%"></span>
                 }
             </div>
-        }
-        else
-        {
-            <a class="btn" href="@($"planificar?dia={(Fechas.Dif(sel) >= 0 ? sel : Hoy)}")">@Iconos.Chispa @E.T("Planificar con IA", "Elegir mi ropa")</a>
-        }
-    </footer>
+        </footer>
+    }
 </div>
 
 @code {
+    [SupplyParameterFromQuery(Name = "dia")] public string? DiaQuery { get; set; }
+
     string sel = Fechas.Hoy;
     DateTime mes = new(DateTime.Today.Year, DateTime.Today.Month, 1);
 
@@ -131,10 +135,21 @@
 
     void CambiarMes(int n) => mes = mes.AddMonths(n);
 
+    /// <summary>Al volver de un día (calendario?dia=…), se queda marcado ese día y su semana.</summary>
+    protected override void OnParametersSet()
+    {
+        if (DiaQuery != null && System.Text.RegularExpressions.Regex.IsMatch(DiaQuery, @"^\d{4}-\d{2}-\d{2}$"))
+        {
+            sel = DiaQuery;
+            var f = Fechas.De(sel);
+            mes = new DateTime(f.Year, f.Month, 1);
+        }
+    }
+
+    /// <summary>Tocar un día lo abre directamente.</summary>
     void Elegir(string dia)
     {
         sel = dia;
-        var f = Fechas.De(dia);
-        if (f.Month != mes.Month || f.Year != mes.Year) mes = new DateTime(f.Year, f.Month, 1);
+        Ir($"dia/{dia}");
     }
 }

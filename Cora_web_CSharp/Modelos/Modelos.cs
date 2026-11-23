@@ -148,6 +148,25 @@ public class Datos
     public List<string> Favoritas { get; set; } = new();
     public Perfil Perfil { get; set; } = new();
     public Ajustes Ajustes { get; set; } = new();
+    /// <summary>Lo que haces en Explorar: me gusta, a quién sigues y tus comentarios.</summary>
+    public Social Social { get; set; } = new();
+}
+
+public class Social
+{
+    public List<string> MeGusta { get; set; } = new();
+    public List<string> Siguiendo { get; set; } = new();
+    public List<Comentario> Comentarios { get; set; } = new();
+}
+
+/// <summary>Un comentario que has escrito en una publicación de Explorar.</summary>
+public class Comentario
+{
+    public string Id { get; set; } = "";
+    public string PubId { get; set; } = "";
+    public string Texto { get; set; } = "";
+    /// <summary>Momento en que se escribió (UTC, formato ISO).</summary>
+    public string Hora { get; set; } = "";
 }
 
 /// <summary>Tiempo de un día: temperatura máxima y cielo ("sol", "nubes", "nublado", "lluvia").</summary>
@@ -156,4 +175,11 @@ public record Tiempo(int T, string Cielo);
 /// <summary>Tipo de plan: Universidad, Trabajo, Cena…</summary>
 public record TipoPlan(string Clave, string Nombre, int Formalidad, string Patron, string Frase);
 
-public record Publicacion(string Id, string Usuario, string Hace, string Titulo, string Texto, string? Look, string[] Ids, int MeGusta, int Comentarios);
+/// <summary>Un outfit publicado en Explorar. Usuario sin «@» (lucia).</summary>
+public record Publicacion(string Id, string Usuario, string Hace, string Titulo, string Texto, string? Look, string[] Ids, int MeGusta);
+
+/// <summary>Una persona de Explorar (datos de ejemplo).</summary>
+public record Persona(string Usuario, string Nombre, string Bio, string[] Estilos, int Seguidores, int Siguiendo);
+
+/// <summary>Comentarios de ejemplo que ya traen las publicaciones.</summary>
+public record ComentarioEjemplo(string Usuario, string Texto, string Hace);

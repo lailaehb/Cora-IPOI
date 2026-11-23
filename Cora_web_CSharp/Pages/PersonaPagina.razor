@@ -1,0 +1,48 @@
+@page "/persona/{Usuario}"
+@inherits PaginaCora
+
+@* PERFIL DE OTRA PERSONA (Explorar): quién es, su estilo, seguirla y sus outfits. *@
+<div class="pantalla">
+    <div class="contenido">
+        @if (Per == null)
+        {
+            <Cabecera Volver="true" Titulo="Perfil" VolverA="explorar" />
+            <Caja Tipo="error" Texto="No encontramos a esta persona." />
+        }
+        else
+        {
+            <Cabecera Volver="true" Titulo="@Per.Nombre" Sub="@($"@{Per.Usuario}")" />
+            <div class="fila heroe">
+                <span class="avatar grande">@(Per.Nombre[..1])</span>
+                <div class="crece numeros">
+                    <span><b>@Suyas.Count</b><small class="sec">outfits</small></span>
+                    <span><b>@(Per.Seguidores + (Sigo ? 1 : 0))</b><small class="sec">seguidores</small></span>
+                    <span><b>@Per.Siguiendo</b><small class="sec">siguiendo</small></span>
+                </div>
+            </div>
+            <p>@Per.Bio</p>
+            <div class="etiquetas">
+                @foreach (var e in Per.Estilos)
+                {
+                    <span class="etiqueta">@e</span>
+                }
+            </div>
+            <button class="btn @(Sigo ? "secundario" : "")" aria-pressed="@(Sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(Per.Usuario)">@(Sigo ? "✓ Siguiendo" : $"Seguir a {Per.Nombre}")</button>
+
+            <div class="seccion"><h2>Sus outfits</h2></div>
+            <div class="rejilla-outfits">
+                @foreach (var pub in Suyas)
+                {
+                    <MiniOutfit P="pub" ConAutor="false" @key="pub.Id" />
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Usuario { get; set; } = "";
+    Persona? Per => DatosEjemplo.PersonaDe(Usuario);
+    bool Sigo => E.Sigo(Usuario);
+    List<Publicacion> Suyas => DatosEjemplo.Publicaciones.Where(p => p.Usuario == Usuario).ToList();
+}

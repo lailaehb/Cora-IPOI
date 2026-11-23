@@ -72,12 +72,45 @@ public static class DatosEjemplo
     public static readonly string[] Estilos = { "Casual", "Minimalista", "Clásico", "Deportivo" };
     public static readonly string[] Gustos = { "Vaqueros", "Vestidos", "Chándal", "Zapatillas" };
 
+    // ---------------------------------------------------------------- Explorar
+    public static readonly List<Persona> Personas = new()
+    {
+        new("lucia", "Lucía", "Estudiante de Bellas Artes. Capas, tonos neutros y botas todo el otoño.", new[] { "Casual", "Clásico" }, 1240, 310),
+        new("marta", "Marta", "Trabajo en una oficina y busco looks cómodos que no parezcan cómodos.", new[] { "Minimalista", "Clásico" }, 860, 152),
+        new("andrea", "Andrea", "Clase por la mañana, biblioteca por la tarde. Zapatillas siempre.", new[] { "Casual", "Deportivo" }, 2030, 420),
+        new("carla", "Carla", "Entreno casi todos los días y me gusta ir cómoda también fuera del gimnasio.", new[] { "Deportivo" }, 540, 98),
+    };
+
     public static readonly List<Publicacion> Publicaciones = new()
     {
-        new("lucia", "@lucia", "hace 2 h", "Outfit para una tarde de otoño", "Jersey gris, camisa azul y vaqueros claros.", "look_lucia", new[] { "jersey_gris", "camisa_azul", "vaquero_claro", "botas_negras" }, 124, 12),
-        new("marta", "@marta", "hace 5 h", "Look de oficina", "Blazer con top de punto y falda. Fácil y elegante.", null, new[] { "blazer_negro", "top_punto_gris", "falda_negra", "tacones_negros" }, 87, 6),
-        new("andrea", "@andrea", "ayer", "Para ir a clase", "Cómodo para todo el día: chaqueta de punto, cargo y zapatillas.", null, new[] { "jersey_negro", "camiseta_blanca", "cargo_verde", "zapatillas" }, 203, 18),
+        new("lucia", "lucia", "hace 2 h", "Outfit para una tarde de otoño", "Jersey gris, camisa azul y vaqueros claros.", "look_lucia", new[] { "jersey_gris", "camisa_azul", "vaquero_claro", "botas_negras" }, 124),
+        new("marta", "marta", "hace 5 h", "Look de oficina", "Blazer con top de punto y falda. Fácil y elegante.", null, new[] { "blazer_negro", "top_punto_gris", "falda_negra", "tacones_negros" }, 87),
+        new("andrea", "andrea", "ayer", "Para ir a clase", "Cómodo para todo el día: chaqueta de punto, cargo y zapatillas.", null, new[] { "jersey_negro", "camiseta_blanca", "cargo_verde", "zapatillas" }, 203),
+        new("carla1", "carla", "ayer", "Del gimnasio a tomar algo", "Sudadera y chándal grises con zapatillas blancas. Cómodo y apañado.", null, new[] { "sudadera_gris", "chandal_gris", "zapatillas" }, 64),
+        new("marta2", "marta", "hace 2 días", "Cena de viernes", "Top rojo con falda negra y tacones. Con el blazer por si refresca.", null, new[] { "top_rojo", "falda_negra", "tacones_negros", "blazer_negro" }, 152),
+        new("lucia2", "lucia", "hace 3 días", "Básicos que siempre funcionan", "Camiseta blanca, vaquero azul y botas. No falla.", null, new[] { "camiseta_blanca", "vaquero_azul", "botas_negras" }, 98),
+        new("andrea2", "andrea", "hace 4 días", "Día de biblioteca", "Jersey gordito y vaquero claro para estar a gusto muchas horas.", null, new[] { "jersey_gris", "vaquero_claro", "zapatillas" }, 77),
     };
+
+    public static readonly Dictionary<string, ComentarioEjemplo[]> ComentariosEjemplo = new()
+    {
+        ["lucia"] = new ComentarioEjemplo[] { new("marta", "Me encanta la camisa debajo del jersey", "hace 1 h"), new("andrea", "¿De dónde son las botas?", "hace 40 min") },
+        ["marta"] = new ComentarioEjemplo[] { new("lucia", "Elegantísima y nada incómodo", "hace 3 h") },
+        ["andrea"] = new ComentarioEjemplo[] { new("carla", "Ese cargo combina con todo", "ayer"), new("lucia", "Copio este para el lunes", "ayer") },
+        ["carla1"] = new ComentarioEjemplo[] { new("andrea", "Uniforme oficial de los domingos", "ayer") },
+        ["marta2"] = new ComentarioEjemplo[] { new("lucia", "El rojo te queda genial", "hace 2 días") },
+    };
+
+    public static Persona? PersonaDe(string usuario) => Personas.FirstOrDefault(p => p.Usuario == usuario);
+    public static Publicacion? PublicacionDe(string id) => Publicaciones.FirstOrDefault(p => p.Id == id);
+    public static ComentarioEjemplo[] ComentariosDe(string id) => ComentariosEjemplo.TryGetValue(id, out var c) ? c : Array.Empty<ComentarioEjemplo>();
+
+    /// <summary>Las prendas de una publicación (aunque no estén en tu armario).</summary>
+    public static List<Prenda> PrendasDe(Publicacion p)
+    {
+        var catalogo = Catalogo();
+        return p.Ids.Select(id => catalogo.FirstOrDefault(x => x.Id == id)).Where(x => x != null).Select(x => x!).ToList();
+    }
 
     /// <summary>Todas las prendas conocidas (para pintar los looks de Explorar aunque no estén en tu armario).</summary>
     public static List<Prenda> Catalogo() => Armario().Concat(Etiquetas()).ToList();

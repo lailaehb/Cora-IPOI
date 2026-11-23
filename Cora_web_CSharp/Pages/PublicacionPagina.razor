@@ -1,0 +1,80 @@
+@page "/publicacion/{Id}"
+@inherits PaginaCora
+
+@* UNA PUBLICACIÓN DE EXPLORAR con sus comentarios. Abajo se escribe un comentario y se publica;
+   los tuyos se pueden borrar. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="Outfit" />
+        @if (Pub == null)
+        {
+            <Caja Tipo="error" Texto="Esta publicación ya no existe." />
+        }
+        else
+        {
+            <TarjetaPublicacion P="Pub" />
+            <section class="tarjeta" aria-live="polite">
+                <h2>Comentarios (@E.TotalComentarios(Pub.Id))</h2>
+                @if (E.TotalComentarios(Pub.Id) == 0)
+                {
+                    <p class="sec">Todavía no hay comentarios. ¡Escribe el primero!</p>
+                }
+                @foreach (var c in DatosEjemplo.ComentariosDe(Pub.Id))
+                {
+                    var nombre = DatosEjemplo.PersonaDe(c.Usuario)?.Nombre ?? c.Usuario;
+                    <div class="comentario">
+                        <a class="avatar peque" href="@($"persona/{c.Usuario}")">@(nombre[..1])</a>
+                        <div class="crece"><b>@nombre</b> <small class="sec">@c.Hace</small><p>@c.Texto</p></div>
+                    </div>
+                }
+                @foreach (var c in E.MisComentarios(Pub.Id))
+                {
+                    var id = c.Id;
+                    <div class="comentario mio">
+                        <span class="avatar peque">@MiInicial</span>
+                        <div class="crece"><b>Tú</b> <small class="sec">@Hace(c.Hora)</small><p>@c.Texto</p></div>
+                        <button class="enlace" @onclick="() => E.BorrarComentarioAsync(id)" aria-label="Borrar mi comentario">Borrar</button>
+                    </div>
+                }
+            </section>
+        }
+    </div>
+    @if (Pub != null)
+    {
+        <footer class="pie">
+            <form class="escribir-comentario" @onsubmit="Publicar">
+                <label class="campo">
+                    <span class="oculto">Escribe un comentario</span>
+                    <input @bind="texto" @bind:event="oninput" maxlength="300" placeholder="Escribe un comentario…" enterkeyhint="send" />
+                </label>
+                <button type="submit" class="btn corto" disabled="@(string.IsNullOrWhiteSpace(texto))">Publicar</button>
+            </form>
+        </footer>
+    }
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = "";
+    Publicacion? Pub => DatosEjemplo.PublicacionDe(Id);
+    string texto = "";
+    string MiInicial => string.IsNullOrEmpty(E.D.Perfil.Nombre) ? "T" : E.D.Perfil.Nombre[..1].ToUpper();
+
+    async Task Publicar()
+    {
+        if (Pub == null || string.IsNullOrWhiteSpace(texto)) return;
+        await E.ComentarAsync(Pub.Id, texto);
+        texto = "";
+        E.MostrarAviso("Comentario publicado");
+    }
+
+    /// <summary>«ahora», «hace 5 min», «hace 2 h» o «hace 3 días».</summary>
+    static string Hace(string iso)
+    {
+        if (!DateTime.TryParse(iso, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var t)) return "";
+        var d = DateTime.UtcNow - t.ToUniversalTime();
+        if (d.TotalMinutes < 1) return "ahora";
+        if (d.TotalHours < 1) return $"hace {(int)d.TotalMinutes} min";
+        if (d.TotalDays < 1) return $"hace {(int)d.TotalHours} h";
+        return (int)d.TotalDays == 1 ? "ayer" : $"hace {(int)d.TotalDays} días";
+    }
+}

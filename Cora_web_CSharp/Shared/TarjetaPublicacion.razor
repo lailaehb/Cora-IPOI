@@ -1,0 +1,64 @@
+@inject Estado E
+@implements IDisposable
+
+@* Una publicación de Explorar: quién la sube (se toca para ver su perfil), el outfit y los botones de
+   me gusta, comentar (abre la publicación con los comentarios) y guardar. *@
+<article class="tarjeta">
+    <div class="fila">
+        <a class="avatar peque" href="@($"persona/{P.Usuario}")" aria-label="@($"Ver el perfil de {Nombre}")">@Inicial</a>
+        <a class="crece persona-enlace" href="@($"persona/{P.Usuario}")"><b>@Nombre</b><small class="sec">@("@")@P.Usuario · @P.Hace</small></a>
+        @if (ConSeguir)
+        {
+            <button class="seguir @(Sigo ? "on" : "")" aria-pressed="@(Sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(P.Usuario)">@(Sigo ? "✓ Siguiendo" : "Seguir")</button>
+        }
+    </div>
+    @if (P.Look != null)
+    {
+        <div class="look">
+            <img src="@($"img/{P.Look}.png")" alt="Foto del conjunto" />
+            <div class="look-prendas">
+                @foreach (var x in Prendas)
+                {
+                    <FotoPrenda P="x" Proporcion="1.15" />
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="collage">
+            @foreach (var x in Prendas)
+            {
+                <FotoPrenda P="x" Proporcion="0.8" />
+            }
+        </div>
+    }
+    <div><h3>@P.Titulo</h3><p class="sec">@P.Texto</p></div>
+    <div class="sociales">
+        <button class="@(Like ? "on" : "")" aria-pressed="@(Like ? "true" : "false")" aria-label="Me gusta" @onclick="() => E.AlternarMeGustaAsync(P.Id)">@Iconos.Corazon(Like) @(P.MeGusta + (Like ? 1 : 0))</button>
+        <a class="@(HeComentado ? "on" : "")" href="@($"publicacion/{P.Id}")" aria-label="@($"Comentarios ({E.TotalComentarios(P.Id)})")">@Iconos.Comentario(HeComentado) @E.TotalComentarios(P.Id)</a>
+        <span class="crece"></span>
+        <button class="@(EstaGuardado ? "on" : "")" aria-pressed="@(EstaGuardado ? "true" : "false")" aria-label="Guardar en mi perfil" @onclick="Guardar">@Iconos.Marcador(EstaGuardado) @(EstaGuardado ? "Guardado" : "Guardar")</button>
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public Publicacion P { get; set; } = default!;
+    /// <summary>En el perfil de la persona ya hay un botón grande de Seguir, así que aquí no se repite.</summary>
+    [Parameter] public bool ConSeguir { get; set; } = true;
+
+    Persona? Autor => DatosEjemplo.PersonaDe(P.Usuario);
+    string Nombre => Autor?.Nombre ?? P.Usuario;
+    string Inicial => Nombre[..1].ToUpper();
+    List<Prenda> Prendas => DatosEjemplo.PrendasDe(P);
+    bool Like => E.LeGusta(P.Id);
+    bool Sigo => E.Sigo(P.Usuario);
+    bool HeComentado => E.MisComentarios(P.Id).Count > 0;
+    bool EstaGuardado => E.EstaGuardado("post-" + P.Id);
+
+    Task Guardar() => E.AlternarGuardadoAsync(new Guardado { Id = "post-" + P.Id, Ids = P.Ids.ToList(), Titulo = $"Outfit de {Nombre}", Look = P.Look });
+
+    protected override void OnInitialized() => E.Cambio += Repintar;
+    void Repintar() => InvokeAsync(StateHasChanged);
+    public void Dispose() => E.Cambio -= Repintar;
+}
