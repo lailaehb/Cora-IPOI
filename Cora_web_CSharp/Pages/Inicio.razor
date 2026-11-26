@@ -178,8 +178,23 @@
             E.MostrarAviso("Cuéntame qué vas a hacer, o toca «Hoy no tengo planes».");
             return;
         }
-        await E.TextoPlanAsync(Hoy, textoHoy.Trim());
+        // «Hoy clase y mañana gimnasio»: lo de hoy es para hoy y lo de otros días se apunta en su día
+        var semana = Enumerable.Range(0, 7).Select(i => Fechas.Sumar(Hoy, i)).ToList();
+        var r = LectorDias.Repartir(textoHoy.Trim(), semana);
+        string deHoy = r.PorDia.TryGetValue(Hoy, out var propio)
+            ? (r.General.Length == 0 ? propio : propio.Length == 0 ? r.General : $"{r.General}, {propio}")
+            : r.General;
+        var otros = r.PorDia.Where(x => x.Key != Hoy && x.Value.Length > 0).ToList();
+        foreach (var (dia, texto) in otros) await E.PonerPlanAsync(dia, texto);
+        await E.PonerPlanAsync(Hoy, deHoy.Length > 0 ? deHoy : textoHoy.Trim());
         _ = E.GenerarSemanaAsync(new List<string> { Hoy });
+        if (otros.Count > 0)
+        {
+            await Task.Delay(300);
+            E.MostrarAviso(otros.Count == 1
+                ? $"También he apuntado tus planes de {Fechas.Etiqueta(otros[0].Key).ToLower()}"
+                : $"También he apuntado tus planes de {otros.Count} días más");
+        }
     }
 
     async Task SinPlanes()

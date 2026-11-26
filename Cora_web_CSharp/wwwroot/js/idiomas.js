@@ -77,6 +77,13 @@ window.coraIdiomas = (function () {
     '¡Hoy toca lavadora!': ['Laundry day today!', "C'est lessive aujourd'hui !"], '1 prenda sucia': ['1 dirty item', '1 vêtement sale'], '1 ya está seca': ['1 is dry', '1 est sec'],
     'O agita el móvil y te sorprendo': ["Or shake your phone and I'll surprise you", 'Ou secoue ton téléphone et je te surprends'],
 
+    // Borrar outfits y repartir planes por días
+    'Borrar outfit': ['Delete outfit', 'Supprimer la tenue'], '¿Borrar el outfit y los planes de este día?': ['Delete the outfit and plans for this day?', 'Supprimer la tenue et les projets de ce jour ?'],
+    'Outfit borrado': ['Outfit deleted', 'Tenue supprimée'], 'Así lo he entendido': ["Here's what I understood", "Voici ce que j'ai compris"],
+    'Día tranquilo': ['Quiet day', 'Journée tranquille'], 'Lo que digas para este día': ['Whatever you say for this day', 'Ce que tu dis pour ce jour'],
+    'Di el día y lo que vas a hacer, y Cora lo reparte. Lo que no lleve día vale para todos.': ["Say the day and what you'll do, and Cora splits it up. Anything without a day applies to all.", 'Dis le jour et ce que tu feras, Cora répartit. Ce qui n’a pas de jour vaut pour tous.'],
+    'Por ejemplo: el lunes clase, el martes gimnasio y el miércoles cena': ['For example: Monday class, Tuesday gym and Wednesday dinner', 'Par exemple : lundi cours, mardi sport et mercredi dîner'],
+
     // Registro
     'tu armario, a tu manera': ['your wardrobe, your way', 'ta garde-robe, à ta façon'],
     'Crea tu cuenta': ['Create your account', 'Crée ton compte'], 'Nombre': ['Name', 'Nom'],
@@ -412,7 +419,11 @@ window.coraIdiomas = (function () {
     [/^(\d+) prendas sucias$/, (m) => [`${m[1]} dirty items`, `${m[1]} vêtements sales`][i]], [/^(\d+) ya están secas$/, (m) => [`${m[1]} are dry`, `${m[1]} sont secs`][i]],
     [/^Lista en (.+)$/, (m) => [`Ready in ${m[1].replace(/días?/, 'd').replace(' y ', ' ')}`, `Prête dans ${m[1].replace('días', 'jours').replace('día', 'jour').replace(' y ', ' et ')}`][i]],
     [/^Como mucho (\d+) días a la vez$/, (m) => [`Up to ${m[1]} days at a time`, `${m[1]} jours maximum à la fois`][i]],
+    [/^También he apuntado tus planes de (\d+) días más$/, (m) => [`I've also noted your plans for ${m[1]} more days`, `J'ai aussi noté tes projets pour ${m[1]} jours de plus`][i]],
+    [/^También he apuntado tus planes de (.+)$/, (m) => [`I've also noted your plans for ${traducir(Fechas_cap(m[1])) ?? m[1]}`, `J'ai aussi noté tes projets pour ${traducir(Fechas_cap(m[1])) ?? m[1]}`][i]],
+    [/^(.+) \(ya lo tenías\)$/, (m) => [`${m[1]} (already planned)`, `${m[1]} (déjà prévu)`][i]],
   ];
+  function Fechas_cap(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
   function cuando(t) {
     if (t === 'hoy') return ['today', "aujourd'hui"][i];
     if (t === 'mañana') return ['tomorrow', 'demain'][i];

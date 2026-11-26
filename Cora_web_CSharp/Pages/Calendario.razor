@@ -73,6 +73,7 @@
                             <button class="btn secundario bajo" aria-pressed="@(guardado ? "true" : "false")" @onclick="() => E.AlternarGuardadoDiaAsync(dia)">@Iconos.Marcador(guardado) @(guardado ? "Guardado ✓" : "Guardar")</button>
                         </div>
                     }
+                    <BorrarOutfit Dia="@dia" @key="@("borrar-" + dia)" />
                 }
                 else
                 {

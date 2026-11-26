@@ -736,3 +736,21 @@ h1 { font-weight: 700; } h2 { font-weight: 650; }
 .pista-agitar .ico { width: 15px; height: 15px; }
 
 @media (prefers-reduced-motion: reduce) { .btn.brillo::after, .onda { display: none; } }
+
+/* Borrar outfit */
+.enlace-borrar { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; color: var(--secundario); font-size: calc(13.5px * var(--esc, 1)); min-height: 40px; padding: 0; }
+.enlace-borrar:hover { color: var(--error); }
+.enlace-borrar .ico { width: 16px; height: 16px; }
+.confirmar-borrar { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 12px; background: var(--error-suave); font-weight: 600; font-size: calc(14px * var(--esc, 1)); animation: aparece .25s ease-out; }
+
+/* Varios días: vista previa de lo que ha entendido Cora */
+.reparto h3 { display: flex; align-items: center; gap: 6px; color: var(--acento); }
+.reparto ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.reparto li { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--linea); font-size: calc(14px * var(--esc, 1)); animation: aparece .25s ease-out; }
+.reparto li:last-child { border-bottom: 0; }
+.reparto-dia { width: 38px; flex: none; display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.reparto-dia small { color: var(--secundario); font-size: calc(11.5px * var(--esc, 1)); }
+.reparto li.propio .reparto-dia { background: var(--degradado); color: var(--sobre-acento); border-radius: 10px; padding: 4px 0; }
+.reparto li.propio .reparto-dia small { color: var(--sobre-acento); }
+.reparto li.propio .crece { font-weight: 600; }
+.reparto li.libre .crece, .reparto li.antes .crece { color: var(--secundario); }

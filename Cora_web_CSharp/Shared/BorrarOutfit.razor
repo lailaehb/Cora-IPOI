@@ -1,0 +1,28 @@
+@inject Estado E
+
+@* Borrar el outfit de un día (y sus planes). Primero pregunta, para no borrar sin querer. *@
+@if (!confirmar)
+{
+    <button class="enlace-borrar" @onclick="() => confirmar = true">@Iconos.Papelera Borrar outfit</button>
+}
+else
+{
+    <div class="confirmar-borrar" role="alert">
+        <span>¿Borrar el outfit y los planes de este día?</span>
+        <div class="fila">
+            <button class="btn secundario bajo" @onclick="() => confirmar = false">Cancelar</button>
+            <button class="btn peligro bajo" @onclick="Borrar">Borrar</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Dia { get; set; } = "";
+    bool confirmar;
+
+    async Task Borrar()
+    {
+        confirmar = false;
+        await E.BorrarOutfitAsync(Dia);
+    }
+}

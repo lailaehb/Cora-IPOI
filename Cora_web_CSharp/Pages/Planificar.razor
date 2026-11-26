@@ -36,6 +36,7 @@
                         <button class="btn secundario bajo" aria-pressed="@(DiaGuardado ? "true" : "false")" @onclick="() => E.AlternarGuardadoDiaAsync(elegido)">@Iconos.Marcador(DiaGuardado) @(DiaGuardado ? "Guardado ✓" : "Guardar")</button>
                     </div>
                 }
+                <BorrarOutfit Dia="@elegido" @key="@("borrar-" + elegido)" />
             }
             else
             {
@@ -94,11 +95,23 @@
                         }
                     </div>
                     <p class="rango-resumen">@Iconos.Calendario <span>@ResumenRango</span></p>
-                    <CampoPlan Etiqueta="¿Qué vas a hacer esos días?" Texto="@textoRango" TextoChanged="t => textoRango = t" Placeholder="Por ejemplo: viaje a la playa, paseos y alguna cena" />
-                    @if (DiasConPlanPropio > 0)
-                    {
-                        <small class="sec">@(DiasConPlanPropio == 1 ? "1 día ya tiene sus planes: los respeto." : $"{DiasConPlanPropio} días ya tienen sus planes: los respeto.")</small>
-                    }
+                    <CampoPlan Etiqueta="¿Qué vas a hacer esos días?" Texto="@textoRango" TextoChanged="t => textoRango = t" Placeholder="Por ejemplo: el lunes clase, el martes gimnasio y el miércoles cena" />
+                    <small class="sec">Di el día y lo que vas a hacer, y Cora lo reparte. Lo que no lleve día vale para todos.</small>
+                </section>
+
+                @* Vista previa: cómo ha repartido Cora el texto, día a día *@
+                <section class="tarjeta reparto" aria-live="polite">
+                    <h3>@Iconos.Chispa Así lo he entendido</h3>
+                    <ul>
+                        @foreach (var d in DiasRango)
+                        {
+                            var (texto, tipo) = PlanPrevisto(d);
+                            <li class="@tipo" @key="d">
+                                <span class="reparto-dia"><small>@Fechas.DiaCorto(d)</small><b>@Fechas.De(d).Day</b></span>
+                                <span class="crece">@texto</span>
+                            </li>
+                        }
+                    </ul>
                 </section>
             }
         }
@@ -211,6 +224,27 @@
         await E.SonarAsync("tic");
     }
 
+    /// <summary>El texto de «varios días» repartido entre los días elegidos.</summary>
+    Reparto Reparto => LectorDias.Repartir(textoRango, DiasRango);
+
+    static string Juntar(string general, string propio) =>
+        general.Length == 0 ? propio : propio.Length == 0 ? general : $"{general}, {propio}";
+
+    /// <summary>Lo que se verá en la vista previa para un día, y si es suyo, general, de antes o libre.</summary>
+    (string Texto, string Tipo) PlanPrevisto(string d)
+    {
+        var r = Reparto;
+        if (r.PorDia.TryGetValue(d, out var propio)) return (Fechas.Cap(Juntar(r.General, propio).Length > 0 ? Juntar(r.General, propio) : "Lo que digas para este día"), "propio");
+        if (TienePlan(d))
+        {
+            var p = E.D.Planes[d];
+            string antes = !string.IsNullOrWhiteSpace(p.Texto) ? p.Texto : E.PlanDe(d)?.Etiqueta ?? "";
+            return ($"{Fechas.Cap(antes)} (ya lo tenías)", "antes");
+        }
+        if (r.General.Length > 0) return (Fechas.Cap(r.General), "general");
+        return ("Día tranquilo", "libre");
+    }
+
     async Task Generar()
     {
         List<string> dias;
@@ -221,9 +255,14 @@
         else
         {
             dias = DiasRango;
-            // Lo que has escrito para el viaje vale para los días que no tienen sus propios planes
-            if (!string.IsNullOrWhiteSpace(textoRango))
-                foreach (var d in dias.Where(d => !TienePlan(d))) await E.TextoPlanAsync(d, textoRango.Trim());
+            // Cada día recibe lo suyo: lo que has dicho para ese día (más lo general) o, si no lo nombras, lo general.
+            // Los días que no nombras y ya tenían planes se quedan como estaban.
+            var r = Reparto;
+            foreach (var d in dias)
+            {
+                if (r.PorDia.TryGetValue(d, out var propio)) await E.PonerPlanAsync(d, Juntar(r.General, propio));
+                else if (r.General.Length > 0 && !TienePlan(d)) await E.PonerPlanAsync(d, r.General);
+            }
         }
         _ = E.GenerarSemanaAsync(dias);
         // Un día: te quedas aquí y ves cómo se prepara. Varios: al calendario, para ver cómo se rellenan los días.

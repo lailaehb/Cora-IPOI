@@ -619,6 +619,23 @@ public class Estado
         await CambiadoAsync();
     }
 
+    /// <summary>Borra el outfit de un día y sus planes (el día vuelve a quedar libre). Los guardados no se tocan.</summary>
+    public async Task BorrarOutfitAsync(string dia)
+    {
+        D.Outfits.Remove(dia);
+        D.Planes.Remove(dia);
+        await SonarAsync("guardado");
+        MostrarAviso("Outfit borrado");
+        await CambiadoAsync();
+    }
+
+    /// <summary>Pone los planes de un día solo con este texto (quita los botones que hubiera de antes).</summary>
+    public async Task PonerPlanAsync(string dia, string texto)
+    {
+        D.Planes[dia] = new PlanDia { Texto = texto.Length > 200 ? texto[..200] : texto };
+        await CambiadoAsync();
+    }
+
     public async Task TextoPlanAsync(string dia, string texto)
     {
         if (!D.Planes.TryGetValue(dia, out var p)) D.Planes[dia] = p = new PlanDia();
