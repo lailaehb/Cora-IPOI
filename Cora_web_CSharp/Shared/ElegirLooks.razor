@@ -1,0 +1,31 @@
+@* Elegir los looks que sueles llevar: tarjetas con fotos de verdad en vez de muchos botones de texto.
+   Se pueden marcar varios. Lo que te gusta llevar (vaqueros, zapatillas…) sale de los looks elegidos. *@
+<div class="looks" role="group" aria-label="Looks que sueles llevar">
+    @foreach (var l in DatosEjemplo.Looks)
+    {
+        var look = l;
+        bool on = Elegidos.Contains(look.Nombre);
+        <button type="button" class="look-elegir @(on ? "on" : "")" aria-pressed="@(on ? "true" : "false")" @onclick="() => Alternar(look.Nombre)">
+            <span class="look-fotos">
+                @foreach (var id in look.Ids)
+                {
+                    <span class="look-foto"><img src="@($"img/{id}.png")" alt="" loading="lazy" /></span>
+                }
+            </span>
+            <b>@look.Nombre</b>
+            <small>@look.Frase</small>
+            <span class="look-tick" aria-hidden="true">@Iconos.Check</span>
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public List<string> Elegidos { get; set; } = new();
+    [Parameter] public EventCallback Cambio { get; set; }
+
+    async Task Alternar(string nombre)
+    {
+        if (!Elegidos.Remove(nombre)) Elegidos.Add(nombre);
+        await Cambio.InvokeAsync();
+    }
+}

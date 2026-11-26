@@ -67,6 +67,10 @@ public class Outfit
     public List<Look> Extra { get; set; } = new();
     /// <summary>true si lo ha elegido la IA (Gemini); false si sale de las reglas de respaldo.</summary>
     public bool DeIA { get; set; }
+    /// <summary>El usuario ha dicho «Me lo pongo» (deslizando la tarjeta o con el botón): cuenta como usado.</summary>
+    public bool Puesto { get; set; }
+    /// <summary>Lo ha montado o fijado el usuario (probador, «Llévala mañana»): no se recalcula solo al cambiar el tiempo.</summary>
+    public bool Fijo { get; set; }
 }
 
 /// <summary>Un conjunto para un momento del día.</summary>
@@ -142,6 +146,8 @@ public class Ajustes
     public bool MenosOpciones { get; set; }
     /// <summary>Los mensajes de abajo se quedan más tiempo en pantalla.</summary>
     public bool AvisosLargos { get; set; }
+    /// <summary>Ya ha usado el gesto de deslizar el outfit de hoy (se deja de enseñar la pista).</summary>
+    public bool VistoGesto { get; set; }
     /// <summary>El modo fácil está activo cuando están puestos todos sus ajustes.</summary>
     [JsonIgnore] public bool ModoFacil => Letra != "normal" && BotonesGrandes && TextosSencillos && MenosOpciones && AvisosLargos;
 }

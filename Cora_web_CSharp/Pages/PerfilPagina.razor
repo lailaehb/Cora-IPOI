@@ -36,11 +36,11 @@
             <p>@E.D.Perfil.Bio</p>
         }
         <div class="etiquetas">
-            @foreach (var e in E.D.Perfil.Estilos.Concat(E.D.Perfil.Gustos))
+            @foreach (var e in E.D.Perfil.Estilos)
             {
                 <span class="etiqueta">@e</span>
             }
-            @if (E.D.Perfil.Estilos.Count + E.D.Perfil.Gustos.Count == 0)
+            @if (E.D.Perfil.Estilos.Count == 0)
             {
                 <span class="sec">Aún no has elegido tu estilo.</span>
             }
@@ -80,6 +80,8 @@
         <nav class="lista" aria-label="Opciones del perfil">
             <a class="fila-lista" href="armario">@Iconos.Percha<span class="crece">Mis prendas</span><span class="sec">@E.D.Prendas.Count</span>@Iconos.Siguiente</a>
             <a class="fila-lista" href="guardados?tab=prendas">@Iconos.Corazon(false)<span class="crece">Prendas favoritas</span><span class="sec">@E.D.Favoritas.Count</span>@Iconos.Siguiente</a>
+            <a class="fila-lista" href="estadisticas">@Iconos.Grafica<span class="crece">Tu armario en números<small class="sec bloque">Lo que más usas y lo olvidado</small></span>@Iconos.Siguiente</a>
+            <a class="fila-lista" href="probador">@Iconos.Probador<span class="crece">Probador<small class="sec bloque">Monta tu look deslizando</small></span>@Iconos.Siguiente</a>
             <a class="fila-lista" href="configuracion">@Iconos.Engranaje<span class="crece">Configuración<small class="sec bloque">Modo fácil, colores, avisos y lavadora</small></span>@Iconos.Siguiente</a>
         </nav>
     </div>

@@ -2,16 +2,16 @@
 @page "/planificar"
 @inherits PaginaCora
 
-@* UN DÍA DEL CALENDARIO: se llega tocando el día. Arriba, la ropa de ese día; debajo, los planes
-   y qué quieres que prepare la IA (solo este día o toda la semana). Reto 2 (planificar con IA)
-   y reto 3 (mientras la IA trabaja, la tarjeta se ve como un hueco gris y el botón cambia de mensaje). *@
+@* UN DÍA DEL CALENDARIO: arriba, la ropa de ese día; debajo, le cuentas a Cora tus planes escribiendo o hablando
+   (sin botones de planes) y eliges si prepara solo este día o varios (de un día a otro, por ejemplo para un viaje).
+   Reto 2 (planificar con IA) y reto 3 (mientras la IA trabaja, huecos grises y el botón cambia de mensaje). *@
 <div class="pantalla">
     <div class="contenido">
         <Cabecera Volver="true" Titulo="@Fechas.Etiqueta(elegido)" Sub="@($"{Fechas.Cap(Fechas.Larga(elegido))} · {W.T}° {W.Cielo}")" VolverA="@($"calendario?dia={elegido}")" />
 
         @* ---- La ropa de ese día ---- *@
         <section class="tarjeta" aria-live="polite">
-            <div class="entre"><h2>@E.T("Tu ropa", "Tu ropa")</h2><span>@ServicioTiempo.Icono(W.Cielo)</span></div>
+            <div class="entre"><h2>@E.T("Tu ropa", "Tu ropa")</h2><span class="tiempo-anim @W.Cielo">@ServicioTiempo.Icono(W.Cielo)</span></div>
             @if (E.EsperandoDia(elegido))
             {
                 <EsperaIA Mensaje="@E.MensajeEspera" />
@@ -32,72 +32,74 @@
                 if (!Pasado)
                 {
                     <div class="fila">
-                        <button class="btn secundario bajo extra" disabled="@(E.PensandoDia == elegido)" @onclick="() => E.OtraOpcionAsync(elegido)">@(E.PensandoDia == elegido ? "Pensando…" : E.T("Otra opción", "Ver otra"))</button>
+                        <button class="btn secundario bajo extra" disabled="@(E.PensandoDia == elegido)" @onclick="() => E.OtraOpcionAsync(elegido)">@Iconos.Recargar @(E.PensandoDia == elegido ? "Pensando…" : E.T("Otra opción", "Ver otra"))</button>
                         <button class="btn secundario bajo" aria-pressed="@(DiaGuardado ? "true" : "false")" @onclick="() => E.AlternarGuardadoDiaAsync(elegido)">@Iconos.Marcador(DiaGuardado) @(DiaGuardado ? "Guardado ✓" : "Guardar")</button>
                     </div>
                 }
             }
             else
             {
-                <p class="sec">@(Pasado ? "Este día no tiene outfit registrado." : "Todavía sin outfit. Cuéntale tus planes a Cora y te lo prepara.")</p>
+                <p class="sec">@(Pasado ? "Este día no tiene outfit registrado." : "Todavía sin outfit. Cuéntale a Cora qué vas a hacer y te lo prepara.")</p>
             }
         </section>
 
         @if (!Pasado)
         {
-            @* ---- Planes de ese día ---- *@
-            <section class="tarjeta">
-                <h2>@E.T("¿Qué vas a hacer?", "¿Qué vas a hacer?")</h2>
-                <div class="chips">
-                    @foreach (var t in DatosEjemplo.Planes)
-                    {
-                        var tipo = t;
-                        <Chip Texto="@tipo.Nombre" Activo="@(Plan.Claves.Contains(tipo.Clave))" OnClick="@(() => E.AlternarPlanAsync(elegido, tipo.Clave))" />
-                    }
-                </div>
-                <label class="campo">
-                    <span>O cuéntaselo con tus palabras</span>
-                    <textarea maxlength="200" rows="3" placeholder="Por ejemplo: clase por la mañana y gimnasio por la tarde" value="@Plan.Texto" @oninput="Escribir"></textarea>
-                </label>
-                <small class="sec derecha">@Plan.Texto.Length/200</small>
-            </section>
-
-            @* ---- ¿Solo este día o toda la semana? (por defecto, solo este día) ---- *@
-            <div>
-                <span class="etq">¿Qué quieres que prepare la IA?</span>
-                <div class="segmentos" role="radiogroup" aria-label="Qué planificar">
-                    <button role="radio" class="@(soloDia ? "on" : "")" aria-checked="@(soloDia ? "true" : "false")" @onclick="() => soloDia = true">Solo este día</button>
-                    <button role="radio" class="@(!soloDia ? "on" : "")" aria-checked="@(!soloDia ? "true" : "false")" @onclick="() => soloDia = false">Toda la semana</button>
-                </div>
+            @* ---- ¿Un día o varios? ---- *@
+            <div class="segmentos" role="radiogroup" aria-label="Qué planificar">
+                <button role="radio" class="@(!varios ? "on" : "")" aria-checked="@(!varios ? "true" : "false")" @onclick="() => varios = false">Un día</button>
+                <button role="radio" class="@(varios ? "on" : "")" aria-checked="@(varios ? "true" : "false")" @onclick="CambiarAVarios">Varios días</button>
             </div>
 
-            @if (!soloDia)
+            @if (!varios)
             {
-                @* Para la semana: los demás días, por si quieres añadirles planes sin salir de aquí *@
-                <div class="selector-dias" role="group" aria-label="Días de la semana">
-                    @foreach (var d in Dias)
+                <section class="tarjeta">
+                    <h2>¿Qué vas a hacer @Cuando(elegido)?</h2>
+                    @if (Plan.Claves.Count > 0)
                     {
-                        var dia = d;
-                        bool on = dia == elegido;
-                        <button class="@(on ? "on" : "")" aria-pressed="@(on ? "true" : "false")" aria-label="@(Fechas.Etiqueta(dia))" @onclick="() => Cambiar(dia)">
-                            <small>@Fechas.DiaCorto(dia)</small>
-                            <b>@Fechas.De(dia).Day</b>
-                            <i class="@(E.PlanDe(dia) != null ? "punto" : "")"></i>
-                        </button>
+                        @* Planes marcados con botones en versiones anteriores: se ven y se pueden quitar *@
+                        <div class="etiquetas">
+                            @foreach (var c in Plan.Claves.ToList())
+                            {
+                                var clave = c;
+                                var tipo = DatosEjemplo.Planes.FirstOrDefault(t => t.Clave == clave);
+                                if (tipo != null)
+                                {
+                                    <button class="pastilla quitar" aria-label="@($"Quitar {tipo.Nombre}")" @onclick="() => E.AlternarPlanAsync(elegido, clave)">@tipo.Nombre ✕</button>
+                                }
+                            }
+                        </div>
                     }
-                </div>
-                if (DiasConPlan.Count == 0)
-                {
-                    <Caja Tipo="error" Texto="Ningún día de esta semana tiene planes todavía. Toca cada día arriba y cuéntale qué vas a hacer." />
-                }
-                else
-                {
-                    <Caja Texto="@($"La IA preparará los días con planes: {ListaDias}. Los días sin planes no se tocan. Toca otro día arriba para añadirle planes.")" />
-                }
+                    <CampoPlan Texto="@Plan.Texto" TextoChanged="Escribir" />
+                </section>
             }
             else
             {
-                <Caja Texto="@($"La IA preparará solo el outfit para {Cuando(elegido)}. El resto de la semana no se toca. Si ese día tienes que cambiarte (por ejemplo, para el deporte), te hará un conjunto para cada momento.")" />
+                <section class="tarjeta">
+                    <div>
+                        <h2>¿De qué día a qué día?</h2>
+                        <p class="sec">@(eligiendoFin ? "Ahora toca el último día." : "Toca el primer día y luego el último. Perfecto para un viaje.")</p>
+                    </div>
+                    <div class="tira-dias" id="tira-dias" role="group" aria-label="Elegir días">
+                        @foreach (var d in Proximos)
+                        {
+                            var dia = d;
+                            bool dentro = EnRango(dia);
+                            string clase = (dentro ? "dentro " : "") + (dia == desde ? "inicio " : "") + (dia == hasta ? "fin " : "") + (Fechas.De(dia).DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ? "finde" : "");
+                            <button class="@clase" aria-pressed="@(dentro ? "true" : "false")" aria-label="@Fechas.Larga(dia)" @onclick="() => TocarDia(dia)">
+                                <small>@Fechas.DiaCorto(dia)</small>
+                                <b>@Fechas.De(dia).Day</b>
+                                <i class="@(E.OutfitDe(dia) != null ? "punto" : E.PlanDe(dia) != null ? "aro" : "")"></i>
+                            </button>
+                        }
+                    </div>
+                    <p class="rango-resumen">@Iconos.Calendario <span>@ResumenRango</span></p>
+                    <CampoPlan Etiqueta="¿Qué vas a hacer esos días?" Texto="@textoRango" TextoChanged="t => textoRango = t" Placeholder="Por ejemplo: viaje a la playa, paseos y alguna cena" />
+                    @if (DiasConPlanPropio > 0)
+                    {
+                        <small class="sec">@(DiasConPlanPropio == 1 ? "1 día ya tiene sus planes: los respeto." : $"{DiasConPlanPropio} días ya tienen sus planes: los respeto.")</small>
+                    }
+                </section>
             }
         }
     </div>
@@ -116,7 +118,7 @@
             }
             else
             {
-                <button class="btn" @onclick="Generar">@Iconos.Chispa @TextoBoton</button>
+                <button class="btn brillo" @onclick="Generar">@Iconos.Chispa @TextoBoton</button>
             }
         </footer>
     }
@@ -126,9 +128,14 @@
     [Parameter] public string? Fecha { get; set; }
     [SupplyParameterFromQuery(Name = "dia")] public string? DiaQuery { get; set; }
 
+    const int MaxDias = 14;
     string elegido = Fechas.Hoy;
-    bool soloDia = true;
-    List<string> Dias = new();
+    bool varios;
+
+    // Varios días: del día «desde» al día «hasta» (los dos incluidos)
+    string desde = Fechas.Hoy, hasta = Fechas.Hoy;
+    bool eligiendoFin;
+    string textoRango = "";
 
     PlanDia Plan => E.D.Planes.TryGetValue(elegido, out var p) ? p : new PlanDia();
     Outfit? O => E.OutfitDe(elegido);
@@ -136,43 +143,90 @@
     bool Pasado => Fechas.Dif(elegido) < 0;
     bool DiaGuardado => E.DiaGuardado(elegido);
     bool Clasica => E.D.Ajustes.Espera == "clasica";
+
     /// <summary>«hoy», «mañana» o «el lunes 16», para escribir frases naturales.</summary>
     static string Cuando(string d) => Fechas.Dif(d) <= 1 ? Fechas.Etiqueta(d).ToLower() : "el " + Fechas.Etiqueta(d).ToLower();
 
-    List<string> DiasConPlan => Dias.Where(d => E.PlanDe(d) != null).ToList();
-    string ListaDias => string.Join(", ", DiasConPlan.Select(Fechas.Etiqueta)).ToLower();
+    /// <summary>Los próximos 4 semanas, para elegir el rango.</summary>
+    List<string> Proximos => Enumerable.Range(0, 28).Select(i => Fechas.Sumar(Fechas.Hoy, i)).ToList();
+    List<string> DiasRango => Enumerable.Range(0, Fechas.Dif(hasta) - Fechas.Dif(desde) + 1).Select(i => Fechas.Sumar(desde, i)).ToList();
+    bool EnRango(string d) => string.CompareOrdinal(d, desde) >= 0 && string.CompareOrdinal(d, hasta) <= 0;
+    int DiasConPlanPropio => DiasRango.Count(d => TienePlan(d));
+    bool TienePlan(string d) => E.D.Planes.TryGetValue(d, out var p) && (p.Claves.Count > 0 || !string.IsNullOrWhiteSpace(p.Texto));
 
-    string TextoBoton => soloDia
+    string ResumenRango
+    {
+        get
+        {
+            int n = DiasRango.Count;
+            if (n == 1) return $"{Fechas.Cap(Fechas.Larga(desde))} · 1 día";
+            return $"Del {Fechas.Etiqueta(desde).ToLower()} al {Fechas.Etiqueta(hasta).ToLower()} · {n} días";
+        }
+    }
+
+    string TextoBoton => !varios
         ? (O != null ? $"Preparar otro outfit para {Cuando(elegido)}" : $"Preparar el outfit de {Cuando(elegido)}")
-        : DiasConPlan.Count == 1 ? "Preparar la semana (1 día con planes)" : $"Preparar la semana ({DiasConPlan.Count} días con planes)";
+        : DiasRango.Count == 1 ? "Preparar 1 día" : $"Preparar {DiasRango.Count} días";
 
     static bool Valida(string? d) => d != null && System.Text.RegularExpressions.Regex.IsMatch(d, @"^\d{4}-\d{2}-\d{2}$");
 
     protected override void OnParametersSet()
     {
         string? pedido = Valida(Fecha) ? Fecha : Valida(DiaQuery) ? DiaQuery : null;
-        Cambiar(pedido ?? Fechas.Hoy);
+        elegido = pedido ?? Fechas.Hoy;
+        if (Fechas.Dif(elegido) >= 0)
+        {
+            desde = elegido;
+            hasta = Fechas.Sumar(elegido, 6);
+        }
     }
 
-    void Cambiar(string dia)
+    Task Escribir(string texto) => E.TextoPlanAsync(elegido, texto);
+
+    void CambiarAVarios()
     {
-        elegido = dia;
-        Dias = Fechas.Semana(dia).Where(d => Fechas.Dif(d) >= 0).ToList();
+        varios = true;
+        eligiendoFin = false;
     }
 
-    Task Escribir(ChangeEventArgs e) => E.TextoPlanAsync(elegido, e.Value?.ToString() ?? "");
+    /// <summary>Primer toque: el primer día. Segundo toque: el último (como al reservar un hotel).</summary>
+    async Task TocarDia(string d)
+    {
+        if (!eligiendoFin || string.CompareOrdinal(d, desde) < 0)
+        {
+            desde = hasta = d;
+            eligiendoFin = true;
+        }
+        else
+        {
+            int n = Fechas.Dif(d) - Fechas.Dif(desde) + 1;
+            if (n > MaxDias)
+            {
+                d = Fechas.Sumar(desde, MaxDias - 1);
+                E.MostrarAviso($"Como mucho {MaxDias} días a la vez");
+            }
+            hasta = d;
+            eligiendoFin = false;
+        }
+        await E.SonarAsync("tic");
+    }
 
     async Task Generar()
     {
-        var dias = soloDia ? new List<string> { elegido } : DiasConPlan;
-        if (dias.Count == 0 || dias.Any(d => E.PlanDe(d) == null))
+        List<string> dias;
+        if (!varios)
         {
-            await E.SonarAsync("error");
-            E.MostrarAviso(soloDia ? $"Cuéntale a Cora qué vas a hacer {Cuando(elegido)}." : "Cuéntale a Cora el plan de al menos un día.");
-            return;
+            dias = new() { elegido };
+        }
+        else
+        {
+            dias = DiasRango;
+            // Lo que has escrito para el viaje vale para los días que no tienen sus propios planes
+            if (!string.IsNullOrWhiteSpace(textoRango))
+                foreach (var d in dias.Where(d => !TienePlan(d))) await E.TextoPlanAsync(d, textoRango.Trim());
         }
         _ = E.GenerarSemanaAsync(dias);
-        // Un día: te quedas aquí y ves cómo se prepara. La semana: al calendario, para ver cómo se rellenan los días.
-        if (!soloDia) Nav.NavigateTo($"calendario?dia={elegido}");
+        // Un día: te quedas aquí y ves cómo se prepara. Varios: al calendario, para ver cómo se rellenan los días.
+        if (dias.Count > 1) Nav.NavigateTo($"calendario?dia={dias[0]}");
     }
 }

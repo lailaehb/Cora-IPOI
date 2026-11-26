@@ -493,3 +493,246 @@ html.pre-oscuro .arranque { color: #D795AB; }
 
 /* El fondo blanco de las fotos de las prendas se funde con el color de su tarjeta (sin rectángulo blanco) */
 .foto img { mix-blend-mode: multiply; }
+
+/* ================= Deslizar el outfit de hoy =================
+   La tarjeta sigue al dedo (cora.js). Derecha: sello verde «Me lo pongo». Izquierda: sello «Otra». */
+.carta { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; transition: transform .35s cubic-bezier(.2, .8, .3, 1.2), opacity .25s; --si: 0; --no: 0; cursor: grab; }
+.carta.arrastrando { transition: none; cursor: grabbing; }
+.carta.fuera { transition: transform .3s ease-in, opacity .3s ease-in; opacity: 0; }
+.carta img { -webkit-user-drag: none; pointer-events: none; }
+.sello-carta { position: absolute; top: 14px; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 12px; border: 3px solid currentColor; background: var(--superficie); font-weight: 800; font-size: calc(17px * var(--esc, 1)); text-transform: uppercase; letter-spacing: .04em; pointer-events: none; }
+.sello-carta.si { left: 12px; color: var(--ok); transform: rotate(-12deg) scale(calc(.8 + var(--si) * .2)); opacity: var(--si); }
+.sello-carta.no { right: 12px; color: var(--acento); transform: rotate(12deg) scale(calc(.8 + var(--no) * .2)); opacity: var(--no); }
+.carta .collage .foto { transition: box-shadow .2s; }
+.carta.puesta .collage .foto { box-shadow: 0 0 0 2.5px var(--ok); }
+.insignia-puesto { position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 5px; background: var(--ok); color: #fff; font-weight: 700; font-size: calc(13px * var(--esc, 1)); padding: 5px 12px; border-radius: 999px; box-shadow: 0 6px 14px -8px rgba(0, 0, 0, .5); animation: aparece .35s ease-out; white-space: nowrap; }
+.oscuro .insignia-puesto { color: #0E2318; }
+.carta.aprobada { animation: aprobada .55s ease; }
+@keyframes aprobada { 30% { transform: scale(1.04) rotate(1deg); } 60% { transform: scale(.98); } }
+/* La primera vez, la tarjeta se mueve un poco sola para que se vea que se puede deslizar */
+.carta.insinuar { animation: insinuar 2.6s ease-in-out .8s 2; }
+@keyframes insinuar { 0%, 60%, 100% { transform: none; } 70% { transform: translateX(26px) rotate(1.5deg); } 85% { transform: translateX(-18px) rotate(-1deg); } }
+.pista-gesto { text-align: center; color: var(--secundario); font-size: calc(12.5px * var(--esc, 1)); font-weight: 600; letter-spacing: .02em; margin-top: 4px; }
+.btn.hecho { background: var(--ok); box-shadow: none; }
+.oscuro .btn.hecho { color: #0E2318; }
+.confeti { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+
+/* Prenda olvidada en Inicio */
+.olvidada { border: 1.5px dashed var(--acento-suave); }
+.foto-olvidada { width: 72px; flex: none; }
+.olvidada .crece { gap: 2px; }
+.chispa-texto { display: inline-flex; align-items: center; gap: 4px; color: var(--acento); font-weight: 700; font-size: calc(12px * var(--esc, 1)); text-transform: uppercase; letter-spacing: .05em; }
+.chispa-texto .ico { width: 15px; height: 15px; }
+.probador-acceso .ico-caja { background: var(--acento-suave); }
+
+/* Armario: accesos al probador y a los números */
+.accesos-armario { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.acceso { gap: 4px; padding: 12px; }
+.acceso .ico-caja { background: var(--acento-suave); margin-bottom: 4px; }
+.acceso small { color: var(--secundario); }
+.menos-opciones .accesos-armario { grid-template-columns: 1fr; }
+
+/* ================= Probador ================= */
+.probador { gap: 10px; padding: 12px 14px; }
+.nota-look { display: flex; align-items: center; gap: 12px; }
+.nota-look .crece b { font-size: calc(16px * var(--esc, 1)); }
+@property --nota { syntax: "<number>"; inherits: true; initial-value: 0; }
+.aro-nota { --nota: 0; --color: var(--acento); width: 52px; height: 52px; flex: none; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--color) calc(var(--nota) * 1%), var(--linea) 0); transition: --nota .4s; position: relative; }
+.aro-nota::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--superficie); }
+.aro-nota b { position: relative; font-size: calc(16px * var(--esc, 1)); }
+.nota-look.genial .aro-nota { --color: var(--ok); } .nota-look.genial .crece b { color: var(--ok); }
+.nota-look.flojo .aro-nota { --color: var(--error); }
+.fila-probador { display: flex; flex-direction: column; gap: 4px; }
+.nombre-elegido { font-weight: 600; color: var(--texto); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%; }
+.carrusel { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 4px calc(50% - 30px); margin: 0 -14px; overscroll-behavior-x: contain; }
+.carrusel::-webkit-scrollbar { display: none; }
+.item-carrusel { flex: none; width: 88px; scroll-snap-align: center; border: 0; background: none; padding: 0; border-radius: 14px; opacity: .45; transform: scale(.84); transition: transform .2s ease, opacity .2s ease; }
+.item-carrusel .foto { border-radius: 14px; aspect-ratio: 1; }
+.item-carrusel.on { opacity: 1; transform: none; }
+.item-carrusel.on .foto { outline: 2.5px solid var(--acento); outline-offset: 1px; }
+.sin-capa .foto.vacia { display: grid; place-items: center; aspect-ratio: 1; color: var(--secundario); font-size: calc(12.5px * var(--esc, 1)); font-weight: 600; text-align: center; padding: 6px; }
+.opinion h3 { display: flex; align-items: center; gap: 6px; color: var(--acento); }
+.puntos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.puntos li { display: flex; gap: 10px; align-items: flex-start; font-size: calc(14px * var(--esc, 1)); animation: aparece .25s ease-out; }
+.marca-punto { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; }
+.puntos .bien .marca-punto { background: var(--ok-suave); color: var(--ok); }
+.puntos .mal .marca-punto { background: var(--aviso); color: var(--acento); }
+
+/* ================= Tu armario en números ================= */
+.numeros-armario { flex-direction: row; justify-content: space-around; text-align: center; }
+.numeros-armario div { display: flex; flex-direction: column; align-items: center; }
+.numeros-armario b { font-size: calc(24px * var(--esc, 1)); color: var(--acento); }
+.progreso.grande { height: 12px; }
+.fila-ranking { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--linea); color: inherit; }
+.fila-ranking:last-child { border-bottom: 0; }
+.fila-ranking .crece b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fila-ranking .foto-peque { width: 48px; }
+.puesto-ranking { width: 26px; height: 26px; flex: none; border-radius: 50%; background: var(--acento); color: var(--sobre-acento); display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+.barrita { width: 70px; height: 8px; flex: none; border-radius: 99px; background: var(--linea); overflow: hidden; }
+.barrita span { display: block; height: 100%; background: var(--acento); border-radius: 99px; animation: crecer .7s cubic-bezier(.2, .7, .3, 1) both; transform-origin: left; }
+@keyframes crecer { from { transform: scaleX(0); } }
+.barra-colores { display: flex; height: 26px; border-radius: 10px; overflow: hidden; gap: 2px; background: var(--linea); }
+.barra-colores span { min-width: 6px; animation: crecer .7s cubic-bezier(.2, .7, .3, 1) both; transform-origin: left; }
+.leyenda-colores { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: calc(13px * var(--esc, 1)); }
+.leyenda-colores span { display: inline-flex; align-items: center; gap: 5px; }
+.leyenda-colores i { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .15); display: inline-block; }
+.barras-cat { gap: 10px; }
+.barra-cat { display: flex; align-items: center; gap: 10px; }
+.barra-cat > span:first-child { width: 120px; flex: none; font-size: calc(14px * var(--esc, 1)); }
+.barra-cat .barrita { flex: 1; width: auto; }
+
+/* ================= Dictar con la voz ================= */
+.con-micro { position: relative; display: block; }
+.con-micro textarea { padding-right: 58px; }
+.micro { position: absolute; right: 8px; bottom: 8px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--acento-suave); color: var(--acento); display: grid; place-items: center; transition: transform .15s ease, background-color .2s; }
+.micro:active { transform: scale(.92); }
+.micro.on { background: var(--error); color: #fff; animation: escucha 1.2s ease-out infinite; }
+@keyframes escucha { 0% { box-shadow: 0 0 0 0 rgba(178, 58, 58, .45); } 100% { box-shadow: 0 0 0 14px rgba(178, 58, 58, 0); } }
+.escuchando { display: flex; align-items: center; gap: 10px; color: var(--acento); font-weight: 600; font-size: calc(13.5px * var(--esc, 1)); }
+.ondas { display: inline-flex; gap: 3px; align-items: center; height: 18px; }
+.ondas i { width: 3px; height: 100%; border-radius: 2px; background: var(--acento); animation: onda .9s ease-in-out infinite; }
+.ondas i:nth-child(2) { animation-delay: .15s; } .ondas i:nth-child(3) { animation-delay: .3s; } .ondas i:nth-child(4) { animation-delay: .45s; }
+@keyframes onda { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+.entendido { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--acento); font-weight: 600; font-size: calc(13.5px * var(--esc, 1)); }
+.entendido .pastilla { background: var(--acento-suave); color: var(--acento); animation: aparece .3s ease-out; }
+.barra-colores span { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1); }
+
+/* ================= Cora con más rollo (misma identidad) =================
+   · Una sola letra para todo, también el logo: «Outfit» (redonda, moderna y con carácter). Sin mezclar tipos de letra.
+   · El granate de Cora sigue siendo el color principal; se le añade un degradado granate → frambuesa → coral
+     en lo importante (botón principal, botón +, logo, tarjeta de hoy) para que llame más la atención.
+   · Tonos suaves (rosa, melocotón, lavanda, menta) para que cada cuadrado del armario se distinga. */
+:root {
+  --letra: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --logo: var(--letra);
+  --degradado: linear-gradient(120deg, #8F3F5E 0%, #B5486F 55%, #DC7560 100%);
+  --brillo-acento: rgba(181, 72, 111, .45);
+  --tinte-rosa: #F7DDE6; --tinte-melocoton: #FDE5D7; --tinte-lavanda: #E9E2F7; --tinte-menta: #DDF1E6;
+  --c-rosa: #8F3F5E; --c-melocoton: #B4532A; --c-lavanda: #5B4A9E; --c-menta: #2F7A52;
+}
+.oscuro {
+  --degradado: linear-gradient(120deg, #D795AB 0%, #EBA0B8 50%, #F3B190 100%);
+  --brillo-acento: rgba(215, 149, 171, .35);
+  --tinte-rosa: #3A2730; --tinte-melocoton: #3A2A21; --tinte-lavanda: #2C2741; --tinte-menta: #1E3328;
+  --c-rosa: #F0B4C7; --c-melocoton: #F4B391; --c-lavanda: #C6B8F2; --c-menta: #7FD3A3;
+}
+@media (prefers-color-scheme: dark) {
+  .tema-auto {
+    --degradado: linear-gradient(120deg, #D795AB 0%, #EBA0B8 50%, #F3B190 100%);
+    --brillo-acento: rgba(215, 149, 171, .35);
+    --tinte-rosa: #3A2730; --tinte-melocoton: #3A2A21; --tinte-lavanda: #2C2741; --tinte-menta: #1E3328;
+    --c-rosa: #F0B4C7; --c-melocoton: #F4B391; --c-lavanda: #C6B8F2; --c-menta: #7FD3A3;
+  }
+}
+html, body, .movil, button, input, textarea { font-family: var(--letra); }
+h1, h2, h3, b { letter-spacing: -.01em; }
+h1 { font-weight: 700; } h2 { font-weight: 650; }
+.logo, .arranque { font-family: var(--letra); font-weight: 800; letter-spacing: -.04em; background: var(--degradado); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.logo.grande { font-weight: 800; }
+.arranque { font-size: 52px; animation: latido 1.6s ease-in-out infinite; }
+
+/* Botón principal con degradado (y un destello que pasa de vez en cuando en los más importantes) */
+.btn:not(.secundario):not(.peligro):not(.hecho) { background: var(--degradado); background-size: 150% 100%; background-position: 0 0; box-shadow: 0 10px 22px -12px var(--brillo-acento); transition: transform .15s ease, background-position .4s ease, box-shadow .2s; }
+.btn:not(.secundario):not(.peligro):not(.hecho):hover { background-position: 100% 0; }
+.btn.brillo::after { content: ""; position: absolute; top: 0; bottom: 0; width: 35%; left: -45%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .38), transparent); animation: destello 3.6s ease-in-out infinite; pointer-events: none; }
+@keyframes destello { 0%, 65% { left: -45%; } 100% { left: 130%; } }
+.pestana.mas .circulo { background: var(--degradado); box-shadow: 0 10px 22px -8px var(--brillo-acento); }
+.pestana { position: relative; }
+.pestana:not(.mas).activa::after { content: ""; position: absolute; top: 5px; left: 50%; width: 52px; height: 30px; margin-left: -26px; border-radius: 99px; background: var(--acento-suave); z-index: -1; animation: pildora .3s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes pildora { from { transform: scaleX(.3); opacity: 0; } }
+
+/* Tarjeta de hoy con borde de degradado */
+.hoy { border: 1.5px solid transparent; background: linear-gradient(180deg, var(--superficie) 0%, var(--hoy-fin) 100%) padding-box, var(--degradado) border-box; }
+.hoy h2 { background: var(--degradado); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.progreso div, .barrita span, .puesto-ranking { background: var(--degradado); }
+.progreso.completo div { background: var(--ok); }
+
+/* Onda al tocar */
+.onda { position: absolute; border-radius: 50%; background: currentColor; opacity: .22; transform: scale(0); animation: onda-toque .6s ease-out forwards; pointer-events: none; }
+@keyframes onda-toque { to { transform: scale(1); opacity: 0; } }
+.chip, .fila-lista, .tira-dias button, .segmentos button { position: relative; overflow: hidden; }
+
+/* El icono del tiempo se mueve: el sol gira, las nubes flotan, la lluvia cae */
+.tiempo-anim { display: inline-block; }
+.tiempo-anim.sol { animation: girar 14s linear infinite; }
+.tiempo-anim.nubes, .tiempo-anim.nublado { animation: flotar 3.2s ease-in-out infinite; }
+.tiempo-anim.lluvia { animation: llover 1.1s ease-in-out infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+@keyframes flotar { 50% { transform: translateX(3px); } }
+@keyframes llover { 50% { transform: translateY(2px); } }
+
+/* Las fotos del outfit de hoy entran una a una */
+.hoy .collage .foto { animation: entrar-foto .45s cubic-bezier(.2, .8, .3, 1.2) both; }
+.hoy .collage .foto:nth-child(2) { animation-delay: .06s; } .hoy .collage .foto:nth-child(3) { animation-delay: .12s; } .hoy .collage .foto:nth-child(4) { animation-delay: .18s; }
+@keyframes entrar-foto { from { opacity: 0; transform: translateY(10px) scale(.92) rotate(-2deg); } }
+
+/* ================= Inicio: la pregunta de hoy ================= */
+.hoy.pregunta { gap: 10px; }
+.hoy.pregunta .entre { align-items: flex-start; }
+.hoy.pregunta .enlace { margin-top: -6px; }
+.pista-voz { display: flex; align-items: center; gap: 6px; color: var(--secundario); font-size: calc(13px * var(--esc, 1)); }
+.pista-voz .ico { width: 16px; height: 16px; color: var(--acento); }
+.cambiar-plan { color: var(--acento); border: 0; }
+.cambiar-plan .ico { width: 14px; height: 14px; }
+
+/* ================= Registro: elegir looks ================= */
+.looks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.look-elegir { position: relative; overflow: hidden; border: 2px solid transparent; background: var(--superficie); border-radius: 18px; padding: 8px 8px 10px; text-align: left; display: flex; flex-direction: column; gap: 1px; box-shadow: 0 6px 16px -12px rgba(80, 30, 50, .45); transition: transform .2s ease, border-color .2s, box-shadow .2s; }
+.look-fotos { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px; }
+.look-foto { aspect-ratio: 1; background: var(--foto-hoy); border-radius: 10px; display: grid; place-items: center; overflow: hidden; }
+.look-foto img { width: 84%; height: 84%; object-fit: contain; mix-blend-mode: multiply; transition: transform .35s cubic-bezier(.3, 1.4, .5, 1); }
+.look-elegir b { font-size: calc(15px * var(--esc, 1)); }
+.look-elegir small { color: var(--secundario); font-size: calc(12px * var(--esc, 1)); line-height: 1.25; }
+.look-elegir.on { border-color: var(--acento); box-shadow: 0 12px 24px -14px var(--brillo-acento); transform: translateY(-2px); }
+.look-elegir.on .look-foto:nth-child(odd) img { transform: scale(1.08) rotate(-3deg); }
+.look-elegir.on .look-foto:nth-child(even) img { transform: scale(1.08) rotate(3deg); }
+.look-tick { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border-radius: 50%; background: var(--degradado); color: var(--sobre-acento); display: grid; place-items: center; transform: scale(0); transition: transform .25s cubic-bezier(.3, 1.6, .5, 1); box-shadow: 0 4px 10px -4px rgba(0, 0, 0, .4); }
+.look-elegir.on .look-tick { transform: scale(1); }
+
+/* ================= Planificar: varios días ================= */
+.tira-dias { display: flex; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 4px 14px; scroll-snap-type: x proximity; }
+.tira-dias::-webkit-scrollbar { display: none; }
+.tira-dias button { flex: none; width: 48px; min-height: 64px; border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; scroll-snap-align: start; border-radius: 0; transition: background-color .2s, color .2s; }
+.tira-dias small { font-size: calc(11.5px * var(--esc, 1)); color: var(--secundario); }
+.tira-dias b { font-size: calc(16px * var(--esc, 1)); font-weight: 600; }
+.tira-dias .finde small { color: var(--acento); font-weight: 600; }
+.tira-dias i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.tira-dias button.dentro { background: var(--acento-suave); }
+.tira-dias button.inicio { border-radius: 14px 0 0 14px; }
+.tira-dias button.fin { border-radius: 0 14px 14px 0; }
+.tira-dias button.inicio.fin { border-radius: 14px; }
+.tira-dias button.inicio, .tira-dias button.fin { background: var(--degradado); color: var(--sobre-acento); animation: aparece .25s ease-out; }
+.tira-dias button.inicio small, .tira-dias button.fin small { color: var(--sobre-acento); }
+.tira-dias button.inicio .punto, .tira-dias button.fin .punto { background: var(--sobre-acento); }
+.rango-resumen { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--acento); }
+.rango-resumen .ico { width: 18px; height: 18px; }
+.pastilla.quitar { border: 0; cursor: pointer; background: var(--acento-suave); color: var(--acento); font-weight: 600; }
+
+/* ================= Armario: cuatro cuadrados ================= */
+.cuadros { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cuadro { position: relative; aspect-ratio: 1; border-radius: 24px; padding: 14px; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; color: var(--texto); overflow: hidden; transition: transform .2s ease, box-shadow .2s; box-shadow: 0 10px 24px -20px rgba(60, 20, 35, .5); }
+.cuadro::before { content: ""; position: absolute; right: -34px; top: -34px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255, 255, 255, .4); pointer-events: none; }
+.oscuro .cuadro::before { background: rgba(255, 255, 255, .04); }
+.cuadro:active { transform: scale(.96); }
+.cuadro b { font-size: calc(17px * var(--esc, 1)); font-weight: 700; }
+.cuadro small { color: var(--secundario); line-height: 1.25; }
+.cuadro-ico { position: absolute; top: 14px; left: 14px; width: 50px; height: 50px; border-radius: 16px; background: var(--superficie); display: grid; place-items: center; color: var(--c); box-shadow: 0 6px 14px -10px rgba(0, 0, 0, .4); }
+.cuadro-ico .ico { width: 26px; height: 26px; }
+.cuadro-num { position: absolute; top: 14px; right: 14px; min-width: 30px; height: 30px; padding: 0 9px; border-radius: 99px; background: var(--c); color: #fff; font-weight: 800; display: grid; place-items: center; animation: aparece .35s cubic-bezier(.3, 1.6, .5, 1); }
+.oscuro .cuadro-num { color: #1B1517; }
+.cuadro.llama .cuadro-num { animation: latido-num 1.4s ease-in-out infinite; }
+@keyframes latido-num { 50% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(255, 255, 255, .35); } }
+.tinte-rosa { background: var(--tinte-rosa); --c: var(--c-rosa); }
+.tinte-melocoton { background: var(--tinte-melocoton); --c: var(--c-melocoton); }
+.tinte-lavanda { background: var(--tinte-lavanda); --c: var(--c-lavanda); }
+.tinte-menta { background: var(--tinte-menta); --c: var(--c-menta); }
+.aro-lavadora { --avance: 0; padding: 4px; background: conic-gradient(var(--c) calc(var(--avance) * 1%), rgba(0, 0, 0, .07) 0); }
+.aro-lavadora.seca { background: var(--ok); }
+.aro-lavadora > span { width: 100%; height: 100%; border-radius: 12px; background: var(--superficie); display: grid; place-items: center; }
+.girando .ico { animation: lavar 1.2s ease-in-out infinite; }
+@keyframes lavar { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-9deg); } 75% { transform: rotate(9deg); } }
+.menos-opciones .cuadros .extra { display: flex !important; }
+.pista-agitar { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.pista-agitar .ico { width: 15px; height: 15px; }
+
+@media (prefers-reduced-motion: reduce) { .btn.brillo::after, .onda { display: none; } }

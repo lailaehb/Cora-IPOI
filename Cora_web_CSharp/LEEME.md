@@ -45,6 +45,21 @@ Así tenéis un enlace https para abrirla en el iPhone; la cámara en directo so
 **4. Hacer cambios**
 Editad un archivo en GitHub (icono del lápiz) o subid la versión nueva, y pulsad **Commit changes**. Vercel la vuelve a publicar sola en un par de minutos.
 
+## Novedades para jugar con la app
+
+| Qué | Dónde | Qué hacer |
+|---|---|---|
+| **Registro con looks** | Al crear la cuenta | En vez de muchos botones, 6 looks con fotos reales del armario (Casual, Minimalista, Elegante, Cómodo, Deportivo, De noche). Lo que eliges le dice a Cora qué tipo de ropa te gusta. |
+| **¿Qué planes tienes hoy?** | Inicio | Si hoy no hay planes, Cora no se inventa un outfit: pregunta. Escríbelo o díselo con el micro y lo prepara ahí mismo. |
+| **Uno o varios días** | Calendario › un día | Sin botones de planes: lo cuentas escribiendo o hablando. «Varios días»: toca el primer día y el último (hasta 14), por ejemplo para un viaje. |
+| **Cuadrados del armario** | Armario | Cesto, lavadora (con anillo de progreso), probador y números, cada uno con su color. |
+| **Agita el móvil** | Probador | Agitar el móvil es como pulsar «Sorpréndeme». |
+| **Desliza tu outfit** | Inicio | Arrastra la tarjeta del outfit de hoy: a la **derecha** es «Me lo pongo» (confeti, sonido y vibración) y a la **izquierda** es «Otra opción». Los botones hacen lo mismo, para quien prefiera tocar. |
+| **¿Te acuerdas de esta?** | Inicio | Cora te enseña una prenda que no usas desde hace 2 semanas (o nunca). «Llévala mañana» prepara el outfit de mañana alrededor de ella. |
+| **Probador** | Armario › Probador (o Inicio) | Desliza cada fila (capa, arriba, abajo, calzado). Cora pone nota al look al momento y explica qué cambiaría (estilo, tiempo de hoy, colores, si ya lo llevaste). «Sorpréndeme» busca la mejor combinación. |
+| **Tu armario en números** | Armario › En números (o Perfil) | Lo que más usas, lo olvidado, los colores de tu armario y cuánta ropa usas de verdad. |
+| **Dicta tus planes** | Calendario › un día › micrófono | Toca el micrófono y di tus planes («clase y luego cena con amigas»). Debajo sale lo que Cora ha entendido. En iPhone funciona en Safari. |
+
 ## Cómo probar cada reto
 
 | Reto | Dónde | Qué hacer |
@@ -58,12 +73,13 @@ Para oír los sonidos en el iPhone, quitad el modo silencio.
 ## Qué hay en cada carpeta
 
 ```
-Pages/        Pantallas: Inicio, Armario, CategoriaPagina, FichaPrenda, Anadir, NuevaFoto,
+Pages/        Pantallas: Inicio, Armario, Probador, Estadisticas, CategoriaPagina, FichaPrenda, Anadir, NuevaFoto,
               NuevaQr (reto 1), NuevaManual, Calendario (reto 3), Planificar (reto 2),
               Explorar, PerfilPagina, Guardados, Configuracion, Registro
 Shared/       Piezas reutilizables iguales a Figma: Chip, Cabecera, TarjetaPrenda, FilaOutfit…
 Layout/       Marco de la app y barra de navegación inferior
-Servicios/    MotorIA (reglas de la IA), Estado (datos, espera, avisos), ServicioTiempo (Open-Meteo), Fechas
+Servicios/    MotorIA (reglas de la IA), Estilista (opinión del probador), Estado (datos, espera, avisos, uso de las prendas),
+              ServicioIA (Gemini), ServicioTiempo (Open-Meteo), Fechas
 Modelos/      Clases (Prenda, Outfit, Perfil…) y datos de ejemplo
 wwwroot/      index.html, estilos (css/cora.css), JavaScript (cámara, sonido, vibración) y fotos
 vercel.json + vercel-build.sh   Configuración para publicar en Vercel
@@ -72,7 +88,7 @@ vercel.json + vercel-build.sh   Configuración para publicar en Vercel
 ## Lo que hace de verdad y lo que está simulado
 
 - **De verdad:** lectura de QR con la cámara (en directo con https; con foto si no), sonidos, vibración en Android, fotos de prendas, tiempo real de la ciudad del perfil, guardado de todo en el navegador, lavadora (las prendas vuelven a estar disponibles solas a los 2 días) y reglas del planificador.
-- **Simulado:** el registro no crea una cuenta en un servidor (cada navegador guarda sus datos); Explorar muestra publicaciones de ejemplo; al hacer una foto la prenda no se reconoce sola; la «IA» es un sistema de reglas, no un modelo de lenguaje.
+- **Simulado:** el registro no crea una cuenta en un servidor (cada navegador guarda sus datos); Explorar muestra publicaciones de ejemplo. La IA de verdad (Google Gemini) planifica la semana y reconoce la prenda de una foto, pero solo en la web publicada en Vercel con la clave configurada; en el ordenador (dotnet run) se usan las reglas de `MotorIA`. La nota del probador sale de reglas sencillas (`Estilista`), para que responda al momento mientras deslizas.
 
 ## Si algo falla
 

@@ -76,7 +76,8 @@ public static class MotorIA
 
     /// <param name="inicio">Semilla para empezar a buscar (se usa en «Otra opción»).</param>
     /// <param name="evitar">Combinación que el usuario acaba de descartar.</param>
-    public static Outfit Recomendar(string dia, List<Prenda> prendas, PlanDia? planDia, Tiempo w, Dictionary<string, Outfit> outfits, List<string> gustos, int? inicio = null, string? evitar = null)
+    /// <param name="forzar">Prenda que tiene que salir sí o sí (p. ej. una que hace tiempo que no se usa).</param>
+    public static Outfit Recomendar(string dia, List<Prenda> prendas, PlanDia? planDia, Tiempo w, Dictionary<string, Outfit> outfits, List<string> gustos, int? inicio = null, string? evitar = null, string? forzar = null)
     {
         var plan = Resolver(planDia);
         // El deporte va en un conjunto aparte (hay que cambiarse); el principal se elige para el resto de planes
@@ -87,6 +88,10 @@ public static class MotorIA
         string frase = plan == null ? "un día tranquilo" : (deporteAparte ? Lista(otros.Select(x => x.Frase).ToList()) : plan.Frase);
 
         var disponibles = prendas.Where(p => !p.NoDisponible).ToList();
+        // Prenda obligatoria: el conjunto se arma a su alrededor (con el nivel de arreglo más cercano que le encaje)
+        var forzada = forzar == null ? null : disponibles.FirstOrDefault(p => p.Id == forzar);
+        if (forzada != null && !forzada.Encaja(fPedida)) fPedida = Math.Clamp(fPedida, forzada.FormMin, forzada.FormMax);
+        List<Prenda>? Solo(Categoria c) => forzada != null && forzada.Cat == c ? new List<Prenda> { forzada } : null;
         bool frio = w.T < 15, fresco = w.T < 19, llueve = w.Cielo == "lluvia";
 
         // Orden: con frío primero lo que más abriga; después lo que más le gusta al usuario
@@ -94,8 +99,8 @@ public static class MotorIA
         List<Prenda> Ordenar(IEnumerable<Prenda> l) => frio
             ? l.OrderByDescending(p => p.Abrigo).ThenBy(Gusto).ToList()
             : l.OrderBy(Gusto).ToList();
-        List<Prenda> Arriba(int f) => Ordenar(disponibles.Where(p => p.Cat == Categoria.Arriba && p.Encaja(f)));
-        List<Prenda> Abajo(int f) => Ordenar(disponibles.Where(p => p.Cat == Categoria.Abajo && p.Encaja(f)));
+        List<Prenda> Arriba(int f) => Solo(Categoria.Arriba) ?? Ordenar(disponibles.Where(p => p.Cat == Categoria.Arriba && p.Encaja(f)));
+        List<Prenda> Abajo(int f) => Solo(Categoria.Abajo) ?? Ordenar(disponibles.Where(p => p.Cat == Categoria.Abajo && p.Encaja(f)));
 
         var usadas = Usadas(dia, outfits);
         int b = inicio ?? (int)(Fechas.Hash(dia) % 5);
@@ -143,6 +148,7 @@ public static class MotorIA
 
         var zapatos = disponibles.Where(p => p.Cat == Categoria.Calzado && p.Encaja(f)).OrderBy(Gusto).ToList();
         if (llueve) { var secos = zapatos.Where(p => p.AptaLluvia).ToList(); if (secos.Count > 0) zapatos = secos; }
+        zapatos = Solo(Categoria.Calzado) ?? zapatos;
         var capas = new List<Prenda>();
         if (fresco)
         {
@@ -150,12 +156,14 @@ public static class MotorIA
             if (capas.Count == 0 && f > 0) capas = disponibles.Where(p => p.Cat == Categoria.Capa).ToList();
             if (frio) capas = capas.OrderByDescending(p => p.Abrigo).ToList();
         }
+        capas = Solo(Categoria.Capa) ?? capas;
         var zapato = zapatos.Count > 0 ? zapatos[semilla % zapatos.Count] : null;
         var capa = capas.Count > 0 ? capas[semilla % capas.Count] : null;
         var ids = new[] { capa, arriba, abajo, zapato }.Where(p => p != null).Select(p => p!.Id).ToList();
 
         // Explicación en lenguaje natural
         var porque = new List<string> { $"{w.T}° y {w.Cielo}, y toca {frase}." };
+        if (forzada != null) porque.Add($"Rescato {forzada.Nombre.ToLower()}, que hace tiempo que no usas.");
         if (otros.Count > 1) porque.Add("Día mixto: elijo un look que sirva para el plan más arreglado.");
         if (capa != null) porque.Add(frio ? $"Con frío, añado {capa.Nombre.ToLower()}." : $"Para la mañana fresca, {capa.Nombre.ToLower()}.");
         if (llueve && zapato != null) porque.Add($"Llueve: {zapato.Nombre.ToLower()} mejor que tacones.");

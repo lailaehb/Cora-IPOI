@@ -1,7 +1,9 @@
 @page "/"
 @inherits PaginaCora
+@inject IJSRuntime JS
 
-@* INICIO: el outfit de hoy es la protagonista; debajo, la semana y la lavadora. *@
+@* INICIO: el outfit de hoy es la protagonista. Si hoy aún no hay planes, Cora no se inventa nada: te pregunta
+   qué vas a hacer (escribiendo o hablando) y te prepara el outfit aquí mismo. Debajo, los próximos días. *@
 <div class="pantalla">
     <div class="contenido">
         <Cabecera Logo="true" Avatar="true" />
@@ -10,6 +12,22 @@
             <h1 class="saludo">@Saludo, @(string.IsNullOrEmpty(E.D.Perfil.Nombre) ? "Pilar" : E.D.Perfil.Nombre)</h1>
         </div>
 
+        @if (Preguntar)
+        {
+            @* Sin planes para hoy: una pregunta, no un outfit al azar *@
+            <section class="hoy pregunta" aria-label="Tu día de hoy">
+                <div class="entre">
+                    <h2>@E.T("¿Qué planes tienes hoy?", "¿Qué vas a hacer hoy?")</h2>
+                    <span class="pastilla"><span class="tiempo-anim @tiempoHoy.Cielo">@ServicioTiempo.Icono(tiempoHoy.Cielo)</span> @tiempoHoy.T° · @tiempoHoy.Cielo</span>
+                </div>
+                <p class="sec">Cuéntamelo y te preparo el outfit con tu ropa y el tiempo que hace.</p>
+                <CampoPlan Texto="@textoHoy" TextoChanged="t => textoHoy = t" Filas="2" Placeholder="Por ejemplo: clase y luego cena con amigas" />
+                <button class="btn brillo" @onclick="PrepararHoy">@Iconos.Chispa Prepárame el outfit</button>
+                <button class="enlace" @onclick="SinPlanes">Hoy no tengo planes</button>
+            </section>
+        }
+        else
+        {
         <section class="hoy" aria-label="Tu outfit de hoy">
             <h2>@E.T("Tu outfit de hoy", "Tu ropa de hoy")</h2>
             <div class="etiquetas">
@@ -17,7 +35,8 @@
                 {
                     <span class="pastilla">@Iconos.Calendario @Fechas.Cap(plan.Etiqueta)</span>
                 }
-                <span class="pastilla">@ServicioTiempo.Icono(tiempoHoy.Cielo) @tiempoHoy.T° · @tiempoHoy.Cielo</span>
+                <span class="pastilla"><span class="tiempo-anim @tiempoHoy.Cielo">@ServicioTiempo.Icono(tiempoHoy.Cielo)</span> @tiempoHoy.T° · @tiempoHoy.Cielo</span>
+                <a class="pastilla cambiar-plan" href="@($"dia/{Hoy}")">@Iconos.Lapiz Cambiar planes</a>
             </div>
             @if (E.PensandoDia == Hoy)
             {
@@ -33,20 +52,38 @@
                 {
                     <h3 class="momento">@outfit.Momento</h3>
                 }
-                <div class="collage">
-                    @foreach (var id in outfit.Ids.Take(4))
+                @* La tarjeta se desliza: a la derecha «Me lo pongo», a la izquierda «Otra opción» (los botones de abajo hacen lo mismo) *@
+                <div class="carta @(outfit.Puesto ? "puesta" : "") @(E.D.Ajustes.VistoGesto ? "" : "insinuar")" data-deslizar="@(E.D.Ajustes.MenosOpciones ? "derecha" : "ambos")" @key="@(outfit.Clave + outfit.Semilla + outfit.Ids.Count)">
+                    <div class="collage">
+                        @foreach (var id in outfit.Ids.Take(4))
+                        {
+                            <FotoPrenda P="@(E.PrendaPorId(id))" Proporcion="0.75" />
+                        }
+                    </div>
+                    <span class="sello-carta si" aria-hidden="true">@Iconos.Check @E.T("Me lo pongo", "Me la pongo")</span>
+                    <span class="sello-carta no" aria-hidden="true">@Iconos.Recargar Otra</span>
+                    @if (outfit.Puesto)
                     {
-                        <FotoPrenda P="@(E.PrendaPorId(id))" Proporcion="0.75" />
+                        <span class="insignia-puesto">@Iconos.Check Lo llevas hoy</span>
                     }
                 </div>
+                @if (!E.D.Ajustes.VistoGesto)
+                {
+                    <p class="pista-gesto" aria-hidden="true">@(E.D.Ajustes.MenosOpciones ? "Desliza a la derecha si te lo pones →" : "← Otra opción · desliza · Me lo pongo →")</p>
+                }
                 <p class="porque">@outfit.Porque</p>
                 <LooksExtra O="outfit" Catalogo="E.D.Prendas" />
             }
             <div class="fila">
                 <button class="btn secundario redondo extra" disabled="@(E.PensandoDia == Hoy)" @onclick="() => E.OtraOpcionAsync(Hoy)">@Iconos.Recargar @(E.PensandoDia == Hoy ? "Pensando…" : E.T("Otra opción", "Ver otra"))</button>
-                <button class="btn secundario redondo" aria-pressed="@(guardado ? "true" : "false")" @onclick="() => E.AlternarGuardadoDiaAsync(Hoy)">@Iconos.Marcador(guardado) @(guardado ? "Guardado" : "Guardar")</button>
+                @if (outfit != null)
+                {
+                    <button class="btn redondo @(outfit.Puesto ? "hecho" : "")" aria-pressed="@(outfit.Puesto ? "true" : "false")" disabled="@(E.PensandoDia == Hoy)" @onclick="() => E.MeLoPongoAsync(Hoy)">@Iconos.Check @(outfit.Puesto ? "Puesto" : E.T("Me lo pongo", "Me la pongo"))</button>
+                }
+                <button class="btn secundario redondo cuadrado" aria-label="@(guardado ? "Guardado" : "Guardar")" aria-pressed="@(guardado ? "true" : "false")" @onclick="() => E.AlternarGuardadoDiaAsync(Hoy)">@Iconos.Marcador(guardado)</button>
             </div>
         </section>
+        }
 
         <div class="seccion"><h2>@E.T("Esta semana", "Próximos días")</h2><a href="calendario">Ver calendario</a></div>
         <div class="lista">
@@ -58,7 +95,7 @@
                 var w = E.Tiempo.De(dia);
                 <div class="fila-dia">
                     <div class="fecha"><small>@Fechas.DiaCorto(dia)</small><b>@Fechas.De(dia).Day</b></div>
-                    <a class="plan" href="calendario">
+                    <a class="plan" href="@($"dia/{dia}")">
                         <span class="fuerte">@(n == 1 ? "Mañana · " : "")@(pl != null ? Fechas.Cap(pl.Etiqueta) : "Sin planes")</span>
                         <small>@w.T° @w.Cielo</small>
                     </a>
@@ -73,33 +110,37 @@
                     }
                     else
                     {
-                        <a class="enlace-acento" href="@($"dia/{Hoy}")">@E.T("Planificar", "Elegir") @Iconos.Siguiente</a>
+                        <a class="enlace-acento" href="@($"dia/{dia}")">@E.T("Planificar", "Elegir") @Iconos.Siguiente</a>
                     }
                 </div>
             }
         </div>
 
-        @if (E.EnCesto.Count > 0)
+        @* ¿Te acuerdas de…? Una prenda que hace tiempo que no usas, para sacarla mañana *@
+        @if (olvidada != null)
         {
-            <a class="tarjeta fila-tarjeta @(E.TocaLavadoraHoy ? "aviso" : "")" href="cesto">
-                <span class="ico-caja blanca">@Iconos.Cesto</span>
-                <span class="crece"><b>@E.T("Cesto de la ropa", "Ropa sucia") (@E.EnCesto.Count)</b><small>@(E.TocaLavadoraHoy ? "Hoy toca poner la lavadora" : "Toca para poner la lavadora")</small></span>
-                @Iconos.Siguiente
-            </a>
+            <section class="tarjeta olvidada extra" aria-label="Prenda olvidada">
+                <div class="fila">
+                    <a class="foto-olvidada" href="@($"prenda/{olvidada.P.Id}")"><FotoPrenda P="olvidada.P" /></a>
+                    <div class="crece">
+                        <small class="chispa-texto">@Iconos.Chispa ¿Te acuerdas de esta?</small>
+                        <b>@olvidada.P.Nombre</b>
+                        <small class="sec">@Estado.TextoOlvido(olvidada)</small>
+                    </div>
+                </div>
+                <div class="fila">
+                    <button class="btn secundario bajo" @onclick="SiguienteOlvidada">Otra prenda</button>
+                    <button class="btn bajo" @onclick="LlevarManana">@E.T("Llévala mañana", "Ponérmela mañana")</button>
+                </div>
+            </section>
         }
-        @if (E.EnLavadora.Count > 0)
-        {
-            <a class="tarjeta fila-tarjeta" href="categoria/lavadora">
-                <span class="ico-caja">@Iconos.Lavadora</span>
-                <span class="crece"><b>@E.EnLavadora.Count @(E.EnLavadora.Count == 1 ? "prenda" : "prendas") en la lavadora</b><small>@(string.Join(", ", E.EnLavadora.Select(p => p.Nombre)))</small>
-                    @if (E.Secas.Count > 0)
-                    {
-                        <small class="texto-ok">@(E.Secas.Count == 1 ? $"{E.Secas[0].Nombre} ya está seca: márcala como disponible" : $"{E.Secas.Count} ya están secas: márcalas como disponibles")</small>
-                    }
-                </span>
-                @Iconos.Siguiente
-            </a>
-        }
+
+        <a class="tarjeta fila-tarjeta probador-acceso extra" href="probador">
+            <span class="ico-caja">@Iconos.Probador</span>
+            <span class="crece"><b>Probador</b><small>Desliza tus prendas y monta tu propio look</small></span>
+            @Iconos.Siguiente
+        </a>
+
         <a class="tarjeta fila-tarjeta extra" href="explorar">
             <img class="ico-caja" src="img/look_lucia.png" alt="" style="object-fit:cover" />
             <span class="crece"><b>Inspírate</b><small>@("@lucia") ha publicado un outfit de otoño</small></span>
@@ -116,5 +157,74 @@
 
     string Saludo => DateTime.Now.Hour < 14 ? "Buenos días" : DateTime.Now.Hour < 21 ? "Buenas tardes" : "Buenas noches";
 
-    protected override async Task OnInitializedAsync() => await E.AsegurarOutfitAsync(Hoy);
+    // Prendas olvidadas: se pasa de una a otra con «Otra prenda». Solo las que valen para el día a día (no la de deporte).
+    int indiceOlvidada;
+    List<UsoPrenda> olvidadas = new();
+    UsoPrenda? olvidada => olvidadas.Count == 0 ? null : olvidadas[indiceOlvidada % olvidadas.Count];
+
+    DotNetObjectReference<Inicio>? refJs;
+
+    string textoHoy = "";
+
+    /// <summary>Hoy no hay outfit ni planes (ni se está preparando): se pregunta en vez de inventar.</summary>
+    bool Preguntar => outfit == null && E.PensandoDia != Hoy && !E.EsperandoDia(Hoy) && !TienePlanHoy;
+    bool TienePlanHoy => E.D.Planes.TryGetValue(Hoy, out var p) && (p.Claves.Count > 0 || !string.IsNullOrWhiteSpace(p.Texto));
+
+    async Task PrepararHoy()
+    {
+        if (string.IsNullOrWhiteSpace(textoHoy))
+        {
+            await E.SonarAsync("error");
+            E.MostrarAviso("Cuéntame qué vas a hacer, o toca «Hoy no tengo planes».");
+            return;
+        }
+        await E.TextoPlanAsync(Hoy, textoHoy.Trim());
+        _ = E.GenerarSemanaAsync(new List<string> { Hoy });
+    }
+
+    async Task SinPlanes()
+    {
+        await E.AlternarPlanAsync(Hoy, "casa");
+        _ = E.GenerarSemanaAsync(new List<string> { Hoy });
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Solo se prepara solo si ya hay planes para hoy (por ejemplo, puestos desde el calendario)
+        if (TienePlanHoy) await E.AsegurarOutfitAsync(Hoy);
+        olvidadas = E.Olvidadas().Where(u => u.P.FormMax >= 1).ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeraVez)
+    {
+        if (!primeraVez) return;
+        refJs = DotNetObjectReference.Create(this);
+        try { await JS.InvokeVoidAsync("cora.deslizar.registrar", refJs); } catch { }
+    }
+
+    /// <summary>Lo llama cora.js al soltar la tarjeta lejos del centro.</summary>
+    [JSInvokable]
+    public async Task Deslizado(string direccion)
+    {
+        await E.GestoVistoAsync();
+        var o = E.OutfitDe(Hoy);
+        if (direccion == "derecha") { if (o != null && !o.Puesto) await E.MeLoPongoAsync(Hoy); }
+        else await E.OtraOpcionAsync(Hoy);
+    }
+
+    void SiguienteOlvidada() => indiceOlvidada++;
+
+    async Task LlevarManana()
+    {
+        if (olvidada == null) return;
+        await E.LlevarMananaAsync(olvidada.P.Id);
+        Nav.NavigateTo($"dia/{Fechas.Sumar(Hoy, 1)}");
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        try { _ = JS.InvokeVoidAsync("cora.deslizar.olvidar"); } catch { }
+        refJs?.Dispose();
+    }
 }

@@ -44,22 +44,8 @@
                 <label class="campo"><span>Ciudad (para el tiempo)</span><input @bind="p.Ciudad" /></label>
             </div>
             <label class="campo"><span>Sobre ti (sale en tu perfil)</span><textarea rows="2" maxlength="120" placeholder="Por ejemplo: estudiante, me encantan los vaqueros" @bind="p.Bio"></textarea></label>
-            <span class="etq">Tu estilo</span>
-            <div class="chips">
-                @foreach (var x in DatosEjemplo.Estilos)
-                {
-                    var v = x;
-                    <Chip Texto="@v" Activo="@(p.Estilos.Contains(v))" OnClick="@(() => Alternar(p.Estilos, v))" />
-                }
-            </div>
-            <span class="etq">Lo que más te gusta llevar</span>
-            <div class="chips">
-                @foreach (var x in DatosEjemplo.Gustos)
-                {
-                    var v = x;
-                    <Chip Texto="@v" Activo="@(p.Gustos.Contains(v))" OnClick="@(() => Alternar(p.Gustos, v))" />
-                }
-            </div>
+            <span class="etq">Los looks que sueles llevar</span>
+            <ElegirLooks Elegidos="p.Estilos" />
             <button class="btn" @onclick="Guardar">Guardar mis datos</button>
         </section>
 
@@ -171,6 +157,7 @@
         var fallo = await E.Tiempo.ValidarAsync(p.Edad, p.Ciudad);
         if (fallo != null) { await E.SonarAsync("error"); E.MostrarAviso(fallo); return; }
         p.Ciudad = p.Ciudad.Trim();
+        p.Gustos = DatosEjemplo.GustosDe(p.Estilos);
         await E.GuardarPerfilAsync(p);
         await E.SonarAsync("guardado");
         E.MostrarAviso("Datos guardados");

@@ -1,0 +1,116 @@
+@implements IDisposable
+@inject Estado E
+@inject IJSRuntime JS
+
+@* Contarle tus planes a Cora: escribiendo o hablando (micrófono). Sin botones de «Universidad», «Cena»…:
+   Cora entiende el texto y enseña debajo lo que ha entendido. Se usa en Inicio y al planificar un día. *@
+<label class="campo">
+    @if (!string.IsNullOrEmpty(Etiqueta))
+    {
+        <span>@Etiqueta</span>
+    }
+    <span class="con-micro">
+        <textarea maxlength="200" rows="@Filas" placeholder="@Placeholder" value="@(escuchando ? TextoEnVivo : Texto)" readonly="@escuchando" @oninput="Escribir"></textarea>
+        @if (hayVoz)
+        {
+            <button type="button" class="micro @(escuchando ? "on" : "")" aria-pressed="@(escuchando ? "true" : "false")" aria-label="@(escuchando ? "Parar de escuchar" : "Dictar los planes con la voz")" @onclick="Microfono">@Iconos.Micro</button>
+        }
+    </span>
+</label>
+@if (escuchando)
+{
+    <p class="escuchando" aria-live="polite"><span class="ondas" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Te escucho…</p>
+}
+else if (errorVoz != null)
+{
+    <p class="sec" role="alert">@errorVoz</p>
+}
+else if (Entendido.Count > 0)
+{
+    <p class="entendido" aria-live="polite">@Iconos.Chispa Cora entiende: @foreach (var t in Entendido)
+        {
+            <span class="pastilla">@t</span>
+        }</p>
+}
+else if (hayVoz && string.IsNullOrWhiteSpace(Texto))
+{
+    <p class="pista-voz">@Iconos.Micro Toca el micro y cuéntaselo hablando</p>
+}
+
+@code {
+    [Parameter] public string Texto { get; set; } = "";
+    [Parameter] public EventCallback<string> TextoChanged { get; set; }
+    [Parameter] public string? Etiqueta { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Por ejemplo: clase por la mañana y gimnasio por la tarde";
+    [Parameter] public int Filas { get; set; } = 3;
+
+    bool hayVoz, escuchando;
+    string textoVoz = "", textoAntes = "";
+    string? errorVoz;
+    DotNetObjectReference<CampoPlan>? refJs;
+
+    /// <summary>Lo que se ve mientras hablas: lo que ya estaba escrito y lo que vas diciendo.</summary>
+    string TextoEnVivo => string.IsNullOrWhiteSpace(textoAntes) ? textoVoz : (textoAntes.TrimEnd(' ', '.', ',') + ", " + textoVoz);
+
+    /// <summary>Los planes que Cora reconoce en el texto.</summary>
+    List<string> Entendido => MotorIA.Resolver(new PlanDia { Texto = Texto })?.Tipos.Select(t => t.Nombre).ToList() ?? new();
+
+    protected override async Task OnAfterRenderAsync(bool primeraVez)
+    {
+        if (!primeraVez) return;
+        try { hayVoz = await JS.InvokeAsync<bool>("cora.voz.disponible"); } catch { }
+        if (hayVoz) StateHasChanged();
+    }
+
+    async Task Escribir(ChangeEventArgs e)
+    {
+        errorVoz = null;
+        await TextoChanged.InvokeAsync(e.Value?.ToString() ?? "");
+    }
+
+    async Task Microfono()
+    {
+        if (escuchando) { try { await JS.InvokeVoidAsync("cora.voz.parar"); } catch { } return; }
+        refJs ??= DotNetObjectReference.Create(this);
+        textoAntes = Texto; textoVoz = ""; errorVoz = null;
+        bool ok = false;
+        try { ok = await JS.InvokeAsync<bool>("cora.voz.escuchar", E.D.Ajustes.Idioma, refJs); } catch { }
+        escuchando = ok;
+        if (ok) await E.SonarAsync("leido");
+    }
+
+    [JSInvokable]
+    public async Task VozTexto(string texto, bool final)
+    {
+        textoVoz = texto.Trim();
+        StateHasChanged();
+        if (final && textoVoz.Length > 0)
+        {
+            string t = TextoEnVivo;
+            await TextoChanged.InvokeAsync(t.Length > 200 ? t[..200] : t);
+        }
+    }
+
+    [JSInvokable]
+    public async Task VozFin(string? error)
+    {
+        bool habia = escuchando;
+        escuchando = false;
+        errorVoz = error switch
+        {
+            null or "aborted" => null,
+            "no-speech" => "No te he oído. Toca el micrófono y habla cerca del móvil.",
+            "not-allowed" or "service-not-allowed" => "No tengo permiso para usar el micrófono. Actívalo en los ajustes del navegador.",
+            _ => "No he podido escucharte. Prueba otra vez o escríbelo.",
+        };
+        if (habia && errorVoz == null && textoVoz.Length > 0) await E.SonarAsync("listo");
+        else if (errorVoz != null) await E.SonarAsync("error");
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        if (escuchando) { try { _ = JS.InvokeVoidAsync("cora.voz.parar"); } catch { } }
+        refJs?.Dispose();
+    }
+}

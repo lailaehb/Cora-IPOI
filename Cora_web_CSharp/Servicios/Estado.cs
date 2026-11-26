@@ -95,7 +95,7 @@ public class Estado
             p.LavadoHora = inicio.ToString("o", CultureInfo.InvariantCulture);
             p.LavadoDesde = Fechas.Iso(inicio.ToLocalTime());
         }
-        d.Planes[hoy] = new PlanDia { Claves = { "uni" } };
+        // Hoy empieza sin planes: Cora pregunta en Inicio qué vas a hacer (no se inventa un outfit)
         d.Planes[Fechas.Sumar(hoy, 3)] = new PlanDia { Claves = { "cena" } };
         d.Planes[Fechas.Sumar(hoy, 5)] = new PlanDia { Claves = { "fiesta" } };
         // Historial de ejemplo de los últimos días, para que se note la regla de no repetir
@@ -311,7 +311,7 @@ public class Estado
             {
                 string dia = Fechas.Sumar(Fechas.Hoy, i);
                 var w = Tiempo.De(dia);
-                if (D.Outfits.TryGetValue(dia, out var o) && !o.DeIA && !o.Porque.StartsWith($"{w.T}° y {w.Cielo}"))
+                if (D.Outfits.TryGetValue(dia, out var o) && !o.DeIA && !o.Fijo && !o.Puesto && !o.Porque.StartsWith($"{w.T}° y {w.Cielo}"))
                     D.Outfits[dia] = Recomendar(dia, o.Semilla);
             }
             await GuardarAsync();
@@ -517,6 +517,97 @@ public class Estado
         await SonarAsync("listo");
         string listo = dias.Count == 1 ? "Tu outfit está listo" : "Tu semana está lista";
         MostrarAviso(respuesta == null ? _ia.ExplicarError() : deIA == dias.Count ? listo : listo + " (algún día con mis reglas)");
+        await CambiadoAsync();
+    }
+
+    // ---------------------------------------------------------------- «Me lo pongo», uso de las prendas y olvidadas
+    /// <summary>Marca (o desmarca) que hoy llevas el outfit propuesto. Con confeti, sonido y vibración.</summary>
+    public async Task MeLoPongoAsync(string dia)
+    {
+        var o = OutfitDe(dia);
+        if (o == null) return;
+        o.Puesto = !o.Puesto;
+        if (o.Puesto)
+        {
+            await SonarAsync("puesto");
+            await ConfetiAsync();
+            MostrarAviso(T("¡Apuntado! Hoy llevas este outfit", "¡Hecho! Hoy llevas esta ropa"));
+        }
+        await CambiadoAsync();
+    }
+
+    public async Task ConfetiAsync()
+    {
+        try { await _js.InvokeVoidAsync("cora.confeti"); } catch { }
+    }
+
+    /// <summary>Ya se ha usado el gesto de deslizar: deja de salir la pista.</summary>
+    public async Task GestoVistoAsync()
+    {
+        if (D.Ajustes.VistoGesto) return;
+        D.Ajustes.VistoGesto = true;
+        await GuardarAsync();
+    }
+
+    /// <summary>
+    /// Cuántas veces has llevado cada prenda y cuándo fue la última. Cuentan los días pasados con outfit
+    /// y hoy, solo si has dicho «Me lo pongo».
+    /// </summary>
+    public List<UsoPrenda> Usos()
+    {
+        var veces = new Dictionary<string, int>();
+        var ultima = new Dictionary<string, string>();
+        foreach (var (fecha, o) in DiasPuestos())
+            foreach (var id in o.Ids.Distinct())
+            {
+                veces[id] = veces.GetValueOrDefault(id) + 1;
+                if (!ultima.TryGetValue(id, out var u) || string.CompareOrdinal(fecha, u) > 0) ultima[id] = fecha;
+            }
+        return D.Prendas.Select(p => new UsoPrenda(p, veces.GetValueOrDefault(p.Id), ultima.GetValueOrDefault(p.Id))).ToList();
+    }
+
+    /// <summary>Días que cuentan como «llevado»: los pasados con outfit y hoy si lo has marcado.</summary>
+    public List<(string Fecha, Outfit O)> DiasPuestos() => D.Outfits
+        .Where(x => x.Value.Ids.Count > 0 && (Fechas.Dif(x.Key) < 0 || (Fechas.Dif(x.Key) == 0 && x.Value.Puesto)))
+        .Select(x => (x.Key, x.Value)).OrderBy(x => x.Key, StringComparer.Ordinal).ToList();
+
+    public const int DiasOlvido = 14;
+
+    /// <summary>Prendas disponibles que no usas desde hace 2 semanas (o nunca), de la más olvidada a la menos.</summary>
+    public List<UsoPrenda> Olvidadas() => Usos()
+        .Where(u => !u.P.NoDisponible && (u.Ultima == null || -Fechas.Dif(u.Ultima) >= DiasOlvido))
+        .OrderBy(u => u.Ultima ?? "", StringComparer.Ordinal).ThenBy(u => u.P.Nombre).ToList();
+
+    /// <summary>«Aún no la has usado» o «Hace 18 días que no la usas».</summary>
+    public static string TextoOlvido(UsoPrenda u) =>
+        u.Ultima == null ? "Aún no la has usado" : $"Hace {-Fechas.Dif(u.Ultima)} días que no la usas";
+
+    /// <summary>Prepara el outfit de mañana alrededor de una prenda olvidada.</summary>
+    public async Task LlevarMananaAsync(string id)
+    {
+        string dia = Fechas.Sumar(Fechas.Hoy, 1);
+        var prev = OutfitDe(dia);
+        var o = MotorIA.Recomendar(dia, D.Prendas, D.Planes.GetValueOrDefault(dia), Tiempo.De(dia), D.Outfits, D.Perfil.Gustos, (prev?.Semilla ?? 0) + 1, null, id);
+        o.Fijo = true;
+        D.Outfits[dia] = o;
+        await SonarAsync("listo");
+        MostrarAviso("Listo: mañana la llevas");
+        await CambiadoAsync();
+    }
+
+    /// <summary>El look montado en el probador pasa a ser el de hoy (y ya cuenta como puesto).</summary>
+    public async Task PonerLookHoyAsync(List<string> ids, string porque)
+    {
+        var prendas = ids.Select(PrendaPorId).Where(p => p != null).Select(p => p!).ToList();
+        D.Outfits[Fechas.Hoy] = new Outfit
+        {
+            Ids = ids, Porque = porque, Fijo = true, Puesto = true,
+            Clave = MotorIA.ClaveDe(prendas.Where(p => p.Cat == Categoria.Arriba || p.Cat == Categoria.Abajo)),
+        };
+        foreach (var g in D.Guardados.Where(g => g.Fecha == Fechas.Hoy)) g.Ids = new List<string>(ids);
+        await SonarAsync("puesto");
+        await ConfetiAsync();
+        MostrarAviso("¡Tu look es el de hoy!");
         await CambiadoAsync();
     }
 
@@ -746,6 +837,9 @@ public class Estado
 
     public ValueTask Atras() => _js.InvokeVoidAsync("history.back");
 }
+
+/// <summary>Cuántas veces has llevado una prenda y el último día (AAAA-MM-DD), o null si nunca.</summary>
+public record UsoPrenda(Prenda P, int Veces, string? Ultima);
 
 /// <summary>Serialización de los datos generada al compilar (funciona también al publicar la web).</summary>
 [JsonSerializable(typeof(Datos))]

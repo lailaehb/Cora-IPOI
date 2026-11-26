@@ -1,0 +1,220 @@
+@page "/probador"
+@inherits PaginaCora
+@inject IJSRuntime JS
+
+@* PROBADOR: una fila por tipo de prenda (capa, arriba, abajo, calzado). Se desliza cada fila de lado y la prenda
+   del centro es la elegida. Cora opina al momento (nota, tiempo, colores y para qué sirve) y el look se puede
+   poner para hoy o guardar. Solo salen las prendas disponibles (no las del cesto ni las de la lavadora). *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="Probador" Sub="Desliza cada fila y monta tu look" />
+
+        @if (filas.Any(f => f.Cat != Categoria.Capa && f.Prendas.Count == 0))
+        {
+            <Caja Tipo="error" Texto="Te faltan prendas de arriba o de abajo disponibles. Añade alguna o saca algo de la lavadora." />
+        }
+        else
+        {
+            <section class="tarjeta probador" aria-label="Tu look">
+                <div class="nota-look @Tono" aria-live="polite">
+                    <span class="aro-nota" style="--nota:@(opinion.Nota)"><b>@opinion.Nota</b></span>
+                    <span class="crece"><b>@opinion.Titulo</b><small class="sec">@W.T° · @W.Cielo · hoy</small></span>
+                </div>
+                @foreach (var f in filas)
+                {
+                    var fila = f;
+                    <div class="fila-probador">
+                        <div class="entre"><span class="etq">@DatosEjemplo.NombreCat[fila.Cat]</span><small class="nombre-elegido">@NombreElegido(fila)</small></div>
+                        <div class="carrusel" id="@fila.Id" role="listbox" aria-label="@DatosEjemplo.NombreCat[fila.Cat]">
+                            @if (fila.Cat == Categoria.Capa)
+                            {
+                                <button class="item-carrusel sin-capa @(fila.Sel == 0 ? "on" : "")" role="option" aria-selected="@(fila.Sel == 0 ? "true" : "false")" @onclick="() => Tocar(fila, 0)">
+                                    <span class="foto vacia"><span>Sin capa</span></span>
+                                </button>
+                            }
+                            @for (int i = 0; i < fila.Prendas.Count; i++)
+                            {
+                                int pos = i + fila.Desfase;
+                                var p = fila.Prendas[i];
+                                <button class="item-carrusel @(fila.Sel == pos ? "on" : "")" role="option" aria-selected="@(fila.Sel == pos ? "true" : "false")" aria-label="@p.Nombre" @onclick="() => Tocar(fila, pos)">
+                                    <FotoPrenda P="p" />
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </section>
+
+            <section class="tarjeta opinion" aria-label="Lo que opina Cora">
+                <h3>@Iconos.Chispa Lo que opina Cora</h3>
+                <ul class="puntos">
+                    @foreach (var pt in opinion.Puntos)
+                    {
+                        <li class="@(pt.Bien ? "bien" : "mal")"><span class="marca-punto" aria-hidden="true">@(pt.Bien ? "✓" : "!")</span><span>@pt.Texto</span></li>
+                    }
+                </ul>
+                @if (opinion.Planes.Count > 0)
+                {
+                    <div class="etiquetas">
+                        @foreach (var pl in opinion.Planes)
+                        {
+                            <span class="etiqueta">@pl</span>
+                        }
+                    </div>
+                }
+            </section>
+            @if (fuera > 0)
+            {
+                <p class="sec centro">@(fuera == 1 ? "1 prenda no sale porque está en el cesto o en la lavadora." : $"{fuera} prendas no salen porque están en el cesto o en la lavadora.")</p>
+            }
+        }
+    </div>
+    @if (!filas.Any(f => f.Cat != Categoria.Capa && f.Prendas.Count == 0))
+    {
+        <footer class="pie">
+            <div class="fila">
+                <button id="boton-sorpresa" class="btn secundario corto" disabled="@buscando" @onclick="Sorprender">@Iconos.Dado @(buscando ? "Buscando…" : "Sorpréndeme")</button>
+                <button class="btn secundario cuadrado" aria-label="@(Guardado ? "Guardado" : "Guardar look")" aria-pressed="@(Guardado ? "true" : "false")" @onclick="Guardar">@Iconos.Marcador(Guardado)</button>
+                <button class="btn" @onclick="PonerHoy">@Iconos.Check Me lo pongo</button>
+            </div>
+            @if (hayAgitar)
+            {
+                <small class="sec centro pista-agitar">@Iconos.Dado O agita el móvil y te sorprendo</small>
+            }
+        </footer>
+    }
+</div>
+
+@code {
+    /// <summary>Una fila del probador. En la de capas, la posición 0 es «Sin capa» (por eso el desfase).</summary>
+    class Fila
+    {
+        public Categoria Cat;
+        public string Id = "";
+        public List<Prenda> Prendas = new();
+        public int Sel;
+        public int Desfase => Cat == Categoria.Capa ? 1 : 0;
+        public int Total => Prendas.Count + Desfase;
+        public Prenda? Elegida => Sel - Desfase >= 0 && Sel - Desfase < Prendas.Count ? Prendas[Sel - Desfase] : null;
+    }
+
+    static readonly Categoria[] Orden = { Categoria.Capa, Categoria.Arriba, Categoria.Abajo, Categoria.Calzado };
+    List<Fila> filas = new();
+    /// <summary>Se calcula en cada repintado: así cambia al momento al deslizar y cuando llega el tiempo real.</summary>
+    Opinion opinion => Estilista.Opinar(Look, W, E.D.Outfits, Hoy);
+    int fuera;
+    bool buscando, hayAgitar;
+
+    /// <summary>Lo llama cora.js al agitar el móvil.</summary>
+    [JSInvokable]
+    public async Task Agitado()
+    {
+        if (buscando) return;
+        await Sorprender();
+    }
+    DotNetObjectReference<Probador>? refJs;
+    readonly Random azar = new();
+
+    Tiempo W => E.Tiempo.De(Hoy);
+    List<Prenda> Look => filas.Select(f => f.Elegida).Where(p => p != null).Select(p => p!).ToList();
+    List<string> Ids => Look.Select(p => p.Id).ToList();
+    string IdGuardado => "probador-" + string.Join("-", Ids.OrderBy(x => x, StringComparer.Ordinal));
+    bool Guardado => E.EstaGuardado(IdGuardado);
+    string Tono => opinion.Nota >= 85 ? "genial" : opinion.Nota >= 65 ? "bien" : "flojo";
+
+    static string NombreElegido(Fila f) => f.Elegida?.Nombre ?? (f.Cat == Categoria.Capa ? "Sin capa" : "");
+
+    protected override void OnInitialized()
+    {
+        var hoy = E.OutfitDe(Hoy);
+        fuera = E.D.Prendas.Count(p => p.NoDisponible);
+        foreach (var c in Orden)
+        {
+            var f = new Fila { Cat = c, Id = "fila-" + c.ToString().ToLower(), Prendas = E.D.Prendas.Where(p => p.Cat == c && !p.NoDisponible).ToList() };
+            // Se empieza con el outfit de hoy (si sus prendas siguen disponibles)
+            int i = hoy == null ? -1 : f.Prendas.FindIndex(p => hoy.Ids.Contains(p.Id));
+            f.Sel = i >= 0 ? i + f.Desfase : (c == Categoria.Capa && W.T < 15 && f.Prendas.Count > 0 ? 1 : 0);
+            filas.Add(f);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeraVez)
+    {
+        if (!primeraVez) return;
+        refJs = DotNetObjectReference.Create(this);
+        try { hayAgitar = await JS.InvokeAsync<bool>("cora.agitar.activar", refJs, "boton-sorpresa"); } catch { }
+        if (hayAgitar) StateHasChanged();
+        foreach (var f in filas)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("cora.carrusel.ir", f.Id, f.Sel, false);
+                await JS.InvokeVoidAsync("cora.carrusel.observar", f.Id, refJs);
+            }
+            catch { }
+        }
+    }
+
+    /// <summary>Lo llama cora.js cuando otra prenda llega al centro de una fila.</summary>
+    [JSInvokable]
+    public async Task Elegir(string idFila, int indice)
+    {
+        var f = filas.FirstOrDefault(x => x.Id == idFila);
+        if (f == null || indice < 0 || indice >= f.Total || f.Sel == indice) return;
+        f.Sel = indice;
+        StateHasChanged();
+        if (!buscando) await E.SonarAsync("tic");
+    }
+
+    async Task Tocar(Fila f, int indice)
+    {
+        try { await JS.InvokeVoidAsync("cora.carrusel.ir", f.Id, indice, true); } catch { }
+        await Elegir(f.Id, indice);
+    }
+
+    /// <summary>Prueba muchas combinaciones al azar y se queda con la que mejor nota le pone Cora.</summary>
+    async Task Sorprender()
+    {
+        buscando = true;
+        var mejor = filas.Select(f => f.Sel).ToArray();
+        int mejorNota = -1;
+        var actual = filas.Select(f => f.Sel).ToArray();
+        for (int intento = 0; intento < 80; intento++)
+        {
+            var prueba = filas.Select(f => f.Total == 0 ? 0 : azar.Next(f.Total)).ToArray();
+            if (prueba.SequenceEqual(actual)) continue;
+            var look = filas.Select((f, k) => { int i = prueba[k] - f.Desfase; return i >= 0 && i < f.Prendas.Count ? f.Prendas[i] : null; })
+                            .Where(p => p != null).Select(p => p!).ToList();
+            int nota = Estilista.Opinar(look, W, E.D.Outfits, Hoy).Nota + azar.Next(6); // un pelín de azar para que no salga siempre lo mismo
+            if (nota > mejorNota) { mejorNota = nota; mejor = prueba; }
+        }
+        for (int k = 0; k < filas.Count; k++)
+        {
+            filas[k].Sel = mejor[k];
+            try { await JS.InvokeVoidAsync("cora.carrusel.ir", filas[k].Id, mejor[k], true); } catch { }
+        }
+        StateHasChanged();
+        await Task.Delay(450); // mientras se deslizan las filas
+        buscando = false;
+        await E.SonarAsync("listo");
+    }
+
+    async Task PonerHoy()
+    {
+        string porque = $"Lo has montado tú en el probador. {opinion.Titulo} ({opinion.Nota}/100).";
+        await E.PonerLookHoyAsync(Ids, porque);
+        Nav.NavigateTo("");
+    }
+
+    async Task Guardar()
+    {
+        await E.AlternarGuardadoAsync(new Guardado { Id = IdGuardado, Ids = Ids, Titulo = "Mi look del probador" });
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        try { _ = JS.InvokeVoidAsync("cora.agitar.parar"); } catch { }
+        refJs?.Dispose();
+    }
+}

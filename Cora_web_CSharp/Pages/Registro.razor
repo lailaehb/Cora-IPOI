@@ -38,22 +38,11 @@
             {
                 <Caja Tipo="error" Texto="@error" />
             }
-            <h3>¿Cuál es tu estilo?</h3>
-            <div class="chips">
-                @foreach (var x in DatosEjemplo.Estilos)
-                {
-                    var v = x;
-                    <Chip Texto="@v" Activo="@(p.Estilos.Contains(v))" OnClick="@(() => Alternar(p.Estilos, v))" />
-                }
+            <div>
+                <h3>¿Qué looks sueles llevar?</h3>
+                <p class="sec">Toca los que más te pegan, puedes elegir varios.</p>
             </div>
-            <h3>¿Qué te gusta llevar?</h3>
-            <div class="chips">
-                @foreach (var x in DatosEjemplo.Gustos)
-                {
-                    var v = x;
-                    <Chip Texto="@v" Activo="@(p.Gustos.Contains(v))" OnClick="@(() => Alternar(p.Gustos, v))" />
-                }
-            </div>
+            <ElegirLooks Elegidos="p.Estilos" Cambio="LooksCambiados" />
         }
     </div>
     <footer class="pie">
@@ -93,14 +82,13 @@
         if (string.IsNullOrEmpty(p.Nombre) && string.IsNullOrEmpty(p.Email))
         {
             p = E.D.Perfil.Copia();
+            // Solo se quedan los looks que existen (los de versiones anteriores, como «Clásico», se quitan)
+            p.Estilos.RemoveAll(x => !DatosEjemplo.Estilos.Contains(x));
             if (p.Estilos.Count == 0) p.Estilos.Add("Casual");
         }
     }
 
-    static void Alternar(List<string> lista, string v)
-    {
-        if (!lista.Remove(v)) lista.Add(v);
-    }
+    Task LooksCambiados() => E.SonarAsync("tic");
 
     void Continuar()
     {
@@ -124,13 +112,13 @@
     {
         if (string.IsNullOrWhiteSpace(p.Nombre)) p.Nombre = "Pilar";
         if (string.IsNullOrWhiteSpace(p.Email)) p.Email = "pilar@correo.es";
-        if (p.Gustos.Count == 0) p.Gustos.Add("Vaqueros");
         await Terminar();
     }
 
     async Task Terminar()
     {
         p.Registrada = true;
+        p.Gustos = DatosEjemplo.GustosDe(p.Estilos);
         await E.GuardarPerfilAsync(p);
         Nav.NavigateTo("", replace: true);
     }

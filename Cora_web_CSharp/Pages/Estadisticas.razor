@@ -1,0 +1,141 @@
+@page "/estadisticas"
+@inherits PaginaCora
+@inject IJSRuntime JS
+
+@* TU ARMARIO EN NÚMEROS: cuánto usas tu ropa. Cuentan los días pasados con outfit y hoy, si has dicho «Me lo pongo».
+   Las prendas olvidadas (2 semanas o más sin usarlas) se pueden sacar mañana con un toque. *@
+<div class="pantalla">
+    <div class="contenido">
+        <Cabecera Volver="true" Titulo="Tu armario en números" Sub="Lo que más usas y lo que tienes olvidado" />
+
+        <section class="tarjeta numeros-armario">
+            <div><b data-contar="@E.D.Prendas.Count">@E.D.Prendas.Count</b><small class="sec">prendas</small></div>
+            <div><b data-contar="@dias.Count">@dias.Count</b><small class="sec">outfits llevados</small></div>
+            <div><b data-contar="@PorcentajeUsado" data-sufijo="%">@(PorcentajeUsado)%</b><small class="sec">del armario usado</small></div>
+        </section>
+
+        <section class="tarjeta">
+            <h3>Usas el @PorcentajeUsado% de tu armario</h3>
+            <div class="progreso grande" role="progressbar" aria-label="Parte del armario que usas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@PorcentajeUsado"><div style="width:@(PorcentajeUsado)%"></div></div>
+            <p class="sec">@(PorcentajeUsado >= 70 ? "¡Muy bien! Le sacas partido a casi todo." : "Mucha gente usa solo una parte de su ropa. Rescata las olvidadas y verás cuántos looks nuevos salen.")</p>
+        </section>
+
+        @if (masUsadas.Count > 0)
+        {
+            <div class="seccion"><h2>Las que más te pones</h2></div>
+            <div class="lista">
+                @for (int i = 0; i < masUsadas.Count; i++)
+                {
+                    var u = masUsadas[i];
+                    <a class="fila-ranking" href="@($"prenda/{u.P.Id}")">
+                        <span class="puesto-ranking">@(i + 1)</span>
+                        <span class="foto-peque"><FotoPrenda P="u.P" /></span>
+                        <span class="crece"><b>@u.P.Nombre</b><small class="sec">@(u.Veces == 1 ? "1 vez" : $"{u.Veces} veces")</small></span>
+                        <span class="barrita"><span style="width:@(Ancho(u.Veces))"></span></span>
+                    </a>
+                }
+            </div>
+        }
+
+        <div class="seccion"><h2>Olvidadas</h2><small class="sec">@olvidadas.Count</small></div>
+        @if (olvidadas.Count == 0)
+        {
+            <Caja Tipo="ok" Texto="No tienes nada olvidado: has usado todas tus prendas en las últimas dos semanas." />
+        }
+        else
+        {
+            <div class="lista">
+                @foreach (var u in olvidadas.Take(verTodas ? 100 : 5))
+                {
+                    var id = u.P.Id;
+                    <div class="fila-ranking">
+                        <a class="foto-peque" href="@($"prenda/{id}")"><FotoPrenda P="u.P" /></a>
+                        <span class="crece"><b>@u.P.Nombre</b><small class="sec">@Estado.TextoOlvido(u)</small></span>
+                        <button class="seguir" @onclick="() => Llevar(id)">Mañana</button>
+                    </div>
+                }
+            </div>
+            @if (olvidadas.Count > 5 && !verTodas)
+            {
+                <button class="enlace" @onclick="() => verTodas = true">Ver las @olvidadas.Count</button>
+            }
+        }
+
+        <div class="seccion"><h2>Los colores de tu armario</h2></div>
+        <section class="tarjeta">
+            <div class="barra-colores" role="img" aria-label="@string.Join(", ", colores.Select(c => $"{c.Color}: {c.Veces}"))">
+                @foreach (var c in colores)
+                {
+                    <span style="flex:@c.Veces; background:@Estilista.Css(c.Color)"></span>
+                }
+            </div>
+            <div class="leyenda-colores">
+                @foreach (var c in colores)
+                {
+                    <span><i style="background:@Estilista.Css(c.Color)"></i>@Fechas.Cap(c.Color) <b>@c.Veces</b></span>
+                }
+            </div>
+            <p class="sec">@TextoColores</p>
+        </section>
+
+        <div class="seccion"><h2>Por tipo de prenda</h2></div>
+        <section class="tarjeta barras-cat">
+            @foreach (var c in Enum.GetValues<Categoria>())
+            {
+                int n = E.D.Prendas.Count(p => p.Cat == c);
+                <div class="barra-cat">
+                    <span>@DatosEjemplo.NombreCat[c]</span>
+                    <span class="barrita"><span style="width:@(E.D.Prendas.Count == 0 ? "0%" : $"{n * 100 / E.D.Prendas.Count}%")"></span></span>
+                    <b>@n</b>
+                </div>
+            }
+        </section>
+    </div>
+</div>
+
+@code {
+    List<UsoPrenda> usos = new(), masUsadas = new(), olvidadas = new();
+    List<(string Fecha, Outfit O)> dias = new();
+    List<(string Color, int Veces)> colores = new();
+    bool verTodas;
+
+    int PorcentajeUsado => E.D.Prendas.Count == 0 ? 0 : usos.Count(u => u.Veces > 0) * 100 / E.D.Prendas.Count;
+
+    protected override void OnInitialized() => Calcular();
+
+    protected override async Task OnAfterRenderAsync(bool primeraVez)
+    {
+        if (primeraVez) { try { await JS.InvokeVoidAsync("cora.contar"); } catch { } }
+    }
+
+    void Calcular()
+    {
+        usos = E.Usos();
+        dias = E.DiasPuestos();
+        masUsadas = usos.Where(u => u.Veces > 0).OrderByDescending(u => u.Veces).ThenBy(u => u.P.Nombre).Take(3).ToList();
+        olvidadas = E.Olvidadas();
+        colores = E.D.Prendas.GroupBy(p => Estilista.Normal(string.IsNullOrWhiteSpace(p.Color) ? "sin color" : p.Color))
+                    .Select(g => (g.Key, g.Count())).OrderByDescending(x => x.Item2).ToList();
+    }
+
+    string Ancho(int veces) => masUsadas.Count == 0 ? "0%" : $"{veces * 100 / masUsadas[0].Veces}%";
+
+    string TextoColores
+    {
+        get
+        {
+            if (colores.Count == 0) return "";
+            int neutros = E.D.Prendas.Count(p => Estilista.EsNeutro(p.Color));
+            int pct = neutros * 100 / Math.Max(1, E.D.Prendas.Count);
+            return pct >= 60
+                ? $"El {pct}% de tu ropa es de colores neutros: casi todo combina con todo. Tu color estrella es el {colores[0].Color}."
+                : $"Tienes mucho color: solo el {pct}% es neutro. Un básico negro, blanco o gris te dará muchos más looks.";
+        }
+    }
+
+    async Task Llevar(string id)
+    {
+        await E.LlevarMananaAsync(id);
+        Nav.NavigateTo($"dia/{Fechas.Sumar(Hoy, 1)}");
+    }
+}

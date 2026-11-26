@@ -5,22 +5,39 @@
 <div class="pantalla">
     <div class="contenido">
         <Cabecera Titulo="@E.T("Mi armario", "Mi ropa")" Sub="@($"{E.D.Prendas.Count} prendas")" Avatar="true" />
-        @if (E.EnCesto.Count > 0)
-        {
-            <a class="tarjeta fila-tarjeta @(E.TocaLavadoraHoy ? "aviso" : "")" href="cesto">
-                <span class="ico-caja blanca">@Iconos.Cesto</span>
-                <span class="crece"><b>@E.T("Cesto de la ropa", "Ropa sucia") (@E.EnCesto.Count)</b><small>@(E.TocaLavadoraHoy ? "Hoy toca poner la lavadora" : "Toca para poner la lavadora")</small></span>
-                @Iconos.Siguiente
+        @* Cuatro cuadrados: cesto, lavadora, probador y números. Cada uno con su color para que no parezca todo igual. *@
+        <div class="cuadros">
+            <a class="cuadro tinte-melocoton @(E.TocaLavadoraHoy && E.EnCesto.Count > 0 ? "llama" : "")" href="cesto">
+                <span class="cuadro-ico">@Iconos.Cesto</span>
+                @if (E.EnCesto.Count > 0)
+                {
+                    <span class="cuadro-num">@E.EnCesto.Count</span>
+                }
+                <b>@E.T("Cesto", "Ropa sucia")</b>
+                <small>@(E.EnCesto.Count == 0 ? "Vacío" : E.TocaLavadoraHoy ? "¡Hoy toca lavadora!" : E.EnCesto.Count == 1 ? "1 prenda sucia" : $"{E.EnCesto.Count} prendas sucias")</small>
             </a>
-        }
-        @if (E.EnLavadora.Count > 0)
-        {
-            <a class="tarjeta fila-tarjeta aviso" href="categoria/lavadora">
-                <span class="ico-caja blanca">@Iconos.Lavadora</span>
-                <span class="crece"><b>En la lavadora (@E.EnLavadora.Count)</b><small>Toca para marcarlas como disponibles</small></span>
-                @Iconos.Siguiente
+            <a class="cuadro tinte-lavanda @(E.Secas.Count > 0 ? "llama" : "")" href="categoria/lavadora">
+                <span class="cuadro-ico aro-lavadora @(E.Secas.Count > 0 ? "seca" : "")" style="--avance:@(AvanceLavadora)">
+                    <span class="@(E.EnLavadora.Count > 0 && E.Secas.Count == 0 ? "girando" : "")">@Iconos.Lavadora</span>
+                </span>
+                @if (E.EnLavadora.Count > 0)
+                {
+                    <span class="cuadro-num">@E.EnLavadora.Count</span>
+                }
+                <b>Lavadora</b>
+                <small>@(E.EnLavadora.Count == 0 ? "Vacía" : E.Secas.Count > 0 ? (E.Secas.Count == 1 ? "1 ya está seca" : $"{E.Secas.Count} ya están secas") : $"Lista en {Estado.TextoFalta(E.EnLavadora.Min(Estado.Falta))}")</small>
             </a>
-        }
+            <a class="cuadro tinte-rosa" href="probador">
+                <span class="cuadro-ico">@Iconos.Probador</span>
+                <b>Probador</b>
+                <small>Monta tu look deslizando</small>
+            </a>
+            <a class="cuadro tinte-menta extra" href="estadisticas">
+                <span class="cuadro-ico">@Iconos.Grafica</span>
+                <b>En números</b>
+                <small>@(olvidadas == 0 ? "Lo que más usas" : $"{olvidadas} olvidadas")</small>
+            </a>
+        </div>
 
         <div class="seccion"><h2>Categorías</h2></div>
         <div class="categorias">
@@ -71,5 +88,9 @@
 </div>
 
 @code {
+    int olvidadas;
+    protected override void OnInitialized() => olvidadas = E.Olvidadas().Count;
+    /// <summary>Lo que lleva lavado la prenda que antes termina (de 0 a 100), para el anillo del cuadrado.</summary>
+    string AvanceLavadora => E.EnLavadora.Count == 0 ? "0" : ((int)(E.EnLavadora.Max(Estado.FraccionLavado) * 100)).ToString();
     List<Prenda> Favoritas => E.D.Prendas.Where(p => E.EsFavorita(p.Id)).ToList();
 }

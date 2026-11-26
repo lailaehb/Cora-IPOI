@@ -34,4 +34,9 @@ public static class Iconos
     public static MarkupString Check => S("<path d='M5 12l5 5L20 7'/>", 16, 2.6);
     public static MarkupString Imagen => S("<rect x='3' y='4' width='18' height='16' rx='2'/><circle cx='9' cy='10' r='2'/><path d='M21 16l-5-5-9 9'/>", 20);
     public static MarkupString Altavoz => S("<path d='M4 9v6h4l5 4V5L8 9z'/><path d='M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11'/>", 20);
+    /// <summary>Probador: un espejo de cuerpo entero con un brillo.</summary>
+    public static MarkupString Probador => S("<rect x='6' y='2.5' width='12' height='17' rx='6'/><path d='M9 21.5h6M12 19.5v2M9.5 8.5l2-2M10 12l4-4'/>", 22, 1.8);
+    public static MarkupString Micro => S("<rect x='9' y='3' width='6' height='11' rx='3'/><path d='M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7'/>", 22, 1.9);
+    public static MarkupString Grafica => S("<path d='M4 20V10M10 20V4M16 20v-7M22 20H2'/>", 22, 1.9);
+    public static MarkupString Dado => S("<rect x='3.5' y='3.5' width='17' height='17' rx='4'/><path d='M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01'/>", 20, 2.6);
 }

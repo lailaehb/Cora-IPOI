@@ -96,11 +96,28 @@ public static class DatosEjemplo
         new("cena", "Cena", 2, @"cena|comida|comer fuera|restaurante|\bcita\b|tapas|brunch|dinner|lunch|restaurant|\bdate\b|diner|dejeuner|rendez-vous", "una cena"),
         new("fiesta", "Fiesta", 3, @"fiesta|discoteca|cumple|boda|concierto|festival|copas|de marcha|salir de noche|salir por la noche|party|club|birthday|wedding|concert|drinks|night out|fete|soiree|anniversaire|mariage|boite", "una fiesta"),
         new("deporte", "Deporte", 0, @"gimnasio|\bgym\b|deporte|correr|running|entren|padel|tenis|futbol|baloncesto|basket|voley|natacion|nadar|piscina|yoga|pilates|spinning|crossfit|zumba|\bbici|ciclismo|senderismo|\bruta\b|caminar|pesas|boxeo|escalada|partido|baile|danza|workout|\brun\b|running|training|swim|football|soccer|hike|hiking|entrainement|piscine|natation|randonnee|velo|musculation", "hacer deporte"),
+        new("viaje", "Viaje", 1, @"viaje|viajar|playa|turismo|excursion|escapada|vacaciones|montana|camping|trip|travel|beach|holiday|vacation|sightseeing|voyage|plage|vacances|randonnee", "un día de viaje"),
         new("casa", "Sin planes", 1, @"en casa|\bnada\b|descans|recados|sin planes|compras|at home|nothing|\brest\b|errands|shopping|maison|\brien\b|repos|courses", "un día tranquilo"),
     };
 
-    public static readonly string[] Estilos = { "Casual", "Minimalista", "Clásico", "Deportivo" };
-    public static readonly string[] Gustos = { "Vaqueros", "Vestidos", "Chándal", "Zapatillas" };
+    /// <summary>
+    /// Looks que se eligen al registrarse (y en Configuración). Cada uno es un conjunto real hecho con prendas del armario
+    /// de ejemplo, y trae los tipos de prenda que más le pegan: así lo que eliges sirve de verdad para que Cora acierte.
+    /// </summary>
+    public static readonly List<Estilo> Looks = new()
+    {
+        new("Casual", "Vaqueros, camisetas y zapatillas", new[] { "camiseta_blanca", "vaquero_azul", "zapatillas", "chaqueta_borrego_marron" }, new[] { "Vaqueros", "Camisetas", "Zapatillas" }),
+        new("Minimalista", "Básicos en negro, blanco y gris", new[] { "top_punto_gris", "vaquero_negro", "zapatillas", "chaqueta_piel_negra" }, new[] { "Tops", "Vaqueros", "Chaquetas" }),
+        new("Elegante", "Blazer, falda y tacones", new[] { "top_asimetrico_negro", "falda_negra", "tacones_negros", "blazer_negro" }, new[] { "Blazers", "Faldas", "Tacones" }),
+        new("Cómodo", "Punto y pantalones anchos", new[] { "jersey_amarillo", "pantalon_ancho_gris", "zapatillas", "jersey_negro" }, new[] { "Jerséis", "Pantalones" }),
+        new("Deportivo", "Sudaderas, joggers y deportivas", new[] { "sudadera_cremallera_coral", "jogger_caqui", "zapatillas", "camiseta_larga_gris" }, new[] { "Sudaderas", "Pantalones", "Zapatillas" }),
+        new("De noche", "Tops satinados y tacones", new[] { "top_halter_negro", "vaquero_negro", "tacones_negros", "chaqueta_piel_negra" }, new[] { "Tops", "Tacones" }),
+    };
+    public static readonly string[] Estilos = Looks.Select(l => l.Nombre).ToArray();
+
+    /// <summary>Lo que te gusta llevar (tipos de prenda), sacado de los looks que has elegido.</summary>
+    public static List<string> GustosDe(IEnumerable<string> estilos) =>
+        Looks.Where(l => estilos.Contains(l.Nombre)).SelectMany(l => l.Tipos).Distinct().ToList();
 
     // ---------------------------------------------------------------- Explorar
     public static readonly List<Persona> Personas = new()
@@ -211,3 +228,6 @@ public static class DatosEjemplo
         P("chaqueta_impermeable_lima", "Chaqueta impermeable lima", "Zara", Categoria.Capa, "Chaquetas", "lima", "L", 0, 1, abrigo: 1),
     };
 }
+
+/// <summary>Un look para elegir al registrarse: nombre, frase corta, sus 4 prendas (fotos) y los tipos de prenda que le van.</summary>
+public record Estilo(string Nombre, string Frase, string[] Ids, string[] Tipos);
