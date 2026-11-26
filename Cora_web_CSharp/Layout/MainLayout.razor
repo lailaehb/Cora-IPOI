@@ -8,7 +8,8 @@
     <main class="movil @E.ClasesAccesibilidad">
         @if (!E.Listo)
         {
-            <div class="arranque">Cora</div>
+            @* Mientras carga: el icono de la percha, igual que en index.html (sin cambios al pasar de uno a otro) *@
+            <div class="arranque" aria-label="Cargando Cora"><div class="bv-icono"><svg class="bv-percha" viewBox="0 0 1024 1024" fill="none" stroke="#FAF0EC" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"><path d="M455 355a57 57 0 1 1 57 57v28" /><path d="M512 445L248 648q-30 24-10 50q12 19 38 19h472q26 0 38-19q20-26-10-50Z" /></svg></div></div>
         }
         else
         {

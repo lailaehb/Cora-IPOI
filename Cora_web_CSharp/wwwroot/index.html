@@ -29,6 +29,60 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" />
     <link rel="stylesheet" href="css/cora.css" />
+    <!-- Bienvenida y pantalla de carga: aquí dentro (no en cora.css) para que se vean desde el primer instante -->
+    <style>
+
+        /* Pantalla de carga (cada vez que se abre Cora, mientras arranca): el icono de la percha, quieto, con el mismo
+           fondo que la bienvenida y que el que pone el móvil al tocar el icono. Así solo se ve una cosa: la percha. */
+        html:has(.arranque), html:has(.arranque) body { background: #FBEFEA; }
+        html.pre-oscuro:has(.arranque), html.pre-oscuro:has(.arranque) body { background: #1B1517; }
+        .arranque { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center;
+          background: radial-gradient(circle at 20% 15%, rgba(220, 117, 96, .28), transparent 45%), radial-gradient(circle at 85% 85%, rgba(143, 63, 94, .3), transparent 50%), #FBEFEA; }
+        html.pre-oscuro .arranque { background: radial-gradient(circle at 20% 15%, rgba(243, 177, 144, .18), transparent 45%), radial-gradient(circle at 85% 85%, rgba(215, 149, 171, .22), transparent 50%), #1B1517; }
+        .arranque .bv-icono { opacity: 1; transform: none; animation: none; margin: 0; }
+        .arranque .bv-percha { opacity: 1; animation: none; }
+
+        /* ================= Pantalla de bienvenida (3 s al abrir Cora) ================= */
+        .bienvenida { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+          background: radial-gradient(circle at 20% 15%, rgba(220, 117, 96, .28), transparent 45%), radial-gradient(circle at 85% 85%, rgba(143, 63, 94, .3), transparent 50%), #FBEFEA;
+          font-family: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; transition: opacity .5s ease, transform .5s ease; }
+        html.pre-oscuro .bienvenida { background: radial-gradient(circle at 20% 15%, rgba(243, 177, 144, .18), transparent 45%), radial-gradient(circle at 85% 85%, rgba(215, 149, 171, .22), transparent 50%), #1B1517; }
+        .bienvenida.fuera { opacity: 0; transform: scale(1.06); pointer-events: none; }
+        .bv-centro { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        /* El cuadrado del icono aparece y la percha cae desde arriba, se balancea colgada del gancho y se queda quieta */
+        .bv-icono { width: 116px; height: 116px; border-radius: 28px; margin-bottom: 14px; background: linear-gradient(135deg, #A04D6E 0%, #8F3F5E 50%, #7A2E4E 100%);
+          box-shadow: 0 18px 40px -16px rgba(122, 46, 78, .6); display: grid; place-items: center; overflow: hidden; transform: scale(.6); opacity: 0;
+          animation: bv-icono .45s cubic-bezier(.3, 1.4, .5, 1) forwards; }
+        @keyframes bv-icono { to { transform: none; opacity: 1; } }
+        .bv-percha { width: 116px; height: 116px; transform-origin: 50% 30%; opacity: 0; animation: bv-percha 1.15s cubic-bezier(.3, .7, .4, 1) .2s forwards; }
+        @keyframes bv-percha {
+          0% { opacity: 0; transform: translateY(-70px) rotate(-6deg); }
+          30% { opacity: 1; transform: translateY(6px) rotate(14deg); }
+          50% { transform: translateY(-2px) rotate(-9deg); }
+          68% { transform: rotate(5deg); }
+          84% { transform: rotate(-2deg); }
+          100% { opacity: 1; transform: none; }
+        }
+        .bv-logo { display: flex; font-size: 76px; font-weight: 800; letter-spacing: -.05em; line-height: 1; }
+        .bv-logo span { display: inline-block; opacity: 0; transform: translateY(28px) scale(.8); animation: bv-letra .6s cubic-bezier(.2, 1.3, .4, 1) forwards;
+          background: linear-gradient(120deg, #8F3F5E 0%, #B5486F 55%, #DC7560 100%); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+        html.pre-oscuro .bv-logo span { background-image: linear-gradient(120deg, #D795AB 0%, #EBA0B8 50%, #F3B190 100%); }
+        .bv-logo span:nth-child(1) { animation-delay: .35s; background-position: 0 0; }
+        .bv-logo span:nth-child(2) { animation-delay: .45s; background-position: 33% 0; }
+        .bv-logo span:nth-child(3) { animation-delay: .55s; background-position: 66% 0; }
+        .bv-logo span:nth-child(4) { animation-delay: .65s; background-position: 100% 0; }
+        @keyframes bv-letra { to { opacity: 1; transform: none; } }
+        .bv-lema { margin: 6px 0 0; color: #6E5560; font-size: 16px; letter-spacing: .02em; opacity: 0; animation: bv-aparece .6s ease 1.1s forwards; }
+        html.pre-oscuro .bv-lema { color: #BFAEB5; }
+        @keyframes bv-aparece { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        .bv-barra { position: absolute; bottom: calc(56px + env(safe-area-inset-bottom)); width: 120px; height: 4px; border-radius: 99px; background: rgba(143, 63, 94, .15); overflow: hidden; }
+        .bv-barra span { display: block; height: 100%; width: 100%; border-radius: 99px; background: linear-gradient(90deg, #8F3F5E, #DC7560); transform: scaleX(0); transform-origin: left; animation: bv-carga 2.8s cubic-bezier(.4, 0, .2, 1) .2s forwards; }
+        @keyframes bv-carga { to { transform: scaleX(1); } }
+        @media (prefers-reduced-motion: reduce) {
+          .bv-percha, .bv-logo span, .bv-lema { opacity: 1 !important; transform: none !important; }
+          .bv-barra span { transform: scaleX(1) !important; }
+        }
+    </style>
 </head>
 <body>
     <!-- Pantalla de bienvenida (como Instagram): 3 segundos, solo la primera vez que se abre Cora en ese móvil o navegador
@@ -66,7 +120,7 @@
         })();
     </script>
     <div id="app">
-        <div class="arranque">Cora</div>
+        <div class="arranque" aria-label="Cargando Cora"><div class="bv-icono"><svg class="bv-percha" viewBox="0 0 1024 1024" fill="none" stroke="#FAF0EC" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"><path d="M455 355a57 57 0 1 1 57 57v28" /><path d="M512 445L248 648q-30 24-10 50q12 19 38 19h472q26 0 38-19q20-26-10-50Z" /></svg></div></div>
     </div>
     <div id="blazor-error-ui">
         Ha ocurrido un error. <a href="" class="reload">Recargar</a>
