@@ -3,13 +3,13 @@
 
 @* Una publicación de Explorar: quién la sube (se toca para ver su perfil), el outfit y los botones de
    me gusta, comentar (abre la publicación con los comentarios) y guardar. *@
-<article class="tarjeta">
+<article class="tarjeta tocable" @onclick="Abrir">
     <div class="fila">
-        <a class="avatar peque" href="@($"persona/{P.Usuario}")" aria-label="@($"Ver el perfil de {Nombre}")">@Inicial</a>
-        <a class="crece persona-enlace" href="@($"persona/{P.Usuario}")"><b>@Nombre</b><small class="sec">@("@")@P.Usuario · @P.Hace</small></a>
+        <a class="avatar peque" href="@($"persona/{P.Usuario}")" @onclick:stopPropagation="true" aria-label="@($"Ver el perfil de {Nombre}")">@Inicial</a>
+        <a class="crece persona-enlace" href="@($"persona/{P.Usuario}")" @onclick:stopPropagation="true"><b>@Nombre</b><small class="sec">@("@")@P.Usuario · @P.Hace</small></a>
         @if (ConSeguir)
         {
-            <button class="seguir @(Sigo ? "on" : "")" aria-pressed="@(Sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(P.Usuario)">@(Sigo ? "✓ Siguiendo" : "Seguir")</button>
+            <button class="seguir @(Sigo ? "on" : "")" aria-pressed="@(Sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(P.Usuario)" @onclick:stopPropagation="true">@(Sigo ? "✓ Siguiendo" : "Seguir")</button>
         }
     </div>
     @if (P.Look != null)
@@ -35,7 +35,7 @@
     }
     @* Lo que escribe cada persona se queda en su idioma, como en una red social *@
     <div data-sin-traducir><h3>@P.Titulo</h3><p class="sec">@P.Texto</p></div>
-    <div class="sociales">
+    <div class="sociales" @onclick:stopPropagation="true">
         <button class="@(Like ? "on" : "")" aria-pressed="@(Like ? "true" : "false")" aria-label="Me gusta" @onclick="() => E.AlternarMeGustaAsync(P.Id)">@Iconos.Corazon(Like) @(P.MeGusta + (Like ? 1 : 0))</button>
         <a class="@(HeComentado ? "on" : "")" href="@($"publicacion/{P.Id}")" aria-label="@($"Comentarios ({E.TotalComentarios(P.Id)})")">@Iconos.Comentario(HeComentado) @E.TotalComentarios(P.Id)</a>
         <span class="crece"></span>
@@ -47,6 +47,14 @@
     [Parameter, EditorRequired] public Publicacion P { get; set; } = default!;
     /// <summary>En el perfil de la persona ya hay un botón grande de Seguir, así que aquí no se repite.</summary>
     [Parameter] public bool ConSeguir { get; set; } = true;
+    /// <summary>En Explorar, tocar la tarjeta abre la publicación. Dentro de la publicación ya no hace falta.</summary>
+    [Parameter] public bool Abrible { get; set; } = true;
+    [Inject] NavigationManager Nav { get; set; } = default!;
+
+    void Abrir()
+    {
+        if (Abrible) Nav.NavigateTo($"publicacion/{P.Id}");
+    }
 
     Persona? Autor => DatosEjemplo.PersonaDe(P.Usuario);
     string Nombre => Autor?.Nombre ?? P.Usuario;

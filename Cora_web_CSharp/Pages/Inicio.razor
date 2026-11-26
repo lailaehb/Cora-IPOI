@@ -53,7 +53,8 @@
                     <h3 class="momento">@outfit.Momento</h3>
                 }
                 @* La tarjeta se desliza: a la derecha «Me lo pongo», a la izquierda «Otra opción» (los botones de abajo hacen lo mismo) *@
-                <div class="carta @(outfit.Puesto ? "puesta" : "") @(E.D.Ajustes.VistoGesto ? "" : "insinuar")" data-deslizar="@(E.D.Ajustes.MenosOpciones ? "derecha" : "ambos")" @key="@(outfit.Clave + outfit.Semilla + outfit.Ids.Count)">
+                <div class="carta @(outfit.Puesto ? "puesta" : "") @(E.D.Ajustes.VistoGesto ? "" : "insinuar")" data-deslizar="@(E.D.Ajustes.MenosOpciones ? "derecha" : "ambos")" @key="@(outfit.Clave + outfit.Semilla + outfit.Ids.Count)"
+                     role="link" tabindex="0" aria-label="Ver tu outfit de hoy" @onclick="@(() => Ir($"dia/{Hoy}"))">
                     <div class="collage">
                         @foreach (var id in outfit.Ids.Take(4))
                         {

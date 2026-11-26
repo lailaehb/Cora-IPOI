@@ -36,12 +36,12 @@
                         {
                             var pe = per;
                             bool sigo = E.Sigo(pe.Usuario);
-                            <div class="tarjeta fila persona-fila">
-                                <a href="@($"persona/{pe.Usuario}")" class="fila crece persona-enlace">
+                            <div class="tarjeta fila persona-fila tocable" @onclick="@(() => Ir($"persona/{pe.Usuario}"))">
+                                <a href="@($"persona/{pe.Usuario}")" class="fila crece persona-enlace" @onclick:stopPropagation="true">
                                     <span class="avatar">@(pe.Nombre[..1])</span>
                                     <span class="crece"><b>@pe.Nombre</b><small class="sec bloque">@("@")@pe.Usuario</small></span>
                                 </a>
-                                <button class="seguir @(sigo ? "on" : "")" aria-pressed="@(sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(pe.Usuario)">@(sigo ? "✓ Siguiendo" : "Seguir")</button>
+                                <button class="seguir @(sigo ? "on" : "")" aria-pressed="@(sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(pe.Usuario)" @onclick:stopPropagation="true">@(sigo ? "✓ Siguiendo" : "Seguir")</button>
                             </div>
                         }
                     </div>
@@ -76,13 +76,13 @@
                 {
                     var pe = per;
                     bool sigo = E.Sigo(pe.Usuario);
-                    <div class="persona-mini">
-                        <a href="@($"persona/{pe.Usuario}")" class="persona-enlace centro">
+                    <div class="persona-mini tocable" @onclick="@(() => Ir($"persona/{pe.Usuario}"))">
+                        <a href="@($"persona/{pe.Usuario}")" class="persona-enlace centro" @onclick:stopPropagation="true">
                             <span class="avatar">@(pe.Nombre[..1])</span>
                             <b>@pe.Nombre</b>
                             <small class="sec">@pe.Estilos[0]</small>
                         </a>
-                        <button class="seguir @(sigo ? "on" : "")" aria-pressed="@(sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(pe.Usuario)">@(sigo ? "✓ Siguiendo" : "Seguir")</button>
+                        <button class="seguir @(sigo ? "on" : "")" aria-pressed="@(sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(pe.Usuario)" @onclick:stopPropagation="true">@(sigo ? "✓ Siguiendo" : "Seguir")</button>
                     </div>
                 }
             </div>
@@ -109,12 +109,12 @@
                     var pe = per;
                     bool sigo = E.Sigo(pe.Usuario);
                     int n = DatosEjemplo.Publicaciones.Count(x => x.Usuario == pe.Usuario);
-                    <div class="tarjeta fila persona-fila">
-                        <a href="@($"persona/{pe.Usuario}")" class="fila crece persona-enlace">
+                    <div class="tarjeta fila persona-fila tocable" @onclick="@(() => Ir($"persona/{pe.Usuario}"))">
+                        <a href="@($"persona/{pe.Usuario}")" class="fila crece persona-enlace" @onclick:stopPropagation="true">
                             <span class="avatar">@(pe.Nombre[..1])</span>
                             <span class="crece"><b>@pe.Nombre</b><small class="sec bloque">@("@")@pe.Usuario · @n @(n == 1 ? "outfit" : "outfits")</small></span>
                         </a>
-                        <button class="seguir @(sigo ? "on" : "")" aria-pressed="@(sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(pe.Usuario)">@(sigo ? "✓ Siguiendo" : "Seguir")</button>
+                        <button class="seguir @(sigo ? "on" : "")" aria-pressed="@(sigo ? "true" : "false")" @onclick="() => E.AlternarSeguirAsync(pe.Usuario)" @onclick:stopPropagation="true">@(sigo ? "✓ Siguiendo" : "Seguir")</button>
                     </div>
                 }
             </div>

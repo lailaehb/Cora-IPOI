@@ -31,6 +31,40 @@
     <link rel="stylesheet" href="css/cora.css" />
 </head>
 <body>
+    <!-- Pantalla de bienvenida (como Instagram): 3 segundos, solo la primera vez que se abre Cora en ese móvil o navegador
+         (se recuerda con localStorage; para volver a verla, borrar los datos de la web). -->
+    <div id="bienvenida" class="bienvenida" aria-hidden="true">
+        <div class="bv-centro">
+            <!-- El icono de la app: la percha (la misma del icono) cae, se balancea y se acomoda -->
+            <div class="bv-icono">
+                <svg class="bv-percha" viewBox="0 0 1024 1024" fill="none" stroke="#FAF0EC" stroke-width="40" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M455 355a57 57 0 1 1 57 57v28" />
+                    <path d="M512 445L248 648q-30 24-10 50q12 19 38 19h472q26 0 38-19q20-26-10-50Z" />
+                </svg>
+            </div>
+            <div class="bv-logo"><span>C</span><span>o</span><span>r</span><span>a</span></div>
+            <p class="bv-lema">tu armario, a tu manera</p>
+        </div>
+        <div class="bv-barra"><span></span></div>
+    </div>
+    <script>
+        (function () {
+            var b = document.getElementById('bienvenida');
+            var vista = false;
+            try { vista = localStorage.getItem('cora-bienvenida') === '1'; localStorage.setItem('cora-bienvenida', '1'); } catch (e) { }
+            if (vista) { b.remove(); return; }
+            var inicio = Date.now();
+            // Se va a los 3 segundos; si la app aún está cargando, espera a que esté lista (como mucho 8 s)
+            (function mirar() {
+                var lista = document.querySelector('.movil .vista');
+                var t = Date.now() - inicio;
+                if ((t >= 3000 && lista) || t >= 8000) {
+                    b.classList.add('fuera');
+                    setTimeout(function () { b.remove(); }, 500);
+                } else setTimeout(mirar, 100);
+            })();
+        })();
+    </script>
     <div id="app">
         <div class="arranque">Cora</div>
     </div>
@@ -42,6 +76,11 @@
     <script src="js/cora.js"></script>
     <!-- Idiomas: traduce la app al inglés o al francés si se elige en Configuración -->
     <script src="js/idiomas.js"></script>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <!-- La app arranca a mano: si hay pantalla de bienvenida, primero se deja terminar su animación (1,3 s)
+         y luego arranca, porque mientras arranca el navegador está muy ocupado y la animación se quedaría parada -->
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+    <script>
+        setTimeout(function () { Blazor.start(); }, document.getElementById('bienvenida') ? 1300 : 0);
+    </script>
 </body>
 </html>
