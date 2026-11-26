@@ -381,7 +381,7 @@ public class Estado
             // Un conjunto válido necesita, como mínimo, algo de arriba y algo de abajo
             if (!prendas.Any(p => p.Cat == Categoria.Arriba) || !prendas.Any(p => p.Cat == Categoria.Abajo)) continue;
             var ids = OrdenLook.Select(c => prendas.FirstOrDefault(p => p.Cat == c)).Where(p => p != null).Select(p => p!.Id).ToList();
-            looks.Add((new Look { Momento = l.Momento.Trim(), Ids = ids, Porque = l.Porque.Trim() }, l.Plan == "deporte"));
+            looks.Add((new Look { Momento = l.Momento.Trim(), Ids = ids, Porque = l.Porque.Trim() }, l.Plan is "deporte" or "baile"));
         }
         if (looks.Count == 0) return null;
         // El conjunto principal es el de los planes «normales»; el de deporte va como cambio de ropa

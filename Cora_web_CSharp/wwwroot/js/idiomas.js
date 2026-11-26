@@ -84,6 +84,12 @@ window.coraIdiomas = (function () {
     'Di el día y lo que vas a hacer, y Cora lo reparte. Lo que no lleve día vale para todos.': ["Say the day and what you'll do, and Cora splits it up. Anything without a day applies to all.", 'Dis le jour et ce que tu feras, Cora répartit. Ce qui n’a pas de jour vaut pour tous.'],
     'Por ejemplo: el lunes clase, el martes gimnasio y el miércoles cena': ['For example: Monday class, Tuesday gym and Wednesday dinner', 'Par exemple : lundi cours, mardi sport et mercredi dîner'],
 
+    // Más tipos de plan (lo que Cora entiende en lo que cuentas)
+    'Evento': ['Event', 'Événement'], 'Baile': ['Dance', 'Danse'], 'Ver un partido': ['Watching a match', 'Voir un match'],
+    'Campo': ['Countryside', 'Campagne'], 'Familia y pareja': ['Family and partner', 'Famille et couple'], 'Amigos': ['Friends', 'Amis'],
+    'Paseo y parque': ['Walk and park', 'Balade et parc'], 'Ocio': ['Leisure', 'Loisirs'], 'Recados': ['Errands', 'Courses'],
+    'Para ir a baile': ['For dance class', 'Pour la danse'],
+
     // Registro
     'tu armario, a tu manera': ['your wardrobe, your way', 'ta garde-robe, à ta façon'],
     'Crea tu cuenta': ['Create your account', 'Crée ton compte'], 'Nombre': ['Name', 'Nom'],

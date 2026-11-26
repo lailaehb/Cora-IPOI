@@ -77,12 +77,16 @@ public static class MotorIA
     /// <param name="inicio">Semilla para empezar a buscar (se usa en «Otra opción»).</param>
     /// <param name="evitar">Combinación que el usuario acaba de descartar.</param>
     /// <param name="forzar">Prenda que tiene que salir sí o sí (p. ej. una que hace tiempo que no se usa).</param>
+    /// <summary>Planes para los que hay que cambiarse de ropa: llevan su propio conjunto cómodo.</summary>
+    static readonly string[] Aparte = { "deporte", "baile" };
+
     public static Outfit Recomendar(string dia, List<Prenda> prendas, PlanDia? planDia, Tiempo w, Dictionary<string, Outfit> outfits, List<string> gustos, int? inicio = null, string? evitar = null, string? forzar = null)
     {
         var plan = Resolver(planDia);
         // El deporte va en un conjunto aparte (hay que cambiarse); el principal se elige para el resto de planes
-        var otros = plan?.Tipos.Where(t => t.Clave != "deporte").ToList() ?? new();
-        bool conDeporte = plan?.Tipos.Any(t => t.Clave == "deporte") ?? false;
+        var otros = plan?.Tipos.Where(t => !Aparte.Contains(t.Clave)).ToList() ?? new();
+        var activo = plan?.Tipos.FirstOrDefault(t => Aparte.Contains(t.Clave));
+        bool conDeporte = activo != null;
         bool deporteAparte = conDeporte && otros.Count > 0;
         int fPedida = plan == null ? 1 : (otros.Count > 0 ? otros.Max(x => x.Formalidad) : 0);
         string frase = plan == null ? "un día tranquilo" : (deporteAparte ? Lista(otros.Select(x => x.Frase).ToList()) : plan.Frase);
@@ -180,13 +184,13 @@ public static class MotorIA
         if (deporteAparte)
         {
             outfit.Momento = Fechas.Cap(Lista(otros.Select(x => x.Nombre.ToLower()).ToList()));
-            outfit.Extra.Add(LookDeporte(disponibles, ids, semilla, fresco));
+            outfit.Extra.Add(LookDeporte(disponibles, ids, semilla, fresco, activo!));
         }
         return outfit;
     }
 
     /// <summary>Segundo conjunto del día, solo con prendas marcadas para «Deporte».</summary>
-    static Look LookDeporte(List<Prenda> disponibles, List<string> yaElegidas, int semilla, bool fresco)
+    static Look LookDeporte(List<Prenda> disponibles, List<string> yaElegidas, int semilla, bool fresco, TipoPlan tipo)
     {
         Prenda? Elegir(Categoria c)
         {
@@ -201,8 +205,8 @@ public static class MotorIA
         var capa = fresco ? Elegir(Categoria.Capa) : null;
         var ids = new[] { capa, arriba, abajo, zapato }.Where(p => p != null).Select(p => p!.Id).ToList();
         string porque = arriba != null && abajo != null
-            ? $"Para el deporte, ropa cómoda: {arriba.Nombre.ToLower()} y {abajo.Nombre.ToLower()}."
+            ? $"Para {(tipo.Clave == "baile" ? "el baile" : "el deporte")}, ropa cómoda: {arriba.Nombre.ToLower()} y {abajo.Nombre.ToLower()}."
             : "No tienes suficiente ropa de deporte: añade alguna prenda y márcala como «Deporte».";
-        return new Look { Momento = "Para hacer deporte", Ids = ids, Porque = porque };
+        return new Look { Momento = tipo.Clave == "baile" ? "Para ir a baile" : "Para hacer deporte", Ids = ids, Porque = porque };
     }
 }

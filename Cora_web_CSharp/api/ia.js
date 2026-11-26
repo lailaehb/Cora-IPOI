@@ -12,7 +12,7 @@
 
 const API = 'https://generativelanguage.googleapis.com/v1beta';
 const MODELO_DEFECTO = 'gemini-3.5-flash-lite';
-const PLANES = ['uni', 'trabajo', 'cena', 'fiesta', 'deporte', 'casa'];
+const PLANES = ['uni', 'trabajo', 'cena', 'fiesta', 'evento', 'deporte', 'baile', 'casa', 'otro'];
 const USOS = ['Deporte', 'Diario', 'Arreglado', 'Fiesta'];
 const CATEGORIAS = ['Arriba', 'Abajo', 'Calzado', 'Capa'];
 
@@ -80,9 +80,9 @@ const INSTRUCCIONES_SEMANA = `Eres Cora, una estilista que prepara los conjuntos
 Reglas:
 - Usa SOLO prendas de la lista "armario" y escribe sus "id" exactamente. No inventes prendas.
 - Cada conjunto lleva una prenda de arriba y una de abajo, calzado y, si hace fresco (menos de 19 °C) o llueve, una prenda de la categoría Capa. Respeta la categoría de cada prenda.
-- Elige prendas cuyo campo "usos" encaje con el plan: deporte → "Deporte"; universidad, recados o día tranquilo → "Diario"; trabajo o cena → "Arreglado" (o "Diario" si no hay nada mejor); fiesta → "Fiesta" o "Arreglado".
+- Elige prendas cuyo campo "usos" encaje con el plan: deporte o baile → "Deporte"; universidad, recados, campo, parque, familia, amigos, viajes o día tranquilo → "Diario"; trabajo, comida, cena, concierto, teatro o un evento → "Arreglado" (o "Diario" si no hay nada mejor); fiesta → "Fiesta" o "Arreglado". La persona cuenta su vida con sus palabras ("comer pipas en un banco", "ir a la parcela", "hacerme las uñas"): entiéndelo como lo entendería una amiga.
 - Cada día trae los botones marcados ("planes") y lo que el usuario ha escrito ("texto"). Lee el texto con atención: puede haber varios planes en un día ("clase por la mañana, gimnasio por la tarde y cena"). Si un día no tiene planes ni texto, es un día tranquilo (ropa de "Diario").
-- Si un plan obliga a cambiarse de ropa (sobre todo el deporte), haz un conjunto aparte para ese momento. Si varios planes se pueden hacer con la misma ropa, usa un solo conjunto. Máximo 3 conjuntos por día.
+- Si un plan obliga a cambiarse de ropa (el deporte o una clase de baile como flamenco, sevillanas o zumba), haz un conjunto aparte y cómodo para ese momento (plan "deporte" o "baile"). Ver un partido NO es hacer deporte: es ropa de calle. Si varios planes se pueden hacer con la misma ropa, usa un solo conjunto. Máximo 3 conjuntos por día.
 - Con frío prioriza prendas de "abrigo" alto; con lluvia evita el calzado con "lluvia": false.
 - No repitas la misma combinación de arriba + abajo que aparezca en "usadas" ni entre los días que planificas (salvo la ropa de deporte, que sí se puede repetir). Si un día trae "evitar", no propongas esas prendas juntas.
 - Ten en cuenta los gustos y estilos del usuario cuando haya varias opciones.

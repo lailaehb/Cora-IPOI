@@ -88,16 +88,29 @@ public static class DatosEjemplo
         ["Chaquetas"] = (1, 2, 2, true), ["Blazers"] = (2, 3, 1, true), ["Abrigos"] = (1, 3, 2, true),
     };
 
+    /// <summary>
+    /// Tipos de plan que entienden las reglas de Cora en lo que escribes o dices (con tus palabras, como se lo contarías a una amiga).
+    /// Formalidad: 0 deporte · 1 diario · 2 arreglado · 3 fiesta. «Deporte» y «Baile» llevan un conjunto aparte (hay que cambiarse).
+    /// Los patrones se comparan con el texto en minúsculas y sin tildes (MotorIA.Normalizar; la ñ se queda como ñ).
+    /// </summary>
     public static readonly List<TipoPlan> Planes = new()
     {
-        // Los patrones se comparan con el texto en minúsculas y sin tildes (MotorIA.Normalizar)
-        new("uni", "Universidad", 1, @"\buni\b|universidad|clase|facultad|examen|biblio|estudi|tutoria|insti|class|universit|college|lecture|exam|study|library|cours|\bfac\b|bibliotheque|etudi", "ir a clase"),
+        new("uni", "Universidad", 1, @"\buni\b|universidad|\bclases?\b(?! de (?:baile|flamenco|sevillanas|zumba|yoga|pilates|danza|spinning|natacion|canto|musica|guitarra|piano))|facultad|examen|biblio|estudi|tutoria|insti|\bclass\b|universit|college|lecture|exam|study|library|\bcours\b|\bfac\b|bibliotheque|etudi", "ir a clase"),
         new("trabajo", "Trabajo", 2, @"trabaj|oficina|reunion|entrevista|curro|practicas en|\bwork|office|meeting|interview|\bjob\b|travail|bureau|boulot|entretien", "trabajar"),
-        new("cena", "Cena", 2, @"cena|comida|comer fuera|restaurante|\bcita\b|tapas|brunch|dinner|lunch|restaurant|\bdate\b|diner|dejeuner|rendez-vous", "una cena"),
-        new("fiesta", "Fiesta", 3, @"fiesta|discoteca|cumple|boda|concierto|festival|copas|de marcha|salir de noche|salir por la noche|party|club|birthday|wedding|concert|drinks|night out|fete|soiree|anniversaire|mariage|boite", "una fiesta"),
-        new("deporte", "Deporte", 0, @"gimnasio|\bgym\b|deporte|correr|running|entren|padel|tenis|futbol|baloncesto|basket|voley|natacion|nadar|piscina|yoga|pilates|spinning|crossfit|zumba|\bbici|ciclismo|senderismo|\bruta\b|caminar|pesas|boxeo|escalada|partido|baile|danza|workout|\brun\b|running|training|swim|football|soccer|hike|hiking|entrainement|piscine|natation|randonnee|velo|musculation", "hacer deporte"),
-        new("viaje", "Viaje", 1, @"viaje|viajar|playa|turismo|excursion|escapada|vacaciones|montana|camping|trip|travel|beach|holiday|vacation|sightseeing|voyage|plage|vacances|randonnee", "un día de viaje"),
-        new("casa", "Sin planes", 1, @"en casa|\bnada\b|descans|recados|sin planes|compras|at home|nothing|\brest\b|errands|shopping|maison|\brien\b|repos|courses", "un día tranquilo"),
+        new("cena", "Cena", 2, @"\bcena|\bcenar\b|comida|almuerzo|comer fuera|comer en un|restaurante|\bcita\b|tapas|tapeo|brunch|dinner|lunch|restaurant|\bdate\b|diner|dejeuner|rendez-vous", "una comida o cena"),
+        new("fiesta", "Fiesta", 3, @"fiesta|discoteca|disco\b|cumple|boda|festival|feria|copas|de marcha|de fiesta|salir de noche|salir por la noche|salir a bailar|ir a bailar|nochevieja|party|club|birthday|wedding|drinks|night out|fete|soiree|anniversaire|mariage|boite", "una fiesta"),
+        new("evento", "Evento", 2, @"evento|actuacion|actuar|espectaculo|teatro|musical|concierto|opera|ballet|gala|graduacion|comunion|bautizo|presentacion|inauguracion|show\b|concert|theatre|theater|spectacle", "un evento o espectáculo"),
+        new("deporte", "Deporte", 0, @"gimnasio|\bgym\b|deporte|correr|running|entren|padel|tenis|(?<!\b(?:ver|veo|vemos|mirar) (?:el |un |al |una |los )?(?:partido de )?)(?<!\bir al )\b(?:futbol|partido|baloncesto|basket|voley)\b|natacion|nadar|yoga|pilates|spinning|crossfit|\bbici|ciclismo|senderismo|\bruta\b|caminar|pesas|boxeo|escalada|workout|\brun\b|training|swim|football|soccer|hike|hiking|entrainement|natation|randonnee|velo|musculation", "hacer deporte"),
+        new("baile", "Baile", 0, @"flamenco|sevillanas|(?<!salir a |ir a )bailar|\bbaile\b|danza|zumba|clase de baile|ensayo|dance class|danse", "ir a baile"),
+        new("partido", "Ver un partido", 1, @"\b(?:ver|veo|vemos|mirar) (?:el |un |al |una |los )?(?:partido|futbol|baloncesto|basket|carrera|formula)|\bir al (?:futbol|estadio|campo)|estadio|campo de futbol|watch (?:the |a )?(?:game|match)", "ver un partido"),
+        new("campo", "Campo", 1, @"\bcampo\b(?! de futbol)|parcela|finca|chalet|casa de campo|barbacoa|piscina|huerto|\bmonte\b|picnic|petunias|countryside|campagne", "un día en el campo"),
+        new("viaje", "Viaje", 1, @"viaje|viajar|playa|turismo|excursion|escapada|vacaciones|monta[nñ]a|camping|apartamento|hotel|cordoba|sevilla|granada|malaga|cadiz|madrid|valencia|barcelona|\bpueblo\b|crucero|avion|\btren\b|\btrip\b|travel|beach|holiday|vacation|sightseeing|voyage|plage|vacances", "un día de viaje"),
+        new("familia", "Familia y pareja", 1, @"familia|novio|novia|pareja|suegr|abuel|\bprimos?\b|\bprimas?\b|\btios\b|\btias?\b|sobrin|cu[nñ]ad|boyfriend|girlfriend|family|copain|copine|famille", "estar con la familia o la pareja"),
+        new("amigos", "Amigos", 1, @"amig[oa]s?|quedada|quedar con|colegas|friends|amis\b", "quedar con amigos"),
+        new("paseo", "Paseo y parque", 1, @"pasear|paseo|parque|\bbanco\b|pipas|charlar|hablar con|cotillear|jugar con|ni[nñ]os|ni[nñ]as|peques|columpio|\bplaza\b|terraza|heladeria|walk|park|balade", "un rato por la calle"),
+        new("ocio", "Ocio", 1, @"cantar|\bcoro\b|karaoke|\bcine\b|peli|bolos|museo|exposicion|juegos de mesa|escape room|videojuegos|leer|libreria|cinema|movie|karaoke", "un plan de ocio"),
+        new("recados", "Recados", 1, @"recados|compras|comprar|de tiendas|centro comercial|supermercado|\bsuper\b|mercado|u[nñ]as|manicura|pedicura|peluqueria|\bpelu\b|estetica|depil|dentista|medico|farmacia|gestion|errands|shopping|groceries|courses|coiffeur", "hacer recados"),
+        new("casa", "Sin planes", 1, @"en casa|quedarme en casa|\bnada\b|descans|sin planes|tranquil|sofa|at home|nothing|\brest\b|maison|\brien\b|repos", "un día tranquilo"),
     };
 
     /// <summary>
