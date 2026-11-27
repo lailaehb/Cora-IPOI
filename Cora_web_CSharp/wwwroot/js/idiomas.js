@@ -232,7 +232,7 @@ window.coraIdiomas = (function () {
     'Inspírate': ['Get inspired', 'Inspire-toi'], 'Qué ver': ['What to see', 'Quoi voir'], 'Todo': ['All', 'Tout'], 'Outfits': ['Outfits', 'Tenues'],
     'Personas': ['People', 'Personnes'], 'Personas que quizá te gusten': ['People you may like', 'Des personnes qui pourraient te plaire'],
     'Ver todas': ['See all', 'Voir tout'], 'Últimos outfits': ['Latest outfits', 'Dernières tenues'], 'Seguir': ['Follow', 'Suivre'],
-    '✓ Siguiendo': ['✓ Following', '✓ Abonné(e)'], 'Sus outfits': ['Their outfits', 'Ses tenues'], 'outfits': ['outfits', 'tenues'], 'outfit': ['outfit', 'tenue'],
+    '✓ Siguiendo': ['✓ Following', '✓ Abonné(e)'], 'Sus outfits': ['Their outfits', 'Ses tenues'], 'outfits': ['outfits', 'tenues'], 'prendas': ['items', 'vêtements'], 'prenda': ['item', 'vêtement'], 'outfit': ['outfit', 'tenue'],
     'seguidores': ['followers', 'abonnés'], 'siguiendo': ['following', 'abonnements'], 'Me gusta': ['Like', "J'aime"],
     'Guardar en mi perfil': ['Save to my profile', 'Enregistrer dans mon profil'], 'Foto del conjunto': ['Outfit photo', 'Photo de la tenue'],
     'Outfit': ['Outfit', 'Tenue'], 'Publicar': ['Post', 'Publier'], 'Escribe un comentario…': ['Write a comment…', 'Écris un commentaire…'],
@@ -401,7 +401,7 @@ window.coraIdiomas = (function () {
     [/^Sacar del cesto \((\d+)\)$/, (m) => [`Take out of basket (${m[1]})`, `Sortir du panier (${m[1]})`][i]],
     [/^Poner la lavadora \((\d+) prendas?\)$/, (m) => [`Start the washer (${m[1]} ${+m[1] === 1 ? 'item' : 'items'})`, `Lancer la machine (${m[1]} ${+m[1] === 1 ? 'vêtement' : 'vêtements'})`][i]],
     [/^Preparar la semana \((\d+) días con planes\)$/, (m) => [`Prepare the week (${m[1]} days with plans)`, `Préparer la semaine (${m[1]} jours avec projets)`][i]],
-    [/^Preparar el outfit de (hoy|mañana|el .+)$/, (m) => [`Prepare the outfit for ${cuando(m[1])}`, `Préparer la tenue de ${cuando(m[1])}`][i]],
+    [/^Preparar el outfit (?:de |del )(hoy|mañana|.+)$/, (m) => [`Prepare the outfit for ${cuando(m[1])}`, `Préparer la tenue de ${cuando(m[1])}`][i]],
     [/^Preparar otro outfit para (hoy|mañana|el .+)$/, (m) => [`Prepare another outfit for ${cuando(m[1])}`, `Préparer une autre tenue pour ${cuando(m[1])}`][i]],
     [/^Cuéntale a Cora qué vas a hacer (hoy|mañana|el .+)\.$/, (m) => [`Tell Cora what you're doing ${cuando(m[1])}.`, `Raconte à Cora ce que tu fais ${cuando(m[1])}.`][i]],
     [/^(Hoy|Mañana|Ayer|Lunes \d+|Martes \d+|Miércoles \d+|Jueves \d+|Viernes \d+|Sábado \d+|Domingo \d+) · (.+)$/, (m) => `${traducir(m[1]) ?? m[1]} · ${traducir(m[2]) ?? m[2]}`],
@@ -431,6 +431,7 @@ window.coraIdiomas = (function () {
   ];
   function Fechas_cap(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
   function cuando(t) {
+    if (/^(lunes|martes|miércoles|jueves|viernes|sábado|domingo) /i.test(t)) t = 'el ' + t;
     if (t === 'hoy') return ['today', "aujourd'hui"][i];
     if (t === 'mañana') return ['tomorrow', 'demain'][i];
     const m = t.match(/^el (\w+) (\d+)$/i); return m ? (i === 0 ? `${dia(m[1])} ${m[2]}` : `${dia(m[1])} ${m[2]}`) : t;

@@ -178,7 +178,7 @@
     }
 
     string TextoBoton => !varios
-        ? (O != null ? $"Preparar otro outfit para {Cuando(elegido)}" : $"Preparar el outfit de {Cuando(elegido)}")
+        ? (O != null ? $"Preparar otro outfit para {Cuando(elegido)}" : $"Preparar el outfit {(Cuando(elegido).StartsWith("el ") ? "del " + Cuando(elegido)[3..] : "de " + Cuando(elegido))}")
         : DiasRango.Count == 1 ? "Preparar 1 día" : $"Preparar {DiasRango.Count} días";
 
     static bool Valida(string? d) => d != null && System.Text.RegularExpressions.Regex.IsMatch(d, @"^\d{4}-\d{2}-\d{2}$");
